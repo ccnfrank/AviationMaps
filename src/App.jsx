@@ -60,6 +60,7 @@ export default function App() {
     } catch {
       return; // escolha cancelada
     }
+    if (!handle) return; // diálogo nativo fechado sem escolher
     try {
       showFiles(await readDirectory(handle));
     } catch (err) {
