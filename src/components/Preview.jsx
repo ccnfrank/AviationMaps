@@ -14,6 +14,7 @@ import PanView from "./PanView";
 import ImageStage from "./ImageStage";
 import { CalibrateButton, CalibrationField, ClearButton, MeasureToggle } from "./MeasureTools";
 import { DeclinationInput, ProtractorToggle } from "./Protractor";
+import ScaleTool from "./ScaleTool";
 import StepSlider from "./StepSlider";
 
 // Zoom e brilho para foto e PDF. Mapas grandes em PDF precisam de bastante zoom.
@@ -53,6 +54,8 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
   const [protractorOn, setProtractorOn] = useState(false);
   const [protractor, setProtractor] = useState(null);    // { surface, pivot, cursor, locked }
   const [declination, setDeclination] = useState("");    // texto digitado: desvio magnético em graus, com sinal
+  const [mapType, setMapType] = useState(null);          // escala: "aviation", "sea" ou "land" (null: sem tipo)
+  const [scaleText, setScaleText] = useState("");        // escala digitada, p. ex. "1:1000000"
 
   // Carrega a imagem (decodifica os formatos que o navegador não mostra).
   useEffect(() => {
@@ -338,6 +341,8 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
             />
           )}
           {measureOn && (lines.length > 0 || draft) && <ClearButton onClick={clearAll} />}
+          <span className="view-tools__sep" aria-hidden="true" />
+          <ScaleTool type={mapType} onType={setMapType} text={scaleText} onText={setScaleText} />
           <span className="view-tools__sep" aria-hidden="true" />
           <StepSlider
             label={t("preview.brightness")}

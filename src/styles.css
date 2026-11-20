@@ -238,6 +238,22 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .declination__input:focus-visible { outline: none; }
 .declination__input[aria-invalid="true"] { color: var(--danger); }
 .declination__unit { color: var(--muted); font-size: var(--fs-sm); }
+/* Escala do mapa: tipo (avião, náutico, terrestre), escala digitada e o resultado de 1 cm */
+.scale-tool { flex: none; display: inline-flex; align-items: center; gap: var(--s-1); }
+.scale-tool__types { display: inline-flex; align-items: center; gap: 2px; }
+.scale-tool__input {
+  width: 116px; height: 30px; padding: 0 var(--s-2); border: 0; border-radius: 999px;
+  background: var(--line-strong); color: var(--text); font-size: var(--fs-sm); font-variant-numeric: tabular-nums;
+  transition: box-shadow var(--dur-fast);
+}
+.scale-tool__input::placeholder { color: var(--muted); }
+.scale-tool__input:focus-visible { outline: none; box-shadow: inset 0 0 0 1px var(--accent); }
+.scale-tool__input[aria-invalid="true"] { color: var(--danger); }
+.scale-tool__readout {
+  display: inline-flex; align-items: baseline; gap: var(--s-2); padding: 0 var(--s-2);
+  color: var(--text); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.scale-tool__alt { color: var(--muted); font-size: var(--fs-xs); }
 /* Botão só com ícone, do mesmo tamanho dos outros controles da barra */
 .tool-toggle {
   flex: none; display: grid; place-items: center; width: 30px; height: 30px; padding: 0;

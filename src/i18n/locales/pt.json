@@ -29,6 +29,17 @@
     "calibrateLabel": "Tamanho real (cm)",
     "apply": "Aplicar"
   },
+  "scale": {
+    "group": "Escala do mapa",
+    "type": "Tipo de mapa",
+    "aviation": "Aviação",
+    "sea": "Aquático",
+    "land": "Terrestre",
+    "label": "Escala do mapa",
+    "title": "Escala do mapa, por exemplo 1:1000000",
+    "equals": "1 cm = {{value}}",
+    "empty": "Informe a escala"
+  },
   "protractor": {
     "toggle": "Transferidor",
     "title": "Transferidor: clique para pôr, mova para apontar, clique de novo para fixar o ângulo",
