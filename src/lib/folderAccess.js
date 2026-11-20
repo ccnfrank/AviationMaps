@@ -3,6 +3,7 @@
 //   objetos File com `webkitRelativePath`, então o resto do app não percebe a diferença.
 // - Chromium: File System Access API (diálogo nativo de pasta).
 // - Os demais: <input webkitdirectory> (ver App.jsx) e arrastar a pasta para a janela.
+import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { readDir, readFile } from "@tauri-apps/plugin-fs";
 import { getPreviewKind } from "./previewKind";
@@ -21,6 +22,12 @@ export async function pickDirectory() {
     return path ?? null;
   }
   return window.showDirectoryPicker({ mode: "read" });
+}
+
+// Só no app Tauri: libera de novo, no escopo de leitura, uma pasta lembrada de outra execução.
+// Ver allow_folder em src-tauri/src/lib.rs.
+export async function allowFolder(path) {
+  await invoke("allow_folder", { path });
 }
 
 // Lê a pasta inteira e devolve Files com `webkitRelativePath` no mesmo formato do

@@ -38,15 +38,20 @@ export default function MeasureLayer({ surface, viewW, viewH, enabled, lines, dr
   };
 
   // Trechos já confirmados (com texto) e, para a medição em andamento, o trecho ao vivo.
+  // `format` devolve null quando a superfície não tem escala: então o trecho fica sem rótulo.
   const labelsOf = (points, key, live = false) => {
     const segs = segmentsOf(points);
-    return segs.map((s, i) => (
-      <Label key={`${key}-${i}`} x={(s.x1 + s.x2) / 2} y={(s.y1 + s.y2) / 2} viewW={viewW} viewH={viewH} text={format(s.px)} live={live} />
-    ));
+    return segs.map((s, i) => {
+      const text = format(s.px);
+      return text == null ? null : (
+        <Label key={`${key}-${i}`} x={(s.x1 + s.x2) / 2} y={(s.y1 + s.y2) / 2} viewW={viewW} viewH={viewH} text={text} live={live} />
+      );
+    });
   };
   // Trecho ao vivo só aparece com comprimento real: logo após um clique ele tem zero de tamanho.
   const liveSeg = live && live.cursor ? segmentsOf([live.points[live.points.length - 1], live.cursor])[0] : null;
   const liveSegment = liveSeg && liveSeg.px >= 0.5 ? liveSeg : null;
+  const liveText = liveSegment ? format(liveSegment.px) : null;
 
   return (
     <>
@@ -78,15 +83,16 @@ export default function MeasureLayer({ surface, viewW, viewH, enabled, lines, dr
             cursor={angle.cursor}
             locked={angle.locked}
             text={angle.text}
+            declination={angle.declination}
           />
         )}
-        {liveSegment && (
+        {liveSegment && liveText != null && (
           <Label
             x={(liveSegment.x1 + liveSegment.x2) / 2}
             y={(liveSegment.y1 + liveSegment.y2) / 2}
             viewW={viewW}
             viewH={viewH}
-            text={format(liveSegment.px)}
+            text={liveText}
             live
           />
         )}

@@ -20,30 +20,21 @@
     "brightnessReset": "Restaurar brilho"
   },
   "measure": {
-    "region": "Ferramentas de medição",
     "toggle": "Medir",
-    "size": "Dimensões",
-    "clear": "Limpar",
+    "title": "Medir em cm: clique para marcar pontos, Esc ou clique direito conclui",
+    "clear": "Limpar medições",
     "calibrate": "Calibrar escala",
-    "calibrateHint": "Desenhe uma linha sobre algo cujo tamanho real você conhece.",
+    "calibrateHint": "Calibrar escala: desenhe uma linha sobre algo cujo tamanho real você conhece",
     "calibrateLine": "Linha de {{px}} px. Tamanho real:",
     "calibrateLabel": "Tamanho real (cm)",
-    "apply": "Aplicar",
-    "scalePdf": "Escala exata: 72 pt = 2,54 cm",
-    "scaleCalibrated": "Escala calibrada",
-    "scaleDpi": "Escala pelo arquivo: {{dpi}} dpi",
-    "scaleNone": "O arquivo não tem resolução. Calibre para obter cm.",
-    "horizontal": "Horizontal",
-    "vertical": "Vertical",
-    "empty": "Clique sobre o arquivo para medir.",
-    "unit": "Unidade",
-    "cmUnavailable": "Calibre a escala para usar cm",
-    "finish": "Concluir",
-    "drawing": "Clique para marcar pontos · Esc ou clique direito conclui"
+    "apply": "Aplicar"
   },
   "protractor": {
     "toggle": "Transferidor",
-    "title": "Transferidor: clique para pôr, mova para apontar, clique de novo para fixar o ângulo"
+    "title": "Transferidor: clique para pôr, mova para apontar, clique de novo para fixar o ângulo",
+    "declination": "Desvio magnético em graus",
+    "declinationPlaceholder": "Desvio",
+    "declinationTitle": "Desvio magnético (°), positivo ou negativo: a segunda agulha aponta para o ângulo + desvio"
   },
   "pdf": {
     "error": "Não foi possível abrir este PDF.",

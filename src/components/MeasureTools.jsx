@@ -1,0 +1,82 @@
+import { useState } from "react";
+import { Ruler, Trash2, Crosshair, Check, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
+
+// Botão de ícone que liga a medição, em cm. Mesmo jeito do botão do transferidor, na barra de ferramentas.
+export function MeasureToggle({ enabled, onToggle }) {
+  const { t } = useTranslation();
+  return (
+    <button
+      type="button"
+      className="tool-toggle"
+      aria-pressed={enabled}
+      onClick={onToggle}
+      aria-label={t("measure.toggle")}
+      title={t("measure.title")}
+    >
+      <Ruler strokeWidth={1.8} aria-hidden="true" />
+    </button>
+  );
+}
+
+// Calibra a escala de uma imagem sem resolução gravada: o próximo traço desenhado é a referência.
+// Fica ativo enquanto espera o traço; clicar de novo desliga.
+export function CalibrateButton({ active, onToggle }) {
+  const { t } = useTranslation();
+  return (
+    <button
+      type="button"
+      className="tool-toggle"
+      aria-pressed={active}
+      onClick={onToggle}
+      aria-label={t("measure.calibrate")}
+      title={t("measure.calibrateHint")}
+    >
+      <Crosshair strokeWidth={1.8} aria-hidden="true" />
+    </button>
+  );
+}
+
+// Campo do tamanho real do traço de calibração, na própria barra (sem janela).
+export function CalibrationField({ px, onApply, onCancel }) {
+  const { t } = useTranslation();
+  const [known, setKnown] = useState("");
+  const parsed = Number(String(known).replace(",", "."));
+  const apply = (e) => {
+    e.preventDefault();
+    if (!(parsed > 0)) return;
+    onApply(parsed);
+    setKnown("");
+  };
+  return (
+    <form className="measure-calibrate" onSubmit={apply}>
+      <span className="measure-calibrate__px">{t("measure.calibrateLine", { px: Math.round(px) })}</span>
+      <input
+        type="text"
+        inputMode="decimal"
+        className="measure-calibrate__input"
+        aria-label={t("measure.calibrateLabel")}
+        placeholder={t("measure.calibrateLabel")}
+        value={known}
+        onChange={(e) => setKnown(e.target.value)}
+        autoFocus
+      />
+      <button type="submit" className="tool-toggle" aria-label={t("measure.apply")} disabled={!(parsed > 0)}>
+        <Check strokeWidth={2} aria-hidden="true" />
+      </button>
+      <button type="button" className="tool-toggle" aria-label={t("common.cancel")} onClick={onCancel}>
+        <X strokeWidth={2} aria-hidden="true" />
+      </button>
+    </form>
+  );
+}
+
+// Apaga todas as medições da janela (Backspace apaga só a última).
+export function ClearButton({ onClick }) {
+  const { t } = useTranslation();
+  return (
+    <button type="button" className="tool-toggle" onClick={onClick} aria-label={t("measure.clear")} title={t("measure.clear")}>
+      <Trash2 strokeWidth={1.8} aria-hidden="true" />
+    </button>
+  );
+}

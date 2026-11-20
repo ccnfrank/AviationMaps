@@ -155,3 +155,16 @@ export function angleOf(from, to) {
   const wrapped = deg < 0 ? deg + 360 : deg;
   return wrapped >= 360 ? 0 : wrapped;
 }
+
+// Desvio magnético digitado: número com sinal (positivo ou negativo), em graus. Aceita vírgula
+// decimal, como no português. Texto vazio ou inválido vira null.
+export function parseDeclination(text) {
+  const value = Number(String(text ?? "").trim().replace(",", "."));
+  return String(text ?? "").trim() !== "" && Number.isFinite(value) ? value : null;
+}
+
+// Ângulo somado ao desvio, normalizado para 0 a 360 graus.
+export function addDeclination(deg, declination) {
+  const wrapped = (((deg + declination) % 360) + 360) % 360;
+  return wrapped >= 360 ? 0 : wrapped;
+}

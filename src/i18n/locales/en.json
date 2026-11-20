@@ -20,30 +20,21 @@
     "brightnessReset": "Reset brightness"
   },
   "measure": {
-    "region": "Measurement tools",
     "toggle": "Measure",
-    "size": "Size",
-    "clear": "Clear",
+    "title": "Measure in cm: click to add points, Esc or right-click to finish",
+    "clear": "Clear measurements",
     "calibrate": "Calibrate scale",
-    "calibrateHint": "Draw a line over something whose real length you know.",
+    "calibrateHint": "Calibrate scale: draw a line over something whose real length you know",
     "calibrateLine": "Line of {{px}} px. Real length:",
     "calibrateLabel": "Real length (cm)",
-    "apply": "Apply",
-    "scalePdf": "Exact scale: 72 pt = 2.54 cm",
-    "scaleCalibrated": "Calibrated scale",
-    "scaleDpi": "Scale from the file: {{dpi}} dpi",
-    "scaleNone": "No resolution in the file. Calibrate to get cm.",
-    "horizontal": "Horizontal",
-    "vertical": "Vertical",
-    "empty": "Click on the file to start measuring.",
-    "unit": "Unit",
-    "cmUnavailable": "Calibrate the scale to use cm",
-    "finish": "Finish",
-    "drawing": "Click to add points · Esc or right-click to finish"
+    "apply": "Apply"
   },
   "protractor": {
     "toggle": "Protractor",
-    "title": "Protractor: click to place it, move to aim, click again to lock the angle"
+    "title": "Protractor: click to place it, move to aim, click again to lock the angle",
+    "declination": "Magnetic declination in degrees",
+    "declinationPlaceholder": "Declination",
+    "declinationTitle": "Magnetic declination (°), positive or negative: the second needle points to the angle + declination"
   },
   "pdf": {
     "error": "Could not open this PDF.",

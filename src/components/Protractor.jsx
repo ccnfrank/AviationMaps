@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { angleOf } from "../lib/measure";
+import { addDeclination, angleOf, parseDeclination } from "../lib/measure";
 
 // Transferidor de aviação, sem fundo: anel com marcas de 1° em 1°, médias a cada 5° e longas a
 // cada 10°. Os números ficam por dentro do anel, escritos ao longo da borda; N, E, S e W e as
@@ -47,11 +47,13 @@ function RingText({ deg, r, className, children }) {
 
 // `center` é o centro fixo (pivot) ou, antes do primeiro clique, o próprio ponteiro.
 // `cursor` e `pivot` juntos dão a seta; `text` é o ângulo mostrado na ponta.
-export default function Protractor({ viewW, viewH, pivot, cursor, locked, text }) {
+// `declination` (graus, com sinal) põe uma segunda agulha em ângulo + desvio magnético.
+export default function Protractor({ viewW, viewH, pivot, cursor, locked, text, declination }) {
   const center = pivot ?? cursor;
   if (!center) return null;
   const deg = pivot && cursor ? angleOf(pivot, cursor) : null;
   const tip = deg != null ? polar(deg, 1) : null;
+  const declinationDeg = deg != null && declination != null ? addDeclination(deg, declination) : null;
 
   return (
     <div
@@ -94,6 +96,13 @@ export default function Protractor({ viewW, viewH, pivot, cursor, locked, text }
             <path d={`M${R} 0 L${R - 9} -4.5 L${R - 9} 4.5 Z`} />
           </g>
         )}
+        {declinationDeg != null && (
+          // Segunda agulha, do desvio magnético: mesma forma, em outra cor, no ângulo + desvio.
+          <g transform={`rotate(${declinationDeg - 90})`} className={`protractor__arrow protractor__arrow--declination${locked ? "" : " is-live"}`}>
+            <line x1={0} y1={0} x2={R - 8} y2={0} />
+            <path d={`M${R} 0 L${R - 9} -4.5 L${R - 9} 4.5 Z`} />
+          </g>
+        )}
         <circle className="protractor__pivot" r={4} />
         <circle className="protractor__pivot-dot" r={1.3} />
       </svg>
@@ -106,6 +115,27 @@ export default function Protractor({ viewW, viewH, pivot, cursor, locked, text }
         </span>
       )}
     </div>
+  );
+}
+
+// Campo do desvio magnético, logo à direita do botão do transferidor. Aceita número com sinal.
+export function DeclinationInput({ value, onChange }) {
+  const { t } = useTranslation();
+  const invalid = value.trim() !== "" && parseDeclination(value) == null;
+  return (
+    <label className="declination" title={t("protractor.declinationTitle")}>
+      <input
+        type="text"
+        inputMode="decimal"
+        className="declination__input"
+        aria-label={t("protractor.declination")}
+        aria-invalid={invalid || undefined}
+        placeholder={t("protractor.declinationPlaceholder")}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <span className="declination__unit" aria-hidden="true">°</span>
+    </label>
   );
 }
 

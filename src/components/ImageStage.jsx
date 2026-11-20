@@ -4,7 +4,7 @@ import MeasureLayer from "./MeasureLayer";
 // Imagem com tamanho exato: encaixa na área (sem aumentar), e com zoom ocupa zoom × a largura da área.
 // Com o tamanho conhecido, a camada de medição cobre a imagem com precisão, em qualquer zoom.
 // `brightness` em porcentagem (100 = original). Só a imagem recebe o filtro; a medição fica por cima, intacta.
-export default function ImageStage({ src, alt, zoom, brightness = 100, measure, onNatural, onError }) {
+export default function ImageStage({ src, alt, zoom, brightness = 100, measure, onError }) {
   const boxRef = useRef(null);
   const [nat, setNat] = useState(null);
   const [area, setArea] = useState({ w: 0, h: 0 });
@@ -50,7 +50,6 @@ export default function ImageStage({ src, alt, zoom, brightness = 100, measure, 
           const img = e.currentTarget;
           const size = { w: img.naturalWidth, h: img.naturalHeight };
           setNat(size);
-          onNatural?.(size);
         }}
         onError={onError}
       />

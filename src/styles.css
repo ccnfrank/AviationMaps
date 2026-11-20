@@ -223,6 +223,21 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 }
 .view-tools::-webkit-scrollbar { display: none; }
 .view-tools__sep { flex: none; width: 1px; height: 18px; background: var(--line); }
+/* Campo do desvio magnético: mesma altura dos botões da barra, com o sufixo ° */
+.declination {
+  flex: none; display: inline-flex; align-items: center; gap: 2px; height: 30px; padding: 0 var(--s-2);
+  border-radius: 999px; background: var(--line-strong); cursor: text; transition: background var(--dur-fast), box-shadow var(--dur-fast);
+}
+.declination:hover { background: #52525b; }
+.declination:focus-within { box-shadow: inset 0 0 0 1px var(--accent); }
+.declination__input {
+  width: 64px; height: 100%; padding: 0; border: 0; background: transparent; color: var(--text);
+  font-size: var(--fs-sm); font-variant-numeric: tabular-nums; text-align: right;
+}
+.declination__input::placeholder { color: var(--muted); }
+.declination__input:focus-visible { outline: none; }
+.declination__input[aria-invalid="true"] { color: var(--danger); }
+.declination__unit { color: var(--muted); font-size: var(--fs-sm); }
 /* Botão só com ícone, do mesmo tamanho dos outros controles da barra */
 .tool-toggle {
   flex: none; display: grid; place-items: center; width: 30px; height: 30px; padding: 0;
@@ -331,34 +346,18 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
   background: var(--accent); color: var(--on-accent); box-shadow: var(--shadow-1);
 }
 .measure-layer__label.is-live { background: var(--surface); color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow-1); }
+/* Calibração: o tamanho real do traço de referência, digitado na própria barra de ferramentas */
+.measure-calibrate { flex: none; display: inline-flex; align-items: center; gap: 2px; }
+.measure-calibrate__px { padding: 0 var(--s-1); color: var(--muted); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.measure-calibrate__input {
+  width: 118px; height: 30px; padding: 0 var(--s-2); border: 1px solid var(--accent); border-radius: 999px;
+  background: var(--raised); color: var(--text); font-size: var(--fs-sm); font-variant-numeric: tabular-nums;
+}
+.measure-calibrate__input::placeholder { color: var(--muted); }
+.measure-calibrate__input:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
 
-/* Unidade: px ou cm, uma por vez */
-.measure-unit { display: inline-flex; padding: 2px; gap: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
-.measure-unit button { height: 24px; min-width: 34px; padding: 0 var(--s-2); border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: var(--fs-xs); font-weight: 600; font-variant-numeric: tabular-nums; }
-.measure-unit button:hover:not(:disabled) { color: var(--text); }
-.measure-unit button.is-active { background: var(--accent); color: var(--on-accent); }
-.measure-unit button:disabled { opacity: .4; }
 
-/* Interruptor da medição: dentro da cápsula de zoom, sem mudar a altura da janela */
 .preview__stage { position: relative; }
-.measure-switch {
-  display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 var(--s-2);
-  border: 0; border-radius: 999px; background: transparent; color: var(--muted);
-  font-size: var(--fs-xs); font-weight: 600; transition: color var(--dur-fast), background var(--dur-fast);
-}
-.measure-switch svg { width: 15px; height: 15px; }
-.measure-switch:hover { color: var(--text); background: var(--line); }
-.measure-switch[aria-checked="true"] { color: var(--accent); background: var(--accent-soft); }
-.measure-switch__track {
-  position: relative; display: inline-block; width: 26px; height: 15px; border-radius: 999px;
-  background: var(--line-strong); transition: background var(--dur-base) var(--ease-out);
-}
-.measure-switch__knob {
-  position: absolute; top: 2px; left: 2px; width: 11px; height: 11px; border-radius: 50%;
-  background: var(--ink); transition: transform var(--dur-base) var(--ease-out);
-}
-.measure-switch[aria-checked="true"] .measure-switch__track { background: var(--accent); }
-.measure-switch[aria-checked="true"] .measure-switch__knob { transform: translateX(11px); background: var(--on-accent); }
 
 /* Transferidor: sem fundo. Só traços, com contorno escuro para aparecer sobre qualquer imagem. */
 .protractor { position: absolute; width: 0; height: 0; pointer-events: none; }
@@ -379,47 +378,9 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .protractor__arrow path { stroke: none; }
 .protractor__arrow.is-live { opacity: .9; stroke-dasharray: 5 4; }
 .protractor__arrow.is-live path { stroke-dasharray: none; }
+/* Agulha do desvio magnético: azul, para não se confundir com a agulha principal âmbar */
+.protractor__arrow--declination { fill: var(--c-audio); stroke: var(--c-audio); }
 
-/* Painel da medição: flutua sobre a parte de baixo do palco, sem empurrar a imagem */
-.measure-bar {
-  position: absolute; left: 50%; bottom: var(--s-4); z-index: 5;
-  transform: translateX(-50%); width: min(720px, calc(100% - 32px));
-  animation: zoom-in var(--dur-base) var(--ease-out) both;
-}
-.measure-bar__body {
-  display: flex; flex-direction: column; align-items: center; gap: var(--s-2);
-  padding: var(--s-3) var(--s-4); border: 1px solid var(--line); border-radius: var(--r-lg);
-  background: rgba(var(--surface-rgb), .92); box-shadow: var(--shadow-2);
-  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-}
-.measure-bar__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-2) var(--s-3); width: 100%; }
-.measure-chip { display: inline-flex; align-items: center; gap: var(--s-2); }
-.measure-chip__label { font-size: var(--fs-xs); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-.measure-chip__value { font-size: var(--fs-sm); font-weight: 600; font-variant-numeric: tabular-nums; }
-.measure-bar__note { font-size: var(--fs-xs); color: var(--muted); }
-.measure-bar__actions { display: inline-flex; gap: var(--s-2); margin-left: auto; }
-.measure-bar__btn {
-  display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 var(--s-3);
-  border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--text); font-size: var(--fs-xs);
-  transition: border-color var(--dur-fast), opacity var(--dur-fast);
-}
-.measure-bar__btn svg { width: 14px; height: 14px; }
-.measure-bar__btn:hover:not(:disabled) { border-color: var(--line-strong); }
-.measure-bar__btn:disabled { opacity: .4; }
-.measure-bar__btn--primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
-.measure-bar__hint { margin: 0; font-size: var(--fs-xs); color: var(--muted); text-align: center; }
-.measure-bar__calibrate { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--s-2); width: 100%; }
-.measure-bar__calibrate-text { font-size: var(--fs-sm); color: var(--muted); }
-.measure-bar__input {
-  width: 130px; height: 30px; padding: 0 var(--s-3); border: 1px solid var(--accent); border-radius: var(--r-sm);
-  background: var(--canvas); color: var(--text); font-size: var(--fs-sm); font-variant-numeric: tabular-nums;
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-.measure-bar__input:focus-visible { outline: none; }
-.measure-result { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.measure-result__main { font-size: var(--fs-md); font-weight: 600; font-variant-numeric: tabular-nums; color: var(--accent); }
-.measure-result.is-live .measure-result__main { color: var(--text); }
-.measure-result__detail { font-size: var(--fs-xs); color: var(--muted); font-variant-numeric: tabular-nums; }
 
 /* ---------- Página inicial: busca, carregar pasta e mapas abaixo do campo (igual ao Media Manager) ---------- */
 /* ---------- Dock: busca, carregar e recentes ---------- */

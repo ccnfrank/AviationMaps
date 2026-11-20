@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   PDF_CM_PER_UNIT, lineMetrics, cmPerUnitFromDpi, cmPerUnitFromCalibration,
   formatNumber, parsePngDpi, parseJpegDpi, readImageDpi, segmentsOf, chainLength, angleOf,
+  parseDeclination, addDeclination,
 } from "./measure";
 
 describe("transferidor", () => {
@@ -17,6 +18,26 @@ describe("transferidor", () => {
     const deg = angleOf(O, { x: 20, y: 10 - 1e-12 });
     expect(deg).toBeGreaterThanOrEqual(0);
     expect(deg).toBeLessThan(360);
+  });
+
+  it("desvio magnético: aceita sinal, vírgula decimal e rejeita vazio ou inválido", () => {
+    expect(parseDeclination("-12")).toBe(-12);
+    expect(parseDeclination("+3,5")).toBe(3.5);
+    expect(parseDeclination(" 0 ")).toBe(0);
+    expect(parseDeclination("")).toBeNull();
+    expect(parseDeclination("   ")).toBeNull();
+    expect(parseDeclination("-")).toBeNull();
+    expect(parseDeclination("abc")).toBeNull();
+    expect(parseDeclination(undefined)).toBeNull();
+  });
+
+  it("agulha do desvio = ângulo + desvio, sempre entre 0 e 360", () => {
+    expect(addDeclination(90, 15)).toBeCloseTo(105);
+    expect(addDeclination(90, -15)).toBeCloseTo(75);
+    expect(addDeclination(10, -30)).toBeCloseTo(340);
+    expect(addDeclination(350, 20)).toBeCloseTo(10);
+    expect(addDeclination(120, 0)).toBeCloseTo(120);
+    expect(addDeclination(0, -360)).toBeCloseTo(0);
   });
 });
 

@@ -7,7 +7,10 @@ import PixelButton from "./components/PixelButton";
 import Preview from "./components/Preview";
 import Search from "./components/Search";
 import LanguageSwitch from "./components/LanguageSwitch";
-import { canPickDirectory, pickDirectory, readDirectory, readDroppedDirectory } from "./lib/folderAccess";
+import {
+  allowFolder, canPickDirectory, isTauri, pickDirectory, readDirectory, readDroppedDirectory,
+} from "./lib/folderAccess";
+import { forgetLastFolder, readLastFolder, saveLastFolder } from "./lib/lastFolder";
 import { ROOT_NAME, groupFiles } from "./lib/groupFiles";
 import { getPreviewKind } from "./lib/previewKind";
 
@@ -63,6 +66,8 @@ export default function App() {
     if (!handle) return; // diálogo nativo fechado sem escolher
     try {
       showFiles(await readDirectory(handle));
+      // Só o caminho nativo (Tauri) tem um caminho para lembrar; no navegador a pasta não fica guardada.
+      if (typeof handle === "string") saveLastFolder(handle);
     } catch (err) {
       reportReadError(err);
     }
@@ -72,6 +77,29 @@ export default function App() {
     setFolders(null);
     setPreviewEntry(null);
   };
+
+  // Ao abrir o app (Tauri), reabre a última pasta carregada. Se ela sumiu ou não pode ser lida,
+  // esquece o caminho e avisa.
+  useEffect(() => {
+    const last = isTauri() ? readLastFolder() : null;
+    if (!last) return undefined;
+    let alive = true;
+    (async () => {
+      try {
+        await allowFolder(last);
+        const files = await readDirectory(last);
+        if (alive) showFiles(files);
+      } catch (err) {
+        forgetLastFolder();
+        if (alive) reportReadError(err);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+    // Roda só na abertura: showFiles e reportReadError só trocam estado e mostram aviso.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Arrastar uma pasta para a janela: mostra a área de soltar e abre a pasta ao soltar.
   useEffect(() => {

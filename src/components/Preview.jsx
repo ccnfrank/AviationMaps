@@ -6,13 +6,14 @@ import { getPreviewKind } from "../lib/previewKind";
 import { getImageBlob } from "../lib/media/decodeImage";
 import { toDisplayUrl } from "../lib/displayUrl";
 import {
-  PDF_CM_PER_UNIT, angleOf, chainLength, cmPerUnitFromCalibration, cmPerUnitFromDpi, formatNumber, readImageDpi,
+  PDF_CM_PER_UNIT, angleOf, chainLength, cmPerUnitFromCalibration, cmPerUnitFromDpi, formatNumber, parseDeclination,
+  readImageDpi,
 } from "../lib/measure";
 import PdfPages from "./PdfPages";
 import PanView from "./PanView";
 import ImageStage from "./ImageStage";
-import MeasureBar, { MeasureSwitch } from "./MeasureBar";
-import { ProtractorToggle } from "./Protractor";
+import { CalibrateButton, CalibrationField, ClearButton, MeasureToggle } from "./MeasureTools";
+import { DeclinationInput, ProtractorToggle } from "./Protractor";
 import StepSlider from "./StepSlider";
 
 // Zoom e brilho para foto e PDF. Mapas grandes em PDF precisam de bastante zoom.
@@ -24,7 +25,7 @@ const ZOOM_STEP = 0.5;
 const BRIGHTNESS_MIN = 50;
 const BRIGHTNESS_MAX = 150;
 const BRIGHTNESS_DEFAULT = 100;
-const BRIGHTNESS_STEP = 10;
+const BRIGHTNESS_STEP = 5; // de 5 em 5 os botões passam por 75%, e o slider anda de 1 em 1
 
 // Janela de visualização de um arquivo. Quem usa deve dar uma `key` por arquivo, assim o estado
 // (zoom, brilho, medições) começa limpo a cada troca. `entry` é { name, size, file }.
@@ -37,23 +38,21 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
   const [brightness, setBrightness] = useState(BRIGHTNESS_DEFAULT);
   const [error, setError] = useState(null);
 
-  // Medição (imagem e PDF). A escala vem do arquivo (DPI), de uma calibração do usuário, ou é
-  // exata no PDF. Cada medição é uma cadeia de cliques, em unidades da superfície (px da imagem,
-  // pt no PDF). Mostra-se uma unidade só: cm quando há escala, senão px.
+  // Medição (imagem e PDF), sempre em cm. A escala vem do arquivo (DPI), de uma calibração do
+  // usuário, ou é exata no PDF. Sem escala, a medição é desenhada mas não ganha texto.
+  // Cada medição é uma cadeia de cliques, em unidades da superfície (px da imagem, pt no PDF).
   const [measureOn, setMeasureOn] = useState(false);
   const [lines, setLines] = useState([]);          // medições concluídas: { id, surface, points }
   const [draft, setDraft] = useState(null);        // medição em andamento: { surface, points, cursor }
-  const [unit, setUnit] = useState("cm");          // preferência; sem escala, cai para px
   const [dpi, setDpi] = useState(null);
   const [calib, setCalib] = useState(null);        // { cmPerUnit } da calibração da imagem
   const [calibrating, setCalibrating] = useState(false); // a próxima medição calibra a escala
   const [calibLine, setCalibLine] = useState(null);      // medição de calibração, esperando o tamanho real
-  const [imageSize, setImageSize] = useState(null);      // px naturais da imagem
-  const [pageSize, setPageSize] = useState(null);        // pt da primeira página do PDF
   // Transferidor: modo próprio, exclusivo com a medição. O centro (pivot) vem do primeiro clique,
   // a seta segue o ponteiro, e o segundo clique fixa o ângulo.
   const [protractorOn, setProtractorOn] = useState(false);
   const [protractor, setProtractor] = useState(null);    // { surface, pivot, cursor, locked }
+  const [declination, setDeclination] = useState("");    // texto digitado: desvio magnético em graus, com sinal
 
   // Carrega a imagem (decodifica os formatos que o navegador não mostra).
   useEffect(() => {
@@ -103,45 +102,12 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
   }, [entry, kind]);
 
   const measurable = kind !== "unsupported" && !error;
-  const surfaceKey = kind === "image" ? "img" : "pdf:0";
   const imageCm = calib?.cmPerUnit ?? cmPerUnitFromDpi(dpi);
   const unitCm = (surface) => (surface === "img" ? imageCm : PDF_CM_PER_UNIT);
-  // cm só quando a superfície tem escala; caso contrário a medição fica em px, sem misturar.
-  const unitFor = (surface) => (unit === "cm" && unitCm(surface) != null ? "cm" : "px");
-  const formatFor = (surface) => (px) => (unitFor(surface) === "cm"
-    ? `${formatNumber(px * unitCm(surface), 2, language)} cm`
-    : `${formatNumber(px, 0, language)} px`);
-  const formatPair = (w, h, surface) => {
-    const f = (v) => formatFor(surface)(v).replace(/ (cm|px)$/, "");
-    return `${f(w)} × ${f(h)} ${unitFor(surface)}`;
-  };
-  const size = kind === "image" ? imageSize : pageSize;
-  const sizeText = size ? formatPair(size.w, size.h, surfaceKey) : null;
-  const scaleNote = kind === "pdf"
-    ? t("measure.scalePdf")
-    : calib
-      ? t("measure.scaleCalibrated")
-      : dpi
-        ? t("measure.scaleDpi", { dpi: Math.round(dpi) })
-        : t("measure.scaleNone");
-
-  // Medição em andamento: confirmados + o trecho ao vivo até o ponteiro.
-  const liveLength = (d) => {
-    if (!d?.cursor || !d.points.length) return 0;
-    const last = d.points[d.points.length - 1];
-    return Math.hypot(d.cursor.x - last.x, d.cursor.y - last.y);
-  };
-  const draftText = draft ? formatFor(draft.surface)(chainLength(draft.points) + liveLength(draft)) : null;
-
-  const lastLine = lines[lines.length - 1];
-  const lastText = lastLine ? formatFor(lastLine.surface)(chainLength(lastLine.points)) : null;
-  const lastDetail = lastLine && lastLine.points.length === 2
-    ? (() => {
-      const [a, b] = lastLine.points;
-      const f = formatFor(lastLine.surface);
-      return `${t("measure.horizontal")} ${f(Math.abs(b.x - a.x))} · ${t("measure.vertical")} ${f(Math.abs(b.y - a.y))}`;
-    })()
-    : null;
+  // Texto em cm; null quando a superfície ainda não tem escala (então o rótulo não aparece).
+  const formatFor = (surface) => (px) => (unitCm(surface) == null
+    ? null
+    : `${formatNumber(px * unitCm(surface), 2, language)} cm`);
 
   // Pontos chegam pela camada de medição (um por clique). Cliques repetidos no mesmo lugar são ignorados.
   const addPoint = (surface, p) => {
@@ -269,6 +235,7 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
       pivot: protractor.pivot,
       cursor: protractor.cursor,
       locked: protractor.locked,
+      declination: parseDeclination(declination),
       text: protractor.pivot && protractor.cursor
         ? `${formatNumber(angleOf(protractor.pivot, protractor.cursor), 1, language)}°`
         : null,
@@ -328,7 +295,6 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
         zoom={zoom}
         brightness={brightness}
         measure={measureProps}
-        onPageSize={setPageSize}
       />
     );
   } else if (!url) {
@@ -343,7 +309,6 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
           zoom={zoom}
           brightness={brightness}
           measure={measureProps}
-          onNatural={setImageSize}
           onError={fail(t("preview.browserFormat"))}
         />
       </PanView>
@@ -354,35 +319,25 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
     <div className="preview">
       <div className="preview__stage">
         {body}
-        {measurable && (
-          <MeasureBar
-            enabled={measureOn}
-            canCalibrate={kind === "image"}
-            canCm={unitCm(surfaceKey) != null}
-            unit={unitFor(surfaceKey)}
-            onUnitChange={setUnit}
-            sizeText={sizeText}
-            scaleNote={scaleNote}
-            calibrating={calibrating}
-            calibrationPx={calibLine ? chainLength(calibLine.points) : null}
-            onCalibrateStart={() => setCalibrating(true)}
-            onCalibrateApply={applyCalibration}
-            onCalibrateCancel={cancelCalibration}
-            draftText={draftText}
-            hasDraft={Boolean(draft)}
-            lastText={lastText}
-            lastDetail={lastDetail}
-            hasItems={lines.length > 0}
-            onClear={clearAll}
-            onFinish={finishDraft}
-          />
-        )}
       </div>
       {measurable && (
         // Todas as ferramentas da visualização numa linha só: transferidor, medir, brilho e zoom.
+        // As ferramentas da medição (calibrar, apagar) aparecem ao lado do botão medir, só quando ligada.
         <div className="view-tools" role="toolbar" aria-label={t("preview.tools")}>
           <ProtractorToggle enabled={protractorOn} onToggle={toggleProtractor} />
-          <MeasureSwitch enabled={measureOn} onToggle={toggleMeasure} />
+          <DeclinationInput value={declination} onChange={setDeclination} />
+          <MeasureToggle enabled={measureOn} onToggle={toggleMeasure} />
+          {measureOn && kind === "image" && !calibLine && (
+            <CalibrateButton active={calibrating} onToggle={() => setCalibrating((on) => !on)} />
+          )}
+          {measureOn && calibLine && (
+            <CalibrationField
+              px={chainLength(calibLine.points)}
+              onApply={applyCalibration}
+              onCancel={cancelCalibration}
+            />
+          )}
+          {measureOn && (lines.length > 0 || draft) && <ClearButton onClick={clearAll} />}
           <span className="view-tools__sep" aria-hidden="true" />
           <StepSlider
             label={t("preview.brightness")}
