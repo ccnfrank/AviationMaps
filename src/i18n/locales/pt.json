@@ -1,0 +1,92 @@
+{
+  "preview": {
+    "dialog": "Pré-visualização de {{name}}",
+    "readError": "Não foi possível ler este arquivo.",
+    "unsupported": "Não há pré-visualização para este tipo de arquivo.",
+    "loading": "Carregando…",
+    "browserFormat": "O navegador não consegue mostrar este formato.",
+    "decodeImage": "Não foi possível decodificar esta imagem.",
+    "zoom": "Zoom",
+    "switchFile": "Trocar de arquivo",
+    "previous": "Anterior",
+    "next": "Próximo",
+    "zoomOut": "Diminuir zoom",
+    "zoomIn": "Aumentar zoom",
+    "zoomReset": "Restaurar zoom",
+    "tools": "Ferramentas de visualização",
+    "brightness": "Brilho",
+    "brightnessDown": "Diminuir brilho",
+    "brightnessUp": "Aumentar brilho",
+    "brightnessReset": "Restaurar brilho"
+  },
+  "measure": {
+    "region": "Ferramentas de medição",
+    "toggle": "Medir",
+    "size": "Dimensões",
+    "clear": "Limpar",
+    "calibrate": "Calibrar escala",
+    "calibrateHint": "Desenhe uma linha sobre algo cujo tamanho real você conhece.",
+    "calibrateLine": "Linha de {{px}} px. Tamanho real:",
+    "calibrateLabel": "Tamanho real (cm)",
+    "apply": "Aplicar",
+    "scalePdf": "Escala exata: 72 pt = 2,54 cm",
+    "scaleCalibrated": "Escala calibrada",
+    "scaleDpi": "Escala pelo arquivo: {{dpi}} dpi",
+    "scaleNone": "O arquivo não tem resolução. Calibre para obter cm.",
+    "horizontal": "Horizontal",
+    "vertical": "Vertical",
+    "empty": "Clique sobre o arquivo para medir.",
+    "unit": "Unidade",
+    "cmUnavailable": "Calibre a escala para usar cm",
+    "finish": "Concluir",
+    "drawing": "Clique para marcar pontos · Esc ou clique direito conclui"
+  },
+  "protractor": {
+    "toggle": "Transferidor",
+    "title": "Transferidor: clique para pôr, mova para apontar, clique de novo para fixar o ângulo"
+  },
+  "pdf": {
+    "error": "Não foi possível abrir este PDF.",
+    "first": "Mostrando as primeiras {{max}} de {{total}} páginas.",
+    "page": "{{name}}, página {{page}}"
+  },
+  "language": {
+    "label": "Idioma",
+    "en": "Inglês",
+    "pt": "Português"
+  },
+  "errors": {
+    "imageOpen": "O navegador não conseguiu abrir esta imagem.",
+    "readFolder": "Não foi possível ler esta pasta.",
+    "notFolder": "Só é possível abrir pastas. Arraste uma pasta, não um arquivo."
+  },
+  "common": {
+    "close": "Fechar",
+    "cancel": "Cancelar"
+  },
+  "app": {
+    "loadFolder": "Carregar diretório de mapas",
+    "clearFolders": "Limpar pastas",
+    "noFiles": "Nenhuma imagem ou PDF encontrado nesta pasta.",
+    "dropTitle": "Solte a pasta para abrir",
+    "dropHint": "Lida neste dispositivo. Nada é enviado."
+  },
+  "search": {
+    "label": "Buscar mapas em todas as pastas",
+    "placeholder": "Buscar mapas",
+    "noResults": "Nenhum resultado",
+    "count_one": "{{count}} resultado em todas as pastas",
+    "count_other": "{{count}} resultados em todas as pastas",
+    "showing": ", mostrando {{count}}",
+    "region": "Resultados da busca",
+    "views": "Visualização",
+    "gridView": "Visualização em grade",
+    "listView": "Visualização em lista",
+    "folders_one": "{{count}} pasta",
+    "folders_other": "{{count}} pastas",
+    "maps_one": "{{count}} mapa",
+    "maps_other": "{{count}} mapas",
+    "noFolders": "Nenhuma subpasta",
+    "back": "Voltar"
+  }
+}

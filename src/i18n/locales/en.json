@@ -1,0 +1,92 @@
+{
+  "preview": {
+    "dialog": "Preview of {{name}}",
+    "readError": "Could not read this file.",
+    "unsupported": "No preview for this file type.",
+    "loading": "Loading…",
+    "browserFormat": "The browser cannot show this format.",
+    "decodeImage": "Could not decode this image.",
+    "zoom": "Zoom",
+    "switchFile": "Switch file",
+    "previous": "Previous",
+    "next": "Next",
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "zoomReset": "Reset zoom",
+    "tools": "Viewer tools",
+    "brightness": "Brightness",
+    "brightnessDown": "Darken",
+    "brightnessUp": "Brighten",
+    "brightnessReset": "Reset brightness"
+  },
+  "measure": {
+    "region": "Measurement tools",
+    "toggle": "Measure",
+    "size": "Size",
+    "clear": "Clear",
+    "calibrate": "Calibrate scale",
+    "calibrateHint": "Draw a line over something whose real length you know.",
+    "calibrateLine": "Line of {{px}} px. Real length:",
+    "calibrateLabel": "Real length (cm)",
+    "apply": "Apply",
+    "scalePdf": "Exact scale: 72 pt = 2.54 cm",
+    "scaleCalibrated": "Calibrated scale",
+    "scaleDpi": "Scale from the file: {{dpi}} dpi",
+    "scaleNone": "No resolution in the file. Calibrate to get cm.",
+    "horizontal": "Horizontal",
+    "vertical": "Vertical",
+    "empty": "Click on the file to start measuring.",
+    "unit": "Unit",
+    "cmUnavailable": "Calibrate the scale to use cm",
+    "finish": "Finish",
+    "drawing": "Click to add points · Esc or right-click to finish"
+  },
+  "protractor": {
+    "toggle": "Protractor",
+    "title": "Protractor: click to place it, move to aim, click again to lock the angle"
+  },
+  "pdf": {
+    "error": "Could not open this PDF.",
+    "first": "Showing the first {{max}} of {{total}} pages.",
+    "page": "{{name}}, page {{page}}"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "pt": "Português"
+  },
+  "errors": {
+    "imageOpen": "The browser could not open this image.",
+    "readFolder": "This folder could not be read.",
+    "notFolder": "Only folders can be opened. Drop a folder, not a file."
+  },
+  "common": {
+    "close": "Close",
+    "cancel": "Cancel"
+  },
+  "app": {
+    "loadFolder": "Load maps directory",
+    "clearFolders": "Clear folders",
+    "noFiles": "No images or PDFs found in this folder.",
+    "dropTitle": "Drop the folder to open it",
+    "dropHint": "Read on this device. Nothing is uploaded."
+  },
+  "search": {
+    "label": "Search maps in all folders",
+    "placeholder": "Search maps",
+    "noResults": "No results",
+    "count_one": "{{count}} result in all folders",
+    "count_other": "{{count}} results in all folders",
+    "showing": ", showing {{count}}",
+    "region": "Search results",
+    "views": "View",
+    "gridView": "Grid view",
+    "listView": "List view",
+    "folders_one": "{{count}} folder",
+    "folders_other": "{{count}} folders",
+    "maps_one": "{{count}} map",
+    "maps_other": "{{count}} maps",
+    "noFolders": "No subfolders",
+    "back": "Back"
+  }
+}
