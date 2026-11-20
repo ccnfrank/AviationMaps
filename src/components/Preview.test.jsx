@@ -153,3 +153,20 @@ test("transferidor fica à esquerda do medir, e os dois se desligam ao ligar um"
   expect(measure).toHaveAttribute("aria-pressed", "true");
   expect(protractor).toHaveAttribute("aria-pressed", "false");
 });
+
+test("botão de tela cheia só aparece quando a janela oferece a opção", () => {
+  const { unmount } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  expect(screen.queryByRole("button", { name: "Full screen" })).toBeNull();
+  unmount();
+});
+
+test("tela cheia alterna o botão entre entrar e sair", () => {
+  const onToggleFullscreen = vi.fn();
+  const { rerender } = render(<Preview entry={entry("capa.png")} {...nav} onToggleFullscreen={onToggleFullscreen} />);
+  const enter = screen.getByRole("button", { name: "Full screen" });
+  fireEvent.click(enter);
+  expect(onToggleFullscreen).toHaveBeenCalledTimes(1);
+
+  rerender(<Preview entry={entry("capa.png")} {...nav} onToggleFullscreen={onToggleFullscreen} fullscreen />);
+  expect(screen.getByRole("button", { name: "Exit full screen" })).toHaveAttribute("aria-pressed", "true");
+});

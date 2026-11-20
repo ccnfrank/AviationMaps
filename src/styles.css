@@ -198,6 +198,9 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 
 /* ---------- Pré-visualização ---------- */
 .modal--preview { width: min(1100px, 100%); height: min(88vh, 820px); max-height: 88vh; }
+/* Tela cheia: a visualização toma a janela inteira, sem borda nem margem. Seletor duplo para vencer
+   a regra do celular, mais abaixo. */
+.modal.modal--full { position: fixed; inset: 0; width: auto; height: auto; max-height: none; border: 0; border-radius: 0; box-shadow: none; }
 .preview { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .preview__stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: var(--s-4); background: var(--canvas); }
 .preview__media { max-width: 100%; max-height: 100%; border-radius: var(--r-md); object-fit: contain; }

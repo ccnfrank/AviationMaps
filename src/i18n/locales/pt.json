@@ -10,6 +10,8 @@
     "switchFile": "Trocar de arquivo",
     "previous": "Anterior",
     "next": "Próximo",
+    "fullscreen": "Tela cheia",
+    "exitFullscreen": "Sair da tela cheia",
     "zoomOut": "Diminuir zoom",
     "zoomIn": "Aumentar zoom",
     "zoomReset": "Restaurar zoom",

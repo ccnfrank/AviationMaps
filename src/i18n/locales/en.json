@@ -10,6 +10,8 @@
     "switchFile": "Switch file",
     "previous": "Previous",
     "next": "Next",
+    "fullscreen": "Full screen",
+    "exitFullscreen": "Exit full screen",
     "zoomOut": "Zoom out",
     "zoomIn": "Zoom in",
     "zoomReset": "Reset zoom",

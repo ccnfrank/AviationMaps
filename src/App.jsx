@@ -11,6 +11,7 @@ import {
   allowFolder, canPickDirectory, isTauri, pickDirectory, readDirectory, readDroppedDirectory,
 } from "./lib/folderAccess";
 import { forgetLastFolder, readLastFolder, saveLastFolder } from "./lib/lastFolder";
+import { setFullscreen } from "./lib/fullscreen";
 import { ROOT_NAME, groupFiles } from "./lib/groupFiles";
 import { getPreviewKind } from "./lib/previewKind";
 
@@ -45,6 +46,40 @@ export default function App() {
     setPreviewSeq((n) => n + 1);
     setPreviewEntry(entry);
   };
+
+  // Tela cheia da visualização: o estado fica aqui porque é a janela do modal que muda de tamanho.
+  const [viewFull, setViewFullState] = useState(false);
+  const setViewFull = (on) => {
+    setViewFullState(on);
+    setFullscreen(on);
+  };
+  const closePreview = () => {
+    if (viewFull) setViewFull(false);
+    setPreviewEntry(null);
+  };
+
+  // Esc sai da tela cheia (antes de fechar a visualização, que também responde ao Esc).
+  useEffect(() => {
+    if (!viewFull) return undefined;
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      e.stopPropagation();
+      setViewFullState(false);
+      setFullscreen(false);
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [viewFull]);
+
+  // No navegador, a tela cheia pode acabar pelo próprio navegador (Esc, por exemplo): acompanha.
+  useEffect(() => {
+    const onChange = () => {
+      if (!document.fullscreenElement) setViewFullState(false);
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
 
   // Caminho do <input webkitdirectory>, usado quando o navegador não tem o seletor de pasta.
   const onPick = (e) => {
@@ -192,8 +227,8 @@ export default function App() {
       {previewEntry && (
         <Modal
           label={t("preview.dialog", { name: previewEntry.name })}
-          className="modal--preview"
-          onClose={() => setPreviewEntry(null)}
+          className={viewFull ? "modal--preview modal--full" : "modal--preview"}
+          onClose={closePreview}
         >
           <Preview
             key={previewSeq}
@@ -202,7 +237,9 @@ export default function App() {
             hasNext={false}
             onPrev={() => {}}
             onNext={() => {}}
-            onClose={() => setPreviewEntry(null)}
+            onClose={closePreview}
+            fullscreen={viewFull}
+            onToggleFullscreen={() => setViewFull(!viewFull)}
           />
         </Modal>
       )}

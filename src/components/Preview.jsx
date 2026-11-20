@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Sun, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize, Minimize, Sun, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { formatSize } from "../lib/format";
 import { getPreviewKind } from "../lib/previewKind";
@@ -31,7 +31,8 @@ const BRIGHTNESS_STEP = 5; // de 5 em 5 os botões passam por 75%, e o slider an
 
 // Janela de visualização de um arquivo. Quem usa deve dar uma `key` por arquivo, assim o estado
 // (zoom, brilho, medições) começa limpo a cada troca. `entry` é { name, size, file }.
-export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClose }) {
+// `fullscreen` e `onToggleFullscreen` vêm de quem abre a janela (App), que muda o tamanho do modal.
+export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClose, fullscreen = false, onToggleFullscreen }) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage ?? i18n.language;
   const kind = getPreviewKind(entry.name);
@@ -392,6 +393,17 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
           <span className="preview__size">{formatSize(entry.size)}</span>
         </div>
         <button type="button" onClick={onNext} disabled={!hasNext} aria-label={t("preview.next")}><ChevronRight strokeWidth={2} /></button>
+        {onToggleFullscreen && (
+          <button
+            type="button"
+            onClick={onToggleFullscreen}
+            aria-pressed={fullscreen}
+            aria-label={fullscreen ? t("preview.exitFullscreen") : t("preview.fullscreen")}
+            title={fullscreen ? t("preview.exitFullscreen") : t("preview.fullscreen")}
+          >
+            {fullscreen ? <Minimize strokeWidth={2} /> : <Maximize strokeWidth={2} />}
+          </button>
+        )}
         <button type="button" onClick={onClose} aria-label={t("common.close")}><X strokeWidth={2} /></button>
       </nav>
     </div>
