@@ -151,11 +151,13 @@ export function ProtractorToggle({ enabled, onToggle }) {
       aria-label={t("protractor.toggle")}
       title={t("protractor.title")}
     >
+      {/* Transferidor de 360°: anel completo, marcas de 30° (longas) e de 10° (curtas), e uma agulha. */}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M2.5 17a9.5 9.5 0 0 1 19 0" />
-        <path d="M2.5 17h19" />
-        <path d="M12 7.5v2M5.4 10.7l1.3 1.2M18.6 10.7l-1.3 1.2" />
-        <path d="M12 17l4.5-4.5" />
+        <circle cx="12" cy="12" r="9.5" />
+        <path d="M12 2.5v2.6M16.75 3.77l-1.3 2.25M20.23 7.25l-2.25 1.3M21.5 12h-2.6M20.23 16.75l-2.25-1.3M16.75 20.23l-1.3-2.25M12 21.5v-2.6M7.25 20.23l1.3-2.25M3.77 16.75l2.25-1.3M2.5 12h2.6M3.77 7.25l2.25 1.3M7.25 3.77l1.3 2.25" />
+        <path d="M13.65 2.64l-.21 1.19M15.25 3.07l-.41 1.13M18.11 4.72l-.77.92M19.28 5.89l-.92.77M20.93 8.75l-1.13.41M21.36 10.35l-1.19.21M21.36 13.65l-1.19-.21M20.93 15.25l-1.13-.41M19.28 18.11l-.92-.77M18.11 19.28l-.77-.92M15.25 20.93l-.41-1.13M13.65 21.36l-.21-1.19M10.35 21.36l.21-1.19M8.75 20.93l.41-1.13M5.89 19.28l.77-.92M4.72 18.11l.92-.77M3.07 15.25l1.13-.41M2.64 13.65l1.19-.21M2.64 10.35l1.19.21M3.07 8.75l1.13.41M4.72 5.89l.92.77M5.89 4.72l.77.92M8.75 3.07l.41 1.13M10.35 2.64l.21 1.19" strokeWidth={0.9} />
+        <path d="M12 12l4.4-4.4" />
+        <path d="M12 12h.01" />
       </svg>
     </button>
   );

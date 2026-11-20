@@ -27,25 +27,17 @@ describe("ferramenta da escala", () => {
     expect(aviation).toHaveAttribute("aria-pressed", "false");
   });
 
-  it("1:1000000 mostra 1 cm = 10 km (o exemplo do pedido)", () => {
+  it("escala válida não marca o campo como inválido", () => {
     render(<Harness />);
-    fireEvent.change(screen.getByRole("textbox", { name: "Map scale" }), { target: { value: "1:1000000" } });
-    expect(screen.getByText("1 cm = 10 km")).toBeInTheDocument();
+    const input = screen.getByRole("textbox", { name: "Map scale" });
+    fireEvent.change(input, { target: { value: "1:1000000" } });
+    expect(input).not.toHaveAttribute("aria-invalid");
   });
 
-  it("com aviação, o resultado vem em milhas náuticas, com quilômetros ao lado", () => {
-    render(<Harness />);
-    fireEvent.click(screen.getByRole("button", { name: "Aviation" }));
-    fireEvent.change(screen.getByRole("textbox", { name: "Map scale" }), { target: { value: "1:1000000" } });
-    expect(screen.getByText("1 cm = 5.4 NM")).toBeInTheDocument();
-    expect(screen.getByText("≈ 10 km")).toBeInTheDocument();
-  });
-
-  it("escala inválida marca o campo e não mostra resultado", () => {
+  it("escala inválida marca o campo", () => {
     render(<Harness />);
     const input = screen.getByRole("textbox", { name: "Map scale" });
     fireEvent.change(input, { target: { value: "1:0" } });
     expect(input).toHaveAttribute("aria-invalid", "true");
-    expect(screen.getByText("Enter the scale")).toBeInTheDocument();
   });
 });

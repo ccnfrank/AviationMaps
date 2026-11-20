@@ -29,18 +29,16 @@ export function groundMeters(cm, denominator) {
   return (cm / 100) * denominator;
 }
 
-// O que mostrar para 1 cm no mapa, conforme o tipo de mapa:
-// - aviação e náutico: milhas náuticas (NM), com quilômetros ao lado;
+// Distância real, nas unidades do tipo de mapa:
+// - aviação e náutico: milhas náuticas (NM);
 // - terrestre: metros para trechos curtos e quilômetros a partir de 1 km.
-export function scaleReadout(denominator, type) {
-  const meters = groundMeters(1, denominator);
-  if (type === "aviation" || type === "sea") {
-    return {
-      primary: { value: meters / NM_METERS, unit: "NM" },
-      secondary: { value: meters / 1000, unit: "km" },
-    };
-  }
-  return meters < 1000
-    ? { primary: { value: meters, unit: "m" }, secondary: null }
-    : { primary: { value: meters / 1000, unit: "km" }, secondary: null };
+export function realDistance(meters, type) {
+  if (type === "aviation" || type === "sea") return { value: meters / NM_METERS, unit: "NM" };
+  return meters < 1000 ? { value: meters, unit: "m" } : { value: meters / 1000, unit: "km" };
+}
+
+// Texto da distância real, por exemplo "5,4 NM" ou "23,46 km", no formato do idioma.
+export function formatDistance(meters, type, language = "en") {
+  const { value, unit } = realDistance(meters, type);
+  return `${new Intl.NumberFormat(language, { maximumFractionDigits: 2 }).format(value)} ${unit}`;
 }

@@ -15,6 +15,7 @@ import ImageStage from "./ImageStage";
 import { CalibrateButton, CalibrationField, ClearButton, MeasureToggle } from "./MeasureTools";
 import { DeclinationInput, ProtractorToggle } from "./Protractor";
 import ScaleTool from "./ScaleTool";
+import { formatDistance, groundMeters, parseScale } from "../lib/scale";
 import StepSlider from "./StepSlider";
 
 // Zoom e brilho para foto e PDF. Mapas grandes em PDF precisam de bastante zoom.
@@ -107,10 +108,17 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
   const measurable = kind !== "unsupported" && !error;
   const imageCm = calib?.cmPerUnit ?? cmPerUnitFromDpi(dpi);
   const unitCm = (surface) => (surface === "img" ? imageCm : PDF_CM_PER_UNIT);
-  // Texto em cm; null quando a superfície ainda não tem escala (então o rótulo não aparece).
-  const formatFor = (surface) => (px) => (unitCm(surface) == null
-    ? null
-    : `${formatNumber(px * unitCm(surface), 2, language)} cm`);
+  // Rótulo de um trecho medido. Com escala digitada, mostra a distância real (no tipo do mapa);
+  // sem ela, o tamanho em cm no papel. Null quando a superfície ainda não tem escala em cm.
+  const denominator = parseScale(scaleText);
+  const formatFor = (surface) => (px) => {
+    const cm = unitCm(surface);
+    if (cm == null) return null;
+    const paperCm = px * cm;
+    return denominator == null
+      ? `${formatNumber(paperCm, 2, language)} cm`
+      : formatDistance(groundMeters(paperCm, denominator), mapType, language);
+  };
 
   // Pontos chegam pela camada de medição (um por clique). Cliques repetidos no mesmo lugar são ignorados.
   const addPoint = (surface, p) => {

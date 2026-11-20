@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NM_METERS, groundMeters, parseScale, scaleReadout } from "./scale";
+import { NM_METERS, formatDistance, groundMeters, parseScale } from "./scale";
 
 describe("escala digitada", () => {
   it("aceita 1:N, só N, e N com separador de milhar", () => {
@@ -25,24 +25,28 @@ describe("escala digitada", () => {
   });
 });
 
-describe("1 cm no mapa em distância real", () => {
-  it("1:1.000.000 → 1 cm = 10 km (o exemplo do pedido)", () => {
-    expect(groundMeters(1, 1000000)).toBe(10000);
-    expect(scaleReadout(1000000, "land")).toEqual({
-      primary: { value: 10, unit: "km" },
-      secondary: null,
-    });
+describe("medida do mapa em distância real", () => {
+  it("3 cm no papel, na escala 1:1.000.000, são 30 km", () => {
+    const meters = groundMeters(3, 1000000);
+    expect(meters).toBe(30000);
+    expect(formatDistance(meters, "land", "en")).toBe("30 km");
   });
 
-  it("terrestre usa metros em trechos curtos", () => {
-    expect(scaleReadout(50000, "land").primary).toEqual({ value: 500, unit: "m" });
+  it("trechos curtos em terrestre aparecem em metros", () => {
+    expect(formatDistance(groundMeters(1, 50000), "land", "en")).toBe("500 m");
   });
 
-  it("aviação e náutico mostram milhas náuticas, com quilômetros ao lado", () => {
-    const aviation = scaleReadout(1000000, "aviation");
-    expect(aviation.primary.unit).toBe("NM");
-    expect(aviation.primary.value).toBeCloseTo(10000 / NM_METERS);
-    expect(aviation.secondary).toEqual({ value: 10, unit: "km" });
-    expect(scaleReadout(500000, "sea").primary.value).toBeCloseTo(5000 / NM_METERS);
+  it("aviação e náutico mostram milhas náuticas", () => {
+    expect(formatDistance(10000, "aviation", "en")).toBe("5.4 NM");
+    expect(formatDistance(10000, "sea", "en")).toBe("5.4 NM");
+    expect(formatDistance(NM_METERS, "aviation", "en")).toBe("1 NM");
+  });
+
+  it("sem tipo escolhido, usa metros e quilômetros", () => {
+    expect(formatDistance(23456, null, "en")).toBe("23.46 km");
+  });
+
+  it("o separador decimal segue o idioma", () => {
+    expect(formatDistance(10000, "aviation", "pt")).toBe("5,4 NM");
   });
 });
