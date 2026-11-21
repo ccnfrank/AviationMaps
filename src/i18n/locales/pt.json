@@ -10,6 +10,9 @@
     "switchFile": "Trocar de arquivo",
     "previous": "Anterior",
     "next": "Próximo",
+    "fullscreen": "Tela cheia",
+    "exitFullscreen": "Sair da tela cheia",
+    "library": "Painel de mapas",
     "zoomOut": "Diminuir zoom",
     "zoomIn": "Aumentar zoom",
     "zoomReset": "Restaurar zoom",
@@ -20,30 +23,40 @@
     "brightnessReset": "Restaurar brilho"
   },
   "measure": {
-    "region": "Ferramentas de medição",
     "toggle": "Medir",
-    "size": "Dimensões",
-    "clear": "Limpar",
+    "title": "Medir em cm: clique para marcar pontos, Esc ou clique direito conclui",
+    "clear": "Limpar medições",
     "calibrate": "Calibrar escala",
-    "calibrateHint": "Desenhe uma linha sobre algo cujo tamanho real você conhece.",
+    "calibrateHint": "Calibrar escala: desenhe uma linha sobre algo cujo tamanho real você conhece",
     "calibrateLine": "Linha de {{px}} px. Tamanho real:",
     "calibrateLabel": "Tamanho real (cm)",
-    "apply": "Aplicar",
-    "scalePdf": "Escala exata: 72 pt = 2,54 cm",
-    "scaleCalibrated": "Escala calibrada",
-    "scaleDpi": "Escala pelo arquivo: {{dpi}} dpi",
-    "scaleNone": "O arquivo não tem resolução. Calibre para obter cm.",
-    "horizontal": "Horizontal",
-    "vertical": "Vertical",
-    "empty": "Clique sobre o arquivo para medir.",
-    "unit": "Unidade",
-    "cmUnavailable": "Calibre a escala para usar cm",
-    "finish": "Concluir",
-    "drawing": "Clique para marcar pontos · Esc ou clique direito conclui"
+    "apply": "Aplicar"
+  },
+  "points": {
+    "toggle": "Plotar pontos",
+    "title": "Plotar pontos: clique no mapa para marcar; Backspace apaga o último",
+    "clear": "Apagar pontos"
+  },
+  "route": {
+    "total": "Rota",
+    "nm": "{{value}} nm",
+    "magnetic": "mag"
+  },
+  "scale": {
+    "group":"Escala do mapa",
+    "type": "Tipo de mapa",
+    "aviation": "Aviação",
+    "sea": "Aquático",
+    "land": "Terrestre",
+    "label": "Escala do mapa",
+    "title": "Escala do mapa, por exemplo 1:1000000"
   },
   "protractor": {
     "toggle": "Transferidor",
-    "title": "Transferidor: clique para pôr, mova para apontar, clique de novo para fixar o ângulo"
+    "title": "Transferidor: clique para pôr, mova para apontar, clique de novo para fixar o ângulo",
+    "declination": "Desvio magnético em graus",
+    "declinationPlaceholder": "Desvio",
+    "declinationTitle": "Desvio magnético (°), positivo ou negativo: a segunda agulha aponta para o ângulo + desvio"
   },
   "pdf": {
     "error": "Não foi possível abrir este PDF.",
@@ -55,10 +68,17 @@
     "en": "Inglês",
     "pt": "Português"
   },
+  "viewer": {
+    "title": "Visualização de mapas",
+    "emptyTitle": "Solte um mapa aqui",
+    "emptyHint": "Uma imagem ou um PDF. Lido neste dispositivo; nada é enviado.",
+    "choose": "Escolher um mapa"
+  },
   "errors": {
     "imageOpen": "O navegador não conseguiu abrir esta imagem.",
     "readFolder": "Não foi possível ler esta pasta.",
-    "notFolder": "Só é possível abrir pastas. Arraste uma pasta, não um arquivo."
+    "readFile": "Não foi possível ler este arquivo.",
+    "unsupportedFile": "Este arquivo não é um mapa. Use uma imagem ou um PDF."
   },
   "common": {
     "close": "Fechar",
@@ -68,7 +88,7 @@
     "loadFolder": "Carregar diretório de mapas",
     "clearFolders": "Limpar pastas",
     "noFiles": "Nenhuma imagem ou PDF encontrado nesta pasta.",
-    "dropTitle": "Solte a pasta para abrir",
+    "dropTitle": "Solte uma pasta ou um mapa para abrir",
     "dropHint": "Lida neste dispositivo. Nada é enviado."
   },
   "search": {

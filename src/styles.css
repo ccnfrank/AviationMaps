@@ -48,6 +48,7 @@
   --surface-rgb: 17, 17, 19;
 
   /* Escala tipográfica (razão ~1.2, com passos previsíveis) */
+  --fs-3xs: 9px;
   --fs-2xs: 11px;
   --fs-xs: 12px;
   --fs-sm: 13px;
@@ -198,6 +199,9 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 
 /* ---------- Pré-visualização ---------- */
 .modal--preview { width: min(1100px, 100%); height: min(88vh, 820px); max-height: 88vh; }
+/* Tela cheia: a visualização toma a janela inteira, sem borda nem margem. Seletor duplo para vencer
+   a regra do celular, mais abaixo. */
+.modal.modal--full { position: fixed; inset: 0; width: auto; height: auto; max-height: none; border: 0; border-radius: 0; box-shadow: none; }
 .preview { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .preview__stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: var(--s-4); background: var(--canvas); }
 .preview__media { max-width: 100%; max-height: 100%; border-radius: var(--r-md); object-fit: contain; }
@@ -214,15 +218,42 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .pdf-pages__page { display: block; background: #fff; border-radius: 6px; box-shadow: var(--shadow-2); -webkit-user-drag: none; }
 /* Ferramentas da visualização: medir, brilho e zoom numa linha só. Em tela estreita a linha rola na horizontal, sem quebrar. */
 .view-tools {
-  display: flex; flex-wrap: nowrap; align-items: center; gap: var(--s-2);
+  /* Numa linha só quando cabe; se não couber, quebra em duas linhas, sem esconder controles na rolagem */
+  display: flex; flex-wrap: wrap; justify-content: center; row-gap: 4px; align-items: center; gap: var(--s-2);
   align-self: center; width: max-content; max-width: calc(100% - var(--s-4)); box-sizing: border-box;
   margin-top: var(--s-2); padding: 4px 6px 4px var(--s-2);
-  border: 1px solid var(--line); border-radius: 999px; background: var(--raised); box-shadow: var(--shadow-1);
-  overflow-x: auto; scrollbar-width: none;
+  border: 1px solid var(--line); border-radius: 20px; background: var(--raised); box-shadow: var(--shadow-1);
+  overflow-x: hidden; scrollbar-width: none;
   animation: zoom-in var(--dur-base) var(--ease-out) both;
 }
 .view-tools::-webkit-scrollbar { display: none; }
 .view-tools__sep { flex: none; width: 1px; height: 18px; background: var(--line); }
+/* Campo do desvio magnético: mesma altura dos botões da barra, com o sufixo ° */
+.declination {
+  flex: none; display: inline-flex; align-items: center; gap: 2px; height: 30px; padding: 0 var(--s-2);
+  border-radius: 999px; background: var(--line-strong); cursor: text; transition: background var(--dur-fast), box-shadow var(--dur-fast);
+}
+.declination:hover { background: #52525b; }
+.declination:focus-within { box-shadow: inset 0 0 0 1px var(--accent); }
+.declination__input {
+  width: 64px; height: 100%; padding: 0; border: 0; background: transparent; color: var(--text);
+  font-size: var(--fs-sm); font-variant-numeric: tabular-nums; text-align: right;
+}
+.declination__input::placeholder { color: var(--muted); }
+.declination__input:focus-visible { outline: none; }
+.declination__input[aria-invalid="true"] { color: var(--danger); }
+.declination__unit { color: var(--muted); font-size: var(--fs-sm); }
+/* Escala do mapa: tipo (avião, náutico, terrestre), escala digitada e o resultado de 1 cm */
+.scale-tool { flex: none; display: inline-flex; align-items: center; gap: var(--s-1); }
+.scale-tool__types { display: inline-flex; align-items: center; gap: 2px; }
+.scale-tool__input {
+  width: 116px; height: 30px; padding: 0 var(--s-2); border: 0; border-radius: 999px;
+  background: var(--line-strong); color: var(--text); font-size: var(--fs-sm); font-variant-numeric: tabular-nums;
+  transition: box-shadow var(--dur-fast);
+}
+.scale-tool__input::placeholder { color: var(--muted); }
+.scale-tool__input:focus-visible { outline: none; box-shadow: inset 0 0 0 1px var(--accent); }
+.scale-tool__input[aria-invalid="true"] { color: var(--danger); }
 /* Botão só com ícone, do mesmo tamanho dos outros controles da barra */
 .tool-toggle {
   flex: none; display: grid; place-items: center; width: 30px; height: 30px; padding: 0;
@@ -243,7 +274,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .tool-step:hover:not(:disabled), .tool-reset:hover:not(:disabled) { color: var(--text); background: var(--line); }
 .tool-step:disabled, .tool-reset:disabled { opacity: .35; }
 .tool-range {
-  flex: none; width: 120px; height: 22px; margin: 0 var(--s-1); background: transparent; cursor: pointer;
+  flex: none; width: 80px; height: 18px; margin: 0 var(--s-1); background: transparent; cursor: pointer;
   -webkit-appearance: none; appearance: none;
 }
 .tool-range:focus-visible { outline: none; }
@@ -252,8 +283,8 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
   background: linear-gradient(to right, var(--accent) var(--fill), var(--line) var(--fill));
 }
 .tool-range::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 16px; height: 16px; margin-top: -6px; border: 0; border-radius: 50%;
-  background: var(--ink); box-shadow: 0 0 0 4px var(--raised), 0 2px 6px rgba(0, 0, 0, .35);
+  -webkit-appearance: none; width: 12px; height: 12px; margin-top: -4px; border: 0; border-radius: 50%;
+  background: var(--ink); box-shadow: 0 0 0 3px var(--raised), 0 2px 6px rgba(0, 0, 0, .35);
   transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast);
 }
 .tool-range:hover::-webkit-slider-thumb { transform: scale(1.18); }
@@ -262,8 +293,8 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .tool-range::-moz-range-track { height: 4px; border-radius: 999px; background: var(--line); }
 .tool-range::-moz-range-progress { height: 4px; border-radius: 999px; background: var(--accent); }
 .tool-range::-moz-range-thumb {
-  width: 16px; height: 16px; border: 0; border-radius: 50%; background: var(--ink);
-  box-shadow: 0 0 0 4px var(--raised), 0 2px 6px rgba(0, 0, 0, .35);
+  width: 12px; height: 12px; border: 0; border-radius: 50%; background: var(--ink);
+  box-shadow: 0 0 0 3px var(--raised), 0 2px 6px rgba(0, 0, 0, .35);
 }
 .tool-value {
   flex: none; min-width: 56px; padding: 4px var(--s-3); border-radius: 999px; text-align: center;
@@ -272,6 +303,26 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 }
 
 .preview__note { color: var(--muted); margin: 0; text-align: center; }
+
+/* Janela de visualização sem mapa: área de soltar, com o botão de escolher um arquivo */
+.viewer-empty {
+  position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center;
+  padding: var(--s-4); background: var(--canvas);
+}
+.viewer-empty__close {
+  position: absolute; top: var(--s-3); right: var(--s-3); display: grid; place-items: center;
+  width: 34px; height: 34px; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer;
+}
+.viewer-empty__close:hover { color: var(--text); background: var(--line); }
+.viewer-empty__close svg { width: 18px; height: 18px; }
+.viewer-empty__zone {
+  display: grid; justify-items: center; gap: var(--s-2); max-width: 360px; padding: var(--s-6) var(--s-5);
+  border: 1.5px dashed var(--line-strong); border-radius: var(--r-xl); text-align: center;
+}
+.viewer-empty__icon { width: 40px; height: 40px; color: var(--muted); }
+.viewer-empty__title { margin: 0; font-size: var(--fs-lg); font-weight: 600; }
+.viewer-empty__hint { margin: 0 0 var(--s-2); color: var(--muted); font-size: var(--fs-sm); }
+
 .preview__nav {
   display: flex; align-items: center; gap: var(--s-3); padding: var(--s-3) var(--s-4);
   border-top: 1px solid var(--line);
@@ -299,7 +350,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
   .app { padding: var(--s-4) var(--s-4) 56px; }
   .modal-backdrop { padding: 0; align-items: flex-end; }
   .modal { width: 100%; max-height: 92vh; border-radius: 20px 20px 0 0; }
-  .tool-range { width: 64px; }
+  .tool-range { width: 52px; }
   .tool-group__icon { display: none; }
   .tool-value { min-width: 48px; padding: 4px var(--s-2); }
 }
@@ -331,34 +382,40 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
   background: var(--accent); color: var(--on-accent); box-shadow: var(--shadow-1);
 }
 .measure-layer__label.is-live { background: var(--surface); color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow-1); }
+/* Ponto plotado: marcador numerado, sempre do mesmo tamanho na tela (não cresce com o zoom) */
+.plot-marker {
+  position: absolute; transform: translate(-50%, -50%); display: grid; place-items: center;
+  min-width: 16px; height: 16px; padding: 0 3px; box-sizing: border-box; border-radius: 999px;
+  background: var(--accent); color: var(--on-accent); border: 1.5px solid var(--canvas); box-shadow: var(--shadow-1);
+  font-size: var(--fs-3xs); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1;
+}
+/* Rota: a linha que une os pontos na ordem em que foram plotados */
+.route-line {
+  stroke: var(--c-audio); stroke-width: 2.5; stroke-linecap: round;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .55));
+}
+/* Rótulos do trecho: o rumo acima da linha e a distância abaixo. --ox e --oy vêm da normal da linha. */
+.route-label {
+  position: absolute; white-space: nowrap; padding: 1px 6px; border-radius: 999px;
+  transform: translate(calc(-50% + var(--ox, 0px)), calc(-50% + var(--oy, 0px)));
+  background: rgba(var(--surface-rgb), .92); border: 1px solid var(--line); box-shadow: var(--shadow-1);
+  color: var(--text); font-size: var(--fs-3xs); font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.route-label--track { color: var(--c-audio); border-color: rgba(96, 165, 250, .45); }
+/* Total da rota, embaixo do nome do arquivo: a barra de ferramentas fica só com os controles */
+.preview__route { color: var(--c-audio); font-size: var(--fs-sm); font-weight: 600; font-variant-numeric: tabular-nums; }
+/* Calibração: o tamanho real do traço de referência, digitado na própria barra de ferramentas */
+.measure-calibrate { flex: none; display: inline-flex; align-items: center; gap: 2px; }
+.measure-calibrate__px { padding: 0 var(--s-1); color: var(--muted); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.measure-calibrate__input {
+  width: 118px; height: 30px; padding: 0 var(--s-2); border: 1px solid var(--accent); border-radius: 999px;
+  background: var(--raised); color: var(--text); font-size: var(--fs-sm); font-variant-numeric: tabular-nums;
+}
+.measure-calibrate__input::placeholder { color: var(--muted); }
+.measure-calibrate__input:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
 
-/* Unidade: px ou cm, uma por vez */
-.measure-unit { display: inline-flex; padding: 2px; gap: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
-.measure-unit button { height: 24px; min-width: 34px; padding: 0 var(--s-2); border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: var(--fs-xs); font-weight: 600; font-variant-numeric: tabular-nums; }
-.measure-unit button:hover:not(:disabled) { color: var(--text); }
-.measure-unit button.is-active { background: var(--accent); color: var(--on-accent); }
-.measure-unit button:disabled { opacity: .4; }
 
-/* Interruptor da medição: dentro da cápsula de zoom, sem mudar a altura da janela */
 .preview__stage { position: relative; }
-.measure-switch {
-  display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 var(--s-2);
-  border: 0; border-radius: 999px; background: transparent; color: var(--muted);
-  font-size: var(--fs-xs); font-weight: 600; transition: color var(--dur-fast), background var(--dur-fast);
-}
-.measure-switch svg { width: 15px; height: 15px; }
-.measure-switch:hover { color: var(--text); background: var(--line); }
-.measure-switch[aria-checked="true"] { color: var(--accent); background: var(--accent-soft); }
-.measure-switch__track {
-  position: relative; display: inline-block; width: 26px; height: 15px; border-radius: 999px;
-  background: var(--line-strong); transition: background var(--dur-base) var(--ease-out);
-}
-.measure-switch__knob {
-  position: absolute; top: 2px; left: 2px; width: 11px; height: 11px; border-radius: 50%;
-  background: var(--ink); transition: transform var(--dur-base) var(--ease-out);
-}
-.measure-switch[aria-checked="true"] .measure-switch__track { background: var(--accent); }
-.measure-switch[aria-checked="true"] .measure-switch__knob { transform: translateX(11px); background: var(--on-accent); }
 
 /* Transferidor: sem fundo. Só traços, com contorno escuro para aparecer sobre qualquer imagem. */
 .protractor { position: absolute; width: 0; height: 0; pointer-events: none; }
@@ -379,47 +436,9 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .protractor__arrow path { stroke: none; }
 .protractor__arrow.is-live { opacity: .9; stroke-dasharray: 5 4; }
 .protractor__arrow.is-live path { stroke-dasharray: none; }
+/* Agulha do desvio magnético: azul, para não se confundir com a agulha principal âmbar */
+.protractor__arrow--declination { fill: var(--c-audio); stroke: var(--c-audio); }
 
-/* Painel da medição: flutua sobre a parte de baixo do palco, sem empurrar a imagem */
-.measure-bar {
-  position: absolute; left: 50%; bottom: var(--s-4); z-index: 5;
-  transform: translateX(-50%); width: min(720px, calc(100% - 32px));
-  animation: zoom-in var(--dur-base) var(--ease-out) both;
-}
-.measure-bar__body {
-  display: flex; flex-direction: column; align-items: center; gap: var(--s-2);
-  padding: var(--s-3) var(--s-4); border: 1px solid var(--line); border-radius: var(--r-lg);
-  background: rgba(var(--surface-rgb), .92); box-shadow: var(--shadow-2);
-  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-}
-.measure-bar__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-2) var(--s-3); width: 100%; }
-.measure-chip { display: inline-flex; align-items: center; gap: var(--s-2); }
-.measure-chip__label { font-size: var(--fs-xs); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-.measure-chip__value { font-size: var(--fs-sm); font-weight: 600; font-variant-numeric: tabular-nums; }
-.measure-bar__note { font-size: var(--fs-xs); color: var(--muted); }
-.measure-bar__actions { display: inline-flex; gap: var(--s-2); margin-left: auto; }
-.measure-bar__btn {
-  display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 var(--s-3);
-  border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--text); font-size: var(--fs-xs);
-  transition: border-color var(--dur-fast), opacity var(--dur-fast);
-}
-.measure-bar__btn svg { width: 14px; height: 14px; }
-.measure-bar__btn:hover:not(:disabled) { border-color: var(--line-strong); }
-.measure-bar__btn:disabled { opacity: .4; }
-.measure-bar__btn--primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
-.measure-bar__hint { margin: 0; font-size: var(--fs-xs); color: var(--muted); text-align: center; }
-.measure-bar__calibrate { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--s-2); width: 100%; }
-.measure-bar__calibrate-text { font-size: var(--fs-sm); color: var(--muted); }
-.measure-bar__input {
-  width: 130px; height: 30px; padding: 0 var(--s-3); border: 1px solid var(--accent); border-radius: var(--r-sm);
-  background: var(--canvas); color: var(--text); font-size: var(--fs-sm); font-variant-numeric: tabular-nums;
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-.measure-bar__input:focus-visible { outline: none; }
-.measure-result { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.measure-result__main { font-size: var(--fs-md); font-weight: 600; font-variant-numeric: tabular-nums; color: var(--accent); }
-.measure-result.is-live .measure-result__main { color: var(--text); }
-.measure-result__detail { font-size: var(--fs-xs); color: var(--muted); font-variant-numeric: tabular-nums; }
 
 /* ---------- Página inicial: busca, carregar pasta e mapas abaixo do campo (igual ao Media Manager) ---------- */
 /* ---------- Dock: busca, carregar e recentes ---------- */
@@ -595,3 +614,65 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 /* Grade sem texto: cartões de pasta, com ícone de pasta no lugar da miniatura */
 .search-live__thumb--folder { display: grid; place-items: center; background: var(--raised); color: var(--accent); }
 .search-live__thumb--folder > svg { width: 44px; height: 44px; }
+
+/* ---------- Visualização com coluna lateral: a janela do mapa e, ao lado, busca, alternância e miniaturas ----------
+   Só com pasta carregada e fora da tela cheia. A janela cresce pela largura da coluna, para o mapa não encolher. */
+.modal--library {
+  --viewer-lib-w: clamp(260px, 24vw, 320px); --lib-now: var(--viewer-lib-w);
+  width: min(calc(1100px + var(--lib-now)), 100%); transition: width var(--dur-base) var(--ease-out);
+}
+.modal--library.is-collapsed { --lib-now: 0px; }
+.viewer-split { flex: 1; min-height: 0; display: flex; }
+.viewer-split > .preview { flex: 1; min-width: 0; }
+/* Gaveta: a coluna abre e fecha pela largura, e a janela do mapa acompanha. Fechada, some e não recebe foco. */
+.viewer-library {
+  width: var(--lib-now); flex: none; display: flex; min-height: 0; overflow: hidden;
+  background: var(--surface); box-shadow: inset 1px 0 0 var(--line);
+  transition: width var(--dur-base) var(--ease-out), visibility 0s linear 0s;
+}
+.modal--library.is-collapsed .viewer-library {
+  visibility: hidden; transition: width var(--dur-base) var(--ease-out), visibility 0s linear var(--dur-base);
+}
+/* Conteúdo com largura fixa: não espreme enquanto a gaveta anima */
+.viewer-library__inner { width: var(--viewer-lib-w); flex: none; display: flex; flex-direction: column; min-height: 0; }
+
+/* Busca da coluna: campo e alternância de visualização na mesma linha, a alternância à direita */
+.search--docked { position: static; flex: 1; min-height: 0; max-width: none; margin: 0; display: flex; flex-direction: column; }
+.search__bar { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-4) var(--s-4) var(--s-3); }
+.search__field { position: relative; flex: 1; min-width: 0; }
+.search--docked .search input { height: 40px; }
+.search--docked .search-live__views { flex: none; height: 40px; box-sizing: border-box; padding: 3px; align-items: center; }
+.search--docked .search-live__view { width: 32px; height: 32px; }
+
+/* O painel ocupa o resto da coluna e rola sozinho; o cabeçalho com a contagem fica preso no topo */
+.search-live--docked {
+  position: static; transform: none; width: auto; max-height: none; flex: 1; min-height: 0;
+  display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain;
+  background: none; border: 0; border-radius: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+  animation: none;
+}
+.search-live--docked .search-live__head {
+  position: sticky; top: 0; z-index: 1; padding: var(--s-1) var(--s-4) var(--s-2);
+  background: var(--surface);
+}
+.search-live--docked .search-live__count { padding: 0; }
+.search-live--docked .search-live__list { max-height: none; overflow: visible; padding: 0 var(--s-3) var(--s-5); }
+.search-live--docked .search-live__grid {
+  grid-auto-rows: auto; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--s-3); max-height: none; overflow: visible; padding: 0 var(--s-4) var(--s-5);
+}
+.search-live--docked .search-live__thumb { height: auto; aspect-ratio: 3 / 2; }
+
+/* No celular não há lado: a coluna desce para baixo da imagem, com rolagem própria */
+@media (max-width: 640px) {
+  .modal--library { width: 100%; }
+  .viewer-split { flex-direction: column; }
+  .viewer-split > .preview { flex: 1 1 58%; min-height: 0; }
+  .viewer-library {
+    width: auto; flex: 1 1 42%; box-shadow: inset 0 1px 0 var(--line);
+    transition: flex-basis var(--dur-base) var(--ease-out), visibility 0s linear 0s;
+  }
+  .modal--library.is-collapsed .viewer-library { flex: 0 0 0; }
+  .viewer-library__inner { width: 100%; }
+  .search__bar { padding: var(--s-3) var(--s-3) var(--s-2); }
+}

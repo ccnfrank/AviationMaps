@@ -7,18 +7,28 @@ import PixelButton from "./components/PixelButton";
 import Preview from "./components/Preview";
 import Search from "./components/Search";
 import LanguageSwitch from "./components/LanguageSwitch";
-import { canPickDirectory, pickDirectory, readDirectory, readDroppedDirectory } from "./lib/folderAccess";
+import ViewerEmpty from "./components/ViewerEmpty";
+import {
+  allowFolder, canPickDirectory, isTauri, pickDirectory, pickMapFileNative, readDirectory, readDroppedDirectory,
+} from "./lib/folderAccess";
+import { forgetLastFolder, readLastFolder, saveLastFolder } from "./lib/lastFolder";
+import { setFullscreen } from "./lib/fullscreen";
 import { ROOT_NAME, groupFiles } from "./lib/groupFiles";
-import { getPreviewKind } from "./lib/previewKind";
+import { firstMapFile, getPreviewKind } from "./lib/previewKind";
 
 // Mapa Reader: a página inicial do Media Manager, só com mapas. Carrega uma pasta (pelo botão ou
 // soltando-a na janela). A busca mostra os mapas (imagens e PDF) que casam com o texto, logo
-// abaixo do campo, e cada um abre na janela de visualização. Os outros arquivos são ignorados.
+// abaixo do campo, e cada um abre na janela de visualização. Dentro da visualização, uma coluna ao
+// lado mostra os mapas da pasta para trocar de mapa. Os outros arquivos são ignorados.
+// Sem pasta, um mapa avulso também serve: a tecla V abre a janela vazia, e o arquivo entra
+// arrastando-o para a janela ou pelo botão de escolher. Um arquivo solto na tela inicial abre direto.
 export default function App() {
   const { t } = useTranslation();
   const inputRef = useRef(null);
   const [folders, setFolders] = useState(null); // null: nenhuma pasta carregada ainda
   const [previewEntry, setPreviewEntry] = useState(null);
+  const [viewerEmpty, setViewerEmpty] = useState(false); // janela aberta sem mapa, esperando um arquivo
+  const viewerOpen = previewEntry !== null || viewerEmpty;
   const [previewSeq, setPreviewSeq] = useState(0);
   const [dropping, setDropping] = useState(false);
   const [viewMode, setViewMode] = useState(null); // null: padrão da pasta carregada
@@ -26,6 +36,8 @@ export default function App() {
   // Com subpastas, a busca abre em lista (uma linha por subpasta); sem elas, em grade.
   const hasSubfolders = (folders ?? []).some((f) => f.name !== ROOT_NAME);
   const view = viewMode ?? (hasSubfolders ? "list" : "grid");
+  // Visualização da coluna ao lado do mapa: miniaturas por padrão, independente da busca da página.
+  const [libraryView, setLibraryView] = useState("grid");
 
   // Só os mapas entram na lista: imagens e PDF. Vídeo, áudio, zip e o resto da pasta somem aqui.
   const showFiles = (files) => {
@@ -34,19 +46,106 @@ export default function App() {
     setViewMode(null);
   };
 
-  const reportReadError = (err) => {
-    toast.error(t("errors.readFolder"), { description: err?.message ?? String(err) });
+  const reportReadError = (err, key = "errors.readFolder") => {
+    toast.error(t(key), { description: err?.message ?? String(err) });
   };
 
   const openPreview = (entry) => {
+    setViewerEmpty(false);
     setPreviewSeq((n) => n + 1);
     setPreviewEntry(entry);
   };
+
+  // Abre o primeiro mapa de uma lista de arquivos (soltados ou escolhidos). Outros tipos são ignorados.
+  const openFiles = (files) => {
+    const file = firstMapFile(files);
+    if (!file) {
+      toast.error(t("errors.unsupportedFile"));
+      return;
+    }
+    openPreview({ name: file.name, size: file.size, file });
+  };
+
+  // Tela cheia da visualização: o estado fica aqui porque é a janela do modal que muda de tamanho.
+  const [viewFull, setViewFullState] = useState(false);
+  const setViewFull = (on) => {
+    setViewFullState(on);
+    setFullscreen(on);
+  };
+  const closePreview = () => {
+    if (viewFull) setViewFull(false);
+    setPreviewEntry(null);
+    setViewerEmpty(false);
+  };
+
+  // Tecla V: mostra a janela de visualização vazia (para soltar ou escolher um mapa). Não age
+  // enquanto se digita, nem com a janela já aberta, nem com Ctrl, Cmd ou Alt.
+  useEffect(() => {
+    if (viewerOpen) return undefined;
+    const onKey = (e) => {
+      if (e.key.toLowerCase() !== "v" || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.target.closest?.("input, textarea, [contenteditable]")) return;
+      setViewerEmpty(true);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [viewerOpen]);
+
+  // Esc sai da tela cheia (antes de fechar a visualização, que também responde ao Esc).
+  useEffect(() => {
+    if (!viewFull) return undefined;
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      e.stopPropagation();
+      setViewFullState(false);
+      setFullscreen(false);
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [viewFull]);
+
+  // No navegador, a tela cheia pode acabar pelo próprio navegador (Esc, por exemplo): acompanha.
+  useEffect(() => {
+    const onChange = () => {
+      if (!document.fullscreenElement) setViewFullState(false);
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  // A coluna ao lado do mapa (gaveta) aparece com pasta carregada, fora da tela cheia (que ocupa a janela toda).
+  // Começa aberta; L, ou o botão da barra da visualização, abre e fecha. L não age enquanto se digita.
+  const showLibrary = hasFolders && !viewFull;
+  const [libraryOpen, setLibraryOpen] = useState(true);
+  const toggleLibrary = () => setLibraryOpen((open) => !open);
+  useEffect(() => {
+    if (!viewerOpen || !showLibrary) return undefined;
+    const onKey = (e) => {
+      if (e.key.toLowerCase() !== "l" || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.target.closest?.("input, textarea, [contenteditable]")) return;
+      toggleLibrary();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [viewerOpen, showLibrary]);
 
   // Caminho do <input webkitdirectory>, usado quando o navegador não tem o seletor de pasta.
   const onPick = (e) => {
     showFiles(Array.from(e.target.files ?? []));
     e.target.value = "";
+  };
+
+  // Botão de escolher um mapa na janela vazia, no app Tauri (o navegador usa o <input> de ViewerEmpty).
+  const onChooseNative = async () => {
+    let file;
+    try {
+      file = await pickMapFileNative();
+    } catch (err) {
+      reportReadError(err, "errors.readFile");
+      return;
+    }
+    if (file) openFiles([file]);
   };
 
   const onLoadClick = async () => {
@@ -60,8 +159,11 @@ export default function App() {
     } catch {
       return; // escolha cancelada
     }
+    if (!handle) return; // diálogo nativo fechado sem escolher
     try {
       showFiles(await readDirectory(handle));
+      // Só o caminho nativo (Tauri) tem um caminho para lembrar; no navegador a pasta não fica guardada.
+      if (typeof handle === "string") saveLastFolder(handle);
     } catch (err) {
       reportReadError(err);
     }
@@ -70,9 +172,34 @@ export default function App() {
   const clearFolders = () => {
     setFolders(null);
     setPreviewEntry(null);
+    setViewerEmpty(false);
   };
 
+  // Ao abrir o app (Tauri), reabre a última pasta carregada. Se ela sumiu ou não pode ser lida,
+  // esquece o caminho e avisa.
+  useEffect(() => {
+    const last = isTauri() ? readLastFolder() : null;
+    if (!last) return undefined;
+    let alive = true;
+    (async () => {
+      try {
+        await allowFolder(last);
+        const files = await readDirectory(last);
+        if (alive) showFiles(files);
+      } catch (err) {
+        forgetLastFolder();
+        if (alive) reportReadError(err);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+    // Roda só na abertura: showFiles e reportReadError só trocam estado e mostram aviso.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Arrastar uma pasta para a janela: mostra a área de soltar e abre a pasta ao soltar.
+  // Um mapa solto (imagem ou PDF) abre na janela de visualização, sem carregar a pasta dele.
   useEffect(() => {
     const hasFilesIn = (e) => Array.from(e.dataTransfer?.types ?? []).includes("Files");
     const onDragEnter = (e) => {
@@ -91,14 +218,14 @@ export default function App() {
       e.preventDefault();
       setDropping(false);
       const item = Array.from(e.dataTransfer.items ?? []).find((it) => it.kind === "file");
-      if (!item) return;
+      // Arquivo solto: lido já, enquanto o evento ainda tem os arquivos.
+      if (!item || item.webkitGetAsEntry?.()?.isDirectory !== true) {
+        openFiles(e.dataTransfer.files ?? []);
+        return;
+      }
       try {
         const files = await readDroppedDirectory(item);
-        if (!files) {
-          toast.error(t("errors.notFolder"));
-          return;
-        }
-        showFiles(files);
+        if (files) showFiles(files);
       } catch (err) {
         reportReadError(err);
       }
@@ -160,21 +287,42 @@ export default function App() {
         onChange={onPick}
       />
 
-      {previewEntry && (
+      {viewerOpen && (
         <Modal
-          label={t("preview.dialog", { name: previewEntry.name })}
-          className="modal--preview"
-          onClose={() => setPreviewEntry(null)}
+          label={previewEntry ? t("preview.dialog", { name: previewEntry.name }) : t("viewer.title")}
+          className={viewFull ? "modal--preview modal--full" : showLibrary ? `modal--preview modal--library${libraryOpen ? "" : " is-collapsed"}` : "modal--preview"}
+          onClose={closePreview}
         >
-          <Preview
-            key={previewSeq}
-            entry={previewEntry}
-            hasPrev={false}
-            hasNext={false}
-            onPrev={() => {}}
-            onNext={() => {}}
-            onClose={() => setPreviewEntry(null)}
-          />
+          <div className="viewer-split">
+            {previewEntry ? (
+              <Preview
+                key={previewSeq}
+                entry={previewEntry}
+                hasPrev={false}
+                hasNext={false}
+                onPrev={() => {}}
+                onNext={() => {}}
+                onClose={closePreview}
+                fullscreen={viewFull}
+                onToggleFullscreen={() => setViewFull(!viewFull)}
+                libraryOpen={libraryOpen}
+                onToggleLibrary={showLibrary ? toggleLibrary : undefined}
+              />
+            ) : (
+              <ViewerEmpty
+                onClose={closePreview}
+                onFiles={openFiles}
+                onChoose={isTauri() ? onChooseNative : undefined}
+              />
+            )}
+            {showLibrary && (
+              <aside className="viewer-library">
+                <div className="viewer-library__inner">
+                  <Search docked folders={folders} onPreview={openPreview} view={libraryView} onViewChange={setLibraryView} />
+                </div>
+              </aside>
+            )}
+          </div>
         </Modal>
       )}
 

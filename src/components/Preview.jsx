@@ -1,18 +1,22 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Sun, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize, Minimize, PanelRight, Sun, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { formatSize } from "../lib/format";
 import { getPreviewKind } from "../lib/previewKind";
 import { getImageBlob } from "../lib/media/decodeImage";
 import { toDisplayUrl } from "../lib/displayUrl";
 import {
-  PDF_CM_PER_UNIT, angleOf, chainLength, cmPerUnitFromCalibration, cmPerUnitFromDpi, formatNumber, readImageDpi,
+  PDF_CM_PER_UNIT, addDeclination, angleOf, chainLength, cmPerUnitFromCalibration, cmPerUnitFromDpi, formatNumber,
+  parseDeclination, readImageDpi,
 } from "../lib/measure";
+import { distanceNm, formatBearing, routeLinks } from "../lib/route";
 import PdfPages from "./PdfPages";
 import PanView from "./PanView";
 import ImageStage from "./ImageStage";
-import MeasureBar, { MeasureSwitch } from "./MeasureBar";
-import { ProtractorToggle } from "./Protractor";
+import { CalibrateButton, CalibrationField, ClearButton, MeasureToggle, PlotToggle } from "./MeasureTools";
+import { DeclinationInput, ProtractorToggle } from "./Protractor";
+import ScaleTool from "./ScaleTool";
+import { formatDistance, groundMeters, parseScale } from "../lib/scale";
 import StepSlider from "./StepSlider";
 
 // Zoom e brilho para foto e PDF. Mapas grandes em PDF precisam de bastante zoom.
@@ -24,11 +28,16 @@ const ZOOM_STEP = 0.5;
 const BRIGHTNESS_MIN = 50;
 const BRIGHTNESS_MAX = 150;
 const BRIGHTNESS_DEFAULT = 100;
-const BRIGHTNESS_STEP = 10;
+const BRIGHTNESS_STEP = 5; // de 5 em 5 os botões passam por 75%, e o slider anda de 1 em 1
 
 // Janela de visualização de um arquivo. Quem usa deve dar uma `key` por arquivo, assim o estado
 // (zoom, brilho, medições) começa limpo a cada troca. `entry` é { name, size, file }.
-export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClose }) {
+// `fullscreen` e `onToggleFullscreen` vêm de quem abre a janela (App), que muda o tamanho do modal.
+// `libraryOpen` e `onToggleLibrary` controlam o painel de mapas ao lado; o botão só aparece com `onToggleLibrary`.
+export default function Preview({
+  entry, hasPrev, hasNext, onPrev, onNext, onClose, fullscreen = false, onToggleFullscreen,
+  libraryOpen = false, onToggleLibrary,
+}) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage ?? i18n.language;
   const kind = getPreviewKind(entry.name);
@@ -37,23 +46,26 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
   const [brightness, setBrightness] = useState(BRIGHTNESS_DEFAULT);
   const [error, setError] = useState(null);
 
-  // Medição (imagem e PDF). A escala vem do arquivo (DPI), de uma calibração do usuário, ou é
-  // exata no PDF. Cada medição é uma cadeia de cliques, em unidades da superfície (px da imagem,
-  // pt no PDF). Mostra-se uma unidade só: cm quando há escala, senão px.
+  // Medição (imagem e PDF), sempre em cm. A escala vem do arquivo (DPI), de uma calibração do
+  // usuário, ou é exata no PDF. Sem escala, a medição é desenhada mas não ganha texto.
+  // Cada medição é uma cadeia de cliques, em unidades da superfície (px da imagem, pt no PDF).
   const [measureOn, setMeasureOn] = useState(false);
   const [lines, setLines] = useState([]);          // medições concluídas: { id, surface, points }
   const [draft, setDraft] = useState(null);        // medição em andamento: { surface, points, cursor }
-  const [unit, setUnit] = useState("cm");          // preferência; sem escala, cai para px
   const [dpi, setDpi] = useState(null);
   const [calib, setCalib] = useState(null);        // { cmPerUnit } da calibração da imagem
   const [calibrating, setCalibrating] = useState(false); // a próxima medição calibra a escala
   const [calibLine, setCalibLine] = useState(null);      // medição de calibração, esperando o tamanho real
-  const [imageSize, setImageSize] = useState(null);      // px naturais da imagem
-  const [pageSize, setPageSize] = useState(null);        // pt da primeira página do PDF
   // Transferidor: modo próprio, exclusivo com a medição. O centro (pivot) vem do primeiro clique,
   // a seta segue o ponteiro, e o segundo clique fixa o ângulo.
   const [protractorOn, setProtractorOn] = useState(false);
   const [protractor, setProtractor] = useState(null);    // { surface, pivot, cursor, locked }
+  const [declination, setDeclination] = useState("");    // texto digitado: desvio magnético em graus, com sinal
+  const [mapType, setMapType] = useState(null);          // escala: "aviation", "sea" ou "land" (null: sem tipo)
+  const [scaleText, setScaleText] = useState("");        // escala digitada, p. ex. "1:1000000"
+  // Pontos plotados: cada clique marca um ponto numerado. { id, surface, x, y } em unidades da superfície.
+  const [plotOn, setPlotOn] = useState(false);
+  const [plots, setPlots] = useState([]);
 
   // Carrega a imagem (decodifica os formatos que o navegador não mostra).
   useEffect(() => {
@@ -103,45 +115,44 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
   }, [entry, kind]);
 
   const measurable = kind !== "unsupported" && !error;
-  const surfaceKey = kind === "image" ? "img" : "pdf:0";
   const imageCm = calib?.cmPerUnit ?? cmPerUnitFromDpi(dpi);
   const unitCm = (surface) => (surface === "img" ? imageCm : PDF_CM_PER_UNIT);
-  // cm só quando a superfície tem escala; caso contrário a medição fica em px, sem misturar.
-  const unitFor = (surface) => (unit === "cm" && unitCm(surface) != null ? "cm" : "px");
-  const formatFor = (surface) => (px) => (unitFor(surface) === "cm"
-    ? `${formatNumber(px * unitCm(surface), 2, language)} cm`
-    : `${formatNumber(px, 0, language)} px`);
-  const formatPair = (w, h, surface) => {
-    const f = (v) => formatFor(surface)(v).replace(/ (cm|px)$/, "");
-    return `${f(w)} × ${f(h)} ${unitFor(surface)}`;
+  // Rótulo de um trecho medido. Com escala digitada, mostra a distância real (no tipo do mapa);
+  // sem ela, o tamanho em cm no papel. Null quando a superfície ainda não tem escala em cm.
+  const denominator = parseScale(scaleText);
+  const formatFor = (surface) => (px) => {
+    const cm = unitCm(surface);
+    if (cm == null) return null;
+    const paperCm = px * cm;
+    return denominator == null
+      ? `${formatNumber(paperCm, 2, language)} cm`
+      : formatDistance(groundMeters(paperCm, denominator), mapType, language);
   };
-  const size = kind === "image" ? imageSize : pageSize;
-  const sizeText = size ? formatPair(size.w, size.h, surfaceKey) : null;
-  const scaleNote = kind === "pdf"
-    ? t("measure.scalePdf")
-    : calib
-      ? t("measure.scaleCalibrated")
-      : dpi
-        ? t("measure.scaleDpi", { dpi: Math.round(dpi) })
-        : t("measure.scaleNone");
 
-  // Medição em andamento: confirmados + o trecho ao vivo até o ponteiro.
-  const liveLength = (d) => {
-    if (!d?.cursor || !d.points.length) return 0;
-    const last = d.points[d.points.length - 1];
-    return Math.hypot(d.cursor.x - last.x, d.cursor.y - last.y);
+  // Rota dos pontos plotados, numa superfície: cada trecho traz o rumo (acima da linha) e a distância
+  // em milhas náuticas (abaixo), quando há escala. Com declinação, o rumo magnético vai junto.
+  const declinationValue = parseDeclination(declination);
+  const routeOf = (surface) => {
+    const cm = unitCm(surface);
+    const denom = parseScale(scaleText);
+    return routeLinks(plots, surface).map((link) => {
+      const trueTrack = angleOf(link.from, link.to);
+      const magnetic = declinationValue == null ? null : addDeclination(trueTrack, declinationValue);
+      const nm = distanceNm(link.px, cm, denom);
+      return {
+        key: link.key,
+        from: link.from,
+        to: link.to,
+        trackText: `${formatBearing(trueTrack)}${magnetic == null ? "" : ` · ${formatBearing(magnetic)} ${t("route.magnetic")}`}`,
+        distance: nm == null ? null : t("route.nm", { value: formatNumber(nm, 1, language) }),
+        nm,
+      };
+    });
   };
-  const draftText = draft ? formatFor(draft.surface)(chainLength(draft.points) + liveLength(draft)) : null;
-
-  const lastLine = lines[lines.length - 1];
-  const lastText = lastLine ? formatFor(lastLine.surface)(chainLength(lastLine.points)) : null;
-  const lastDetail = lastLine && lastLine.points.length === 2
-    ? (() => {
-      const [a, b] = lastLine.points;
-      const f = formatFor(lastLine.surface);
-      return `${t("measure.horizontal")} ${f(Math.abs(b.x - a.x))} · ${t("measure.vertical")} ${f(Math.abs(b.y - a.y))}`;
-    })()
-    : null;
+  // Total da rota: soma dos trechos com distância, em todas as superfícies.
+  const routeSurfaces = [...new Set(plots.map((p) => p.surface))];
+  const routeNm = routeSurfaces.reduce((sum, s) => sum + routeOf(s).reduce((acc, l) => acc + (l.nm ?? 0), 0), 0);
+  const hasRouteNm = routeSurfaces.some((s) => routeOf(s).some((l) => l.nm != null));
 
   // Pontos chegam pela camada de medição (um por clique). Cliques repetidos no mesmo lugar são ignorados.
   const addPoint = (surface, p) => {
@@ -230,6 +241,7 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
     if (next) {
       setProtractorOn(false);
       setProtractor(null);
+      setPlotOn(false);
     } else {
       setDraft(null);
       cancelCalibration();
@@ -244,8 +256,40 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
       setMeasureOn(false);
       setDraft(null);
       cancelCalibration();
+      setPlotOn(false);
     }
   };
+
+  // Plotar pontos: exclusivo com a medição e o transferidor. Cada clique na superfície marca um ponto.
+  const togglePlot = () => {
+    const next = !plotOn;
+    setPlotOn(next);
+    if (next) {
+      setMeasureOn(false);
+      setDraft(null);
+      cancelCalibration();
+      setProtractorOn(false);
+      setProtractor(null);
+    }
+  };
+  const addPlot = (surface, p) => {
+    setPlots((list) => [...list, { id: `${Date.now()}-${list.length}`, surface, x: p.x, y: p.y }]);
+  };
+  const clearPlots = () => setPlots([]);
+
+  // Backspace apaga o último ponto plotado (com o plotar ligado e sem campo em foco).
+  useEffect(() => {
+    if (!plotOn) return undefined;
+    const onKey = (e) => {
+      if (e.target.closest?.("input, textarea")) return;
+      if ((e.key === "Backspace" || e.key === "Delete") && plots.length) {
+        e.preventDefault();
+        setPlots((list) => list.slice(0, -1));
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [plotOn, plots.length]);
 
   // Esc com o transferidor na tela apaga o anel ou a seta, sem fechar a janela.
   useEffect(() => {
@@ -269,6 +313,7 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
       pivot: protractor.pivot,
       cursor: protractor.cursor,
       locked: protractor.locked,
+      declination: parseDeclination(declination),
       text: protractor.pivot && protractor.cursor
         ? `${formatNumber(angleOf(protractor.pivot, protractor.cursor), 1, language)}°`
         : null,
@@ -305,14 +350,18 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
 
   // Linhas exibidas: as concluídas e, durante a calibração, a linha que aguarda o tamanho real.
   const measureProps = {
-    enabled: (measureOn || protractorOn) && !error,
+    enabled: (measureOn || protractorOn || plotOn) && !error,
     lines: calibLine ? [...lines, calibLine] : lines,
     draft,
     protractor: protractorProps,
     format: formatFor,
     onPoint: addPoint,
     onMove: moveCursor,
-    onFinish: protractorOn ? clearProtractor : finishDraft,
+    onFinish: protractorOn ? clearProtractor : plotOn ? () => {} : finishDraft,
+    plotting: plotOn,
+    plots,
+    onPlot: addPlot,
+    routeOf,
   };
 
   let body;
@@ -328,7 +377,6 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
         zoom={zoom}
         brightness={brightness}
         measure={measureProps}
-        onPageSize={setPageSize}
       />
     );
   } else if (!url) {
@@ -343,7 +391,6 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
           zoom={zoom}
           brightness={brightness}
           measure={measureProps}
-          onNatural={setImageSize}
           onError={fail(t("preview.browserFormat"))}
         />
       </PanView>
@@ -354,35 +401,29 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
     <div className="preview">
       <div className="preview__stage">
         {body}
-        {measurable && (
-          <MeasureBar
-            enabled={measureOn}
-            canCalibrate={kind === "image"}
-            canCm={unitCm(surfaceKey) != null}
-            unit={unitFor(surfaceKey)}
-            onUnitChange={setUnit}
-            sizeText={sizeText}
-            scaleNote={scaleNote}
-            calibrating={calibrating}
-            calibrationPx={calibLine ? chainLength(calibLine.points) : null}
-            onCalibrateStart={() => setCalibrating(true)}
-            onCalibrateApply={applyCalibration}
-            onCalibrateCancel={cancelCalibration}
-            draftText={draftText}
-            hasDraft={Boolean(draft)}
-            lastText={lastText}
-            lastDetail={lastDetail}
-            hasItems={lines.length > 0}
-            onClear={clearAll}
-            onFinish={finishDraft}
-          />
-        )}
       </div>
       {measurable && (
         // Todas as ferramentas da visualização numa linha só: transferidor, medir, brilho e zoom.
+        // As ferramentas da medição (calibrar, apagar) aparecem ao lado do botão medir, só quando ligada.
         <div className="view-tools" role="toolbar" aria-label={t("preview.tools")}>
           <ProtractorToggle enabled={protractorOn} onToggle={toggleProtractor} />
-          <MeasureSwitch enabled={measureOn} onToggle={toggleMeasure} />
+          <DeclinationInput value={declination} onChange={setDeclination} />
+          <MeasureToggle enabled={measureOn} onToggle={toggleMeasure} />
+          {measureOn && kind === "image" && !calibLine && (
+            <CalibrateButton active={calibrating} onToggle={() => setCalibrating((on) => !on)} />
+          )}
+          {measureOn && calibLine && (
+            <CalibrationField
+              px={chainLength(calibLine.points)}
+              onApply={applyCalibration}
+              onCancel={cancelCalibration}
+            />
+          )}
+          {measureOn && (lines.length > 0 || draft) && <ClearButton onClick={clearAll} />}
+          <span className="view-tools__sep" aria-hidden="true" />
+          <ScaleTool type={mapType} onType={setMapType} text={scaleText} onText={setScaleText} />
+          <PlotToggle enabled={plotOn} onToggle={togglePlot} />
+          {plotOn && plots.length > 0 && <ClearButton label={t("points.clear")} onClick={clearPlots} />}
           <span className="view-tools__sep" aria-hidden="true" />
           <StepSlider
             label={t("preview.brightness")}
@@ -422,8 +463,33 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
         <div className="preview__meta">
           <span className="preview__name">{entry.name}</span>
           <span className="preview__size">{formatSize(entry.size)}</span>
+          {plotOn && hasRouteNm && (
+            <span className="preview__route">{`${t("route.total")}: ${t("route.nm", { value: formatNumber(routeNm, 1, language) })}`}</span>
+          )}
         </div>
         <button type="button" onClick={onNext} disabled={!hasNext} aria-label={t("preview.next")}><ChevronRight strokeWidth={2} /></button>
+        {onToggleLibrary && (
+          <button
+            type="button"
+            onClick={onToggleLibrary}
+            aria-pressed={libraryOpen}
+            aria-label={t("preview.library")}
+            title={`${t("preview.library")} (L)`}
+          >
+            <PanelRight strokeWidth={2} />
+          </button>
+        )}
+        {onToggleFullscreen && (
+          <button
+            type="button"
+            onClick={onToggleFullscreen}
+            aria-pressed={fullscreen}
+            aria-label={fullscreen ? t("preview.exitFullscreen") : t("preview.fullscreen")}
+            title={fullscreen ? t("preview.exitFullscreen") : t("preview.fullscreen")}
+          >
+            {fullscreen ? <Minimize strokeWidth={2} /> : <Maximize strokeWidth={2} />}
+          </button>
+        )}
         <button type="button" onClick={onClose} aria-label={t("common.close")}><X strokeWidth={2} /></button>
       </nav>
     </div>

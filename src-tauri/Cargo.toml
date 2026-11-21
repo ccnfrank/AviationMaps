@@ -1,0 +1,22 @@
+[package]
+name = "mapreader"
+version = "1.0.0"
+description = "Map Reader: visualizador de mapas (imagens e PDF) com medição em px/cm"
+authors = []
+license = ""
+edition = "2021"
+rust-version = "1.77.2"
+
+[lib]
+name = "mapreader_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-log = "2"
+log = "0.4"

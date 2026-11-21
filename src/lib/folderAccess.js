@@ -1,16 +1,54 @@
-// Acesso a pastas no navegador, em dois modos:
+// Acesso a pastas, em três modos:
+// - App Tauri (macOS): diálogo nativo de pasta e leitura pelo plugin de fs. Os arquivos viram
+//   objetos File com `webkitRelativePath`, então o resto do app não percebe a diferença.
 // - Chromium: File System Access API (diálogo nativo de pasta).
 // - Os demais: <input webkitdirectory> (ver App.jsx) e arrastar a pasta para a janela.
-export const canPickDirectory = () =>
-  typeof window !== "undefined" && typeof window.showDirectoryPicker === "function";
+import { invoke } from "@tauri-apps/api/core";
+import { open } from "@tauri-apps/plugin-dialog";
+import { readDir, readFile } from "@tauri-apps/plugin-fs";
+import { MAP_EXTENSIONS, getPreviewKind } from "./previewKind";
 
+export const isTauri = () =>
+  typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+
+export const canPickDirectory = () =>
+  isTauri() || (typeof window !== "undefined" && typeof window.showDirectoryPicker === "function");
+
+// Devolve a pasta escolhida (handle do navegador ou caminho nativo), ou null se o usuário cancelou.
 export async function pickDirectory() {
+  if (isTauri()) {
+    // recursive: true libera as subpastas no escopo do fs; sem isto, só a pasta escolhida seria lida.
+    const path = await open({ directory: true, multiple: false, recursive: true, title: "Map Reader" });
+    return path ?? null;
+  }
   return window.showDirectoryPicker({ mode: "read" });
+}
+
+// Só no app Tauri: diálogo nativo para escolher um mapa (imagem ou PDF). Devolve o arquivo lido,
+// ou null se o usuário cancelou. No navegador, quem chama usa um <input type="file"> (ver ViewerEmpty).
+export async function pickMapFileNative() {
+  const path = await open({
+    multiple: false,
+    directory: false,
+    filters: [{ name: "Map Reader", extensions: MAP_EXTENSIONS }],
+    title: "Map Reader",
+  });
+  if (!path) return null;
+  const name = path.split(/[\\/]/).filter(Boolean).pop();
+  return new File([await readFile(path)], name);
+}
+
+// Só no app Tauri: libera de novo, no escopo de leitura, uma pasta lembrada de outra execução.
+// Ver allow_folder em src-tauri/src/lib.rs.
+export async function allowFolder(path) {
+  await invoke("allow_folder", { path });
 }
 
 // Lê a pasta inteira e devolve Files com `webkitRelativePath` no mesmo formato do
 // <input webkitdirectory> ("raiz/sub/arquivo"), para o groupFiles tratar tudo igual.
 export async function readDirectory(handle) {
+  if (typeof handle === "string") return readNativeDirectory(handle);
+
   const files = [];
   async function walk(dir, prefix) {
     for await (const entry of dir.values()) {
@@ -25,6 +63,29 @@ export async function readDirectory(handle) {
     }
   }
   await walk(handle, handle.name);
+  return files;
+}
+
+// Leitura nativa (Tauri). Só lê o que o app mostra (imagens e PDF): vídeos, zips e o resto
+// da pasta são pulados antes de carregar os bytes, para não encher a memória à toa.
+async function readNativeDirectory(rootPath) {
+  const rootName = rootPath.split(/[\\/]/).filter(Boolean).pop();
+  const files = [];
+  async function walk(dirPath, prefix) {
+    for (const entry of await readDir(dirPath)) {
+      const path = `${dirPath}/${entry.name}`;
+      const relative = `${prefix}/${entry.name}`;
+      if (entry.isDirectory) {
+        await walk(path, relative);
+      } else if (entry.isFile && getPreviewKind(entry.name) !== "unsupported") {
+        const bytes = await readFile(path);
+        const file = new File([bytes], entry.name);
+        Object.defineProperty(file, "webkitRelativePath", { value: relative });
+        files.push(file);
+      }
+    }
+  }
+  await walk(rootPath, rootName);
   return files;
 }
 

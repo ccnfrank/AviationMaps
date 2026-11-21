@@ -17,8 +17,8 @@ const REDRAW_DELAY = 120;
 // Desenha o PDF com pdf.js em canvas, página por página. Não depende do visualizador
 // embutido do navegador. Cada página ocupa a largura da área vezes o zoom, e a área
 // rola e arrasta nos dois sentidos quando o zoom passa de 100%.
-// `measure` (opcional) liga a medição em cada página; `onPageSize` recebe o tamanho da 1ª página em pt.
-export default function PdfPages({ file, name, zoom = 1, brightness = 100, measure, onPageSize }) {
+// `measure` (opcional) liga a medição em cada página.
+export default function PdfPages({ file, name, zoom = 1, brightness = 100, measure }) {
   const { t } = useTranslation();
   const viewRef = useRef(null);
   const [doc, setDoc] = useState(null);
@@ -63,14 +63,9 @@ export default function PdfPages({ file, name, zoom = 1, brightness = 100, measu
         const v = page.getViewport({ scale: 1 });
         out.push({ w: v.width, h: v.height });
       }
-      if (alive) {
-        setSizes(out);
-        if (out[0]) onPageSize?.(out[0]);
-      }
+      if (alive) setSizes(out);
     })();
     return () => { alive = false; };
-    // onPageSize vem da janela e só é avisado quando o documento muda.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doc]);
 
   // Largura de encaixe: acompanha o tamanho da área (inclusive ao abrir a janela em outro tamanho).
@@ -174,6 +169,10 @@ function PdfPage({ doc, index, name, cssWidth, size, brightness, measure }) {
           onPoint={(p) => measure.onPoint(`pdf:${index}`, p)}
           onMove={(p) => measure.onMove(`pdf:${index}`, p)}
           onFinish={measure.onFinish}
+          plotting={measure.plotting}
+          plots={measure.plots}
+          onPlot={(p) => measure.onPlot(`pdf:${index}`, p)}
+          route={measure.routeOf(`pdf:${index}`)}
         />
       )}
     </div>

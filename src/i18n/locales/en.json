@@ -10,6 +10,9 @@
     "switchFile": "Switch file",
     "previous": "Previous",
     "next": "Next",
+    "fullscreen": "Full screen",
+    "exitFullscreen": "Exit full screen",
+    "library": "Maps panel",
     "zoomOut": "Zoom out",
     "zoomIn": "Zoom in",
     "zoomReset": "Reset zoom",
@@ -20,30 +23,40 @@
     "brightnessReset": "Reset brightness"
   },
   "measure": {
-    "region": "Measurement tools",
     "toggle": "Measure",
-    "size": "Size",
-    "clear": "Clear",
+    "title": "Measure in cm: click to add points, Esc or right-click to finish",
+    "clear": "Clear measurements",
     "calibrate": "Calibrate scale",
-    "calibrateHint": "Draw a line over something whose real length you know.",
+    "calibrateHint": "Calibrate scale: draw a line over something whose real length you know",
     "calibrateLine": "Line of {{px}} px. Real length:",
     "calibrateLabel": "Real length (cm)",
-    "apply": "Apply",
-    "scalePdf": "Exact scale: 72 pt = 2.54 cm",
-    "scaleCalibrated": "Calibrated scale",
-    "scaleDpi": "Scale from the file: {{dpi}} dpi",
-    "scaleNone": "No resolution in the file. Calibrate to get cm.",
-    "horizontal": "Horizontal",
-    "vertical": "Vertical",
-    "empty": "Click on the file to start measuring.",
-    "unit": "Unit",
-    "cmUnavailable": "Calibrate the scale to use cm",
-    "finish": "Finish",
-    "drawing": "Click to add points · Esc or right-click to finish"
+    "apply": "Apply"
+  },
+  "points": {
+    "toggle": "Plot points",
+    "title": "Plot points: click on the map to mark, Backspace removes the last one",
+    "clear": "Clear points"
+  },
+  "route": {
+    "total": "Route",
+    "nm": "{{value}} nm",
+    "magnetic": "mag"
+  },
+  "scale": {
+    "group": "Map scale",
+    "type": "Map type",
+    "aviation": "Aviation",
+    "sea": "Nautical",
+    "land": "Land",
+    "label": "Map scale",
+    "title": "Map scale, for example 1:1000000"
   },
   "protractor": {
     "toggle": "Protractor",
-    "title": "Protractor: click to place it, move to aim, click again to lock the angle"
+    "title": "Protractor: click to place it, move to aim, click again to lock the angle",
+    "declination": "Magnetic declination in degrees",
+    "declinationPlaceholder": "Declination",
+    "declinationTitle": "Magnetic declination (°), positive or negative: the second needle points to the angle + declination"
   },
   "pdf": {
     "error": "Could not open this PDF.",
@@ -55,10 +68,17 @@
     "en": "English",
     "pt": "Português"
   },
+  "viewer": {
+    "title": "Map viewer",
+    "emptyTitle": "Drop a map here",
+    "emptyHint": "An image or a PDF. Read on this device. Nothing is uploaded.",
+    "choose": "Choose a map"
+  },
   "errors": {
     "imageOpen": "The browser could not open this image.",
     "readFolder": "This folder could not be read.",
-    "notFolder": "Only folders can be opened. Drop a folder, not a file."
+    "readFile": "This file could not be read.",
+    "unsupportedFile": "This file is not a map. Use an image or a PDF."
   },
   "common": {
     "close": "Close",
@@ -68,7 +88,7 @@
     "loadFolder": "Load maps directory",
     "clearFolders": "Clear folders",
     "noFiles": "No images or PDFs found in this folder.",
-    "dropTitle": "Drop the folder to open it",
+    "dropTitle": "Drop a folder or a map to open it",
     "dropHint": "Read on this device. Nothing is uploaded."
   },
   "search": {

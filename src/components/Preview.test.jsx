@@ -81,7 +81,7 @@ test("o +/- do zoom não passa de 600%", () => {
   expect(plus).toBeDisabled();
 });
 
-test("brilho: + e − andam de 10 em 10, respeitam o limite e restaurar volta a 100%", () => {
+test("brilho: + e − andam de 5 em 5, chegam a 75%, respeitam o limite e restaurar volta a 100%", () => {
   render(<Preview entry={entry("capa.png")} {...nav} />);
   const group = within(screen.getByRole("group", { name: "Brightness" }));
   const minus = group.getByRole("button", { name: "Darken" });
@@ -89,11 +89,16 @@ test("brilho: + e − andam de 10 em 10, respeitam o limite e restaurar volta a 
   const reset = group.getByRole("button", { name: "Reset brightness" });
   expect(reset).toBeDisabled();
   fireEvent.click(plus);
-  expect(group.getByText("110%")).toBeInTheDocument();
+  expect(group.getByText("105%")).toBeInTheDocument();
   fireEvent.click(minus);
   fireEvent.click(minus);
-  expect(group.getByText("90%")).toBeInTheDocument();
+  expect(group.getByText("95%")).toBeInTheDocument();
   expect(reset).toBeEnabled();
+  for (let i = 0; i < 4; i++) fireEvent.click(minus);
+  expect(group.getByText("75%")).toBeInTheDocument();
+  for (let i = 0; i < 5; i++) fireEvent.click(minus);
+  expect(group.getByText("50%")).toBeInTheDocument();
+  expect(minus).toBeDisabled();
   fireEvent.click(reset);
   expect(group.getByText("100%")).toBeInTheDocument();
   expect(reset).toBeDisabled();
@@ -106,20 +111,62 @@ test("transferidor, medir, brilho e zoom ficam na mesma barra", () => {
   render(<Preview entry={entry("capa.png")} {...nav} />);
   const bar = screen.getByRole("toolbar", { name: "Viewer tools" });
   expect(within(bar).getByRole("button", { name: "Protractor" })).toBeInTheDocument();
-  expect(within(bar).getByRole("switch")).toBeInTheDocument();
+  expect(within(bar).getByRole("button", { name: "Measure" })).toBeInTheDocument();
   expect(within(bar).getByRole("group", { name: "Brightness" })).toBeInTheDocument();
   expect(within(bar).getByRole("group", { name: "Zoom" })).toBeInTheDocument();
+});
+
+test("medir é só um botão de ícone: ligar não abre painel, e calibrar aparece só em imagem", () => {
+  render(<Preview entry={entry("capa.png")} {...nav} />);
+  const measure = screen.getByRole("button", { name: "Measure" });
+  expect(screen.queryByRole("group", { name: "Measurement tools" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Calibrate scale" })).toBeNull();
+  fireEvent.click(measure);
+  expect(screen.queryByRole("group", { name: "Measurement tools" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Calibrate scale" })).toBeInTheDocument();
+});
+
+test("PDF não pede calibração: a escala é exata", () => {
+  render(<Preview entry={entry("manual.pdf")} {...nav} />);
+  fireEvent.click(screen.getByRole("button", { name: "Measure" }));
+  expect(screen.queryByRole("button", { name: "Calibrate scale" })).toBeNull();
+});
+
+test("campo do desvio fica logo à direita do transferidor, antes do medir", () => {
+  render(<Preview entry={entry("capa.png")} {...nav} />);
+  const protractor = screen.getByRole("button", { name: "Protractor" });
+  const field = screen.getByRole("textbox", { name: "Magnetic declination in degrees" });
+  const measure = screen.getByRole("button", { name: "Measure" });
+  expect(protractor.compareDocumentPosition(field) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(field.compareDocumentPosition(measure) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 });
 
 test("transferidor fica à esquerda do medir, e os dois se desligam ao ligar um", () => {
   render(<Preview entry={entry("capa.png")} {...nav} />);
   const protractor = screen.getByRole("button", { name: "Protractor" });
-  const measure = screen.getByRole("switch");
+  const measure = screen.getByRole("button", { name: "Measure" });
   expect(protractor.compareDocumentPosition(measure) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   fireEvent.click(protractor);
   expect(protractor).toHaveAttribute("aria-pressed", "true");
-  expect(measure).toHaveAttribute("aria-checked", "false");
+  expect(measure).toHaveAttribute("aria-pressed", "false");
   fireEvent.click(measure);
-  expect(measure).toHaveAttribute("aria-checked", "true");
+  expect(measure).toHaveAttribute("aria-pressed", "true");
   expect(protractor).toHaveAttribute("aria-pressed", "false");
+});
+
+test("botão de tela cheia só aparece quando a janela oferece a opção", () => {
+  const { unmount } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  expect(screen.queryByRole("button", { name: "Full screen" })).toBeNull();
+  unmount();
+});
+
+test("tela cheia alterna o botão entre entrar e sair", () => {
+  const onToggleFullscreen = vi.fn();
+  const { rerender } = render(<Preview entry={entry("capa.png")} {...nav} onToggleFullscreen={onToggleFullscreen} />);
+  const enter = screen.getByRole("button", { name: "Full screen" });
+  fireEvent.click(enter);
+  expect(onToggleFullscreen).toHaveBeenCalledTimes(1);
+
+  rerender(<Preview entry={entry("capa.png")} {...nav} onToggleFullscreen={onToggleFullscreen} fullscreen />);
+  expect(screen.getByRole("button", { name: "Exit full screen" })).toHaveAttribute("aria-pressed", "true");
 });

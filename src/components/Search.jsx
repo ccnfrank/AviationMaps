@@ -30,7 +30,9 @@ function browseAll(folders, limit) {
 // - com texto, na lista: os mapas que casam, agrupados por subpasta;
 // - na grade: miniaturas (todos os mapas sem texto, ou os que casam).
 // `view` ("grid" ou "list") e `onViewChange` são controlados por quem usa.
-export default function Search({ folders, onPreview, view = "grid", onViewChange }) {
+// `docked` é a coluna lateral da pasta carregada: o painel fica sempre aberto, os botões de
+// visualização ficam ao lado do campo, e a grade sem texto mostra as miniaturas de todos os mapas.
+export default function Search({ folders, onPreview, view = "grid", onViewChange, docked = false }) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -47,13 +49,16 @@ export default function Search({ folders, onPreview, view = "grid", onViewChange
     .map((folder, folderIndex) => ({ folderIndex, folder, items: filterFiles(folder.files, deferred, "all") }))
     .filter((row) => row.items.length > 0), [folders, deferred]);
   // Aberto ao focar: com pastas carregadas, o painel já mostra a lista; sem pastas, só com texto.
-  const showing = open && (query.trim() !== "" || folders.length > 0);
+  // Na coluna lateral o painel fica sempre aberto enquanto houver pastas.
+  const showing = docked ? folders.length > 0 : open && (query.trim() !== "" || folders.length > 0);
 
   // "/" foca a busca, como em editores; não age quando já há campo ou janela aberta.
   useEffect(() => {
     const onKey = (e) => {
       if (e.key !== "/" || e.target.closest?.("input, textarea, [contenteditable]")) return;
-      if (document.querySelector('[role="dialog"]')) return;
+      // Dentro de uma janela aberta só age o campo que está nela (a coluna da visualização).
+      const dialog = document.querySelector('[role="dialog"]');
+      if (dialog && !dialog.contains(inputRef.current)) return;
       e.preventDefault();
       inputRef.current?.focus();
     };
@@ -68,20 +73,29 @@ export default function Search({ folders, onPreview, view = "grid", onViewChange
     onPreview(item.entry);
   };
 
+  const changeView = (next) => {
+    setNav(null);
+    onViewChange?.(next);
+  };
+
   const onKeyDown = (e) => {
     // Enter abre o primeiro mapa só quando há texto digitado, para não abrir nada por engano.
     if (e.key === "Enter" && query.trim() && results.items[0]) {
       e.preventDefault();
       choose(results.items[0]);
     } else if (e.key === "Escape") {
-      if (query) setQuery("");
+      if (query) {
+        setQuery("");
+        // Com texto, o Esc só limpa a busca e não fecha a janela de visualização onde o campo está.
+        e.stopPropagation();
+      }
       setOpen(false);
-      if (!query) e.currentTarget.blur();
+      if (!query && !docked) e.currentTarget.blur();
     }
   };
 
-  return (
-    <div className="search" role="search">
+  const field = (
+    <div className="search__field">
       <SearchIcon className="search__icon" strokeWidth={1.8} aria-hidden="true" />
       <input
         ref={inputRef}
@@ -97,6 +111,37 @@ export default function Search({ folders, onPreview, view = "grid", onViewChange
         onKeyDown={onKeyDown}
       />
       <kbd className="search__key" aria-hidden="true">/</kbd>
+    </div>
+  );
+
+  if (docked) {
+    return (
+      <div className="search search--docked" role="search">
+        <div className="search__bar">
+          {field}
+          <ViewToggle view={view} onChange={changeView} />
+        </div>
+        {showing && (
+          <SearchPanel
+            docked
+            folders={folders}
+            query={deferred}
+            results={results}
+            rows={rows}
+            view={view}
+            onViewChange={changeView}
+            nav={nav}
+            onNavigate={setNav}
+            onChoose={choose}
+          />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="search" role="search">
+      {field}
       {showing && (
         <SearchPanel
           folders={folders}
@@ -104,10 +149,7 @@ export default function Search({ folders, onPreview, view = "grid", onViewChange
           results={results}
           rows={rows}
           view={view}
-          onViewChange={(next) => {
-            setNav(null);
-            onViewChange?.(next);
-          }}
+          onViewChange={changeView}
           nav={nav}
           onNavigate={setNav}
           onChoose={choose}
@@ -117,13 +159,46 @@ export default function Search({ folders, onPreview, view = "grid", onViewChange
   );
 }
 
-// Painel flutuante, logo abaixo do campo. Não tira o foco do campo: é isso que deixa a busca ao vivo.
+// Alternância grade/lista. Fica no cabeçalho do painel flutuante, ou ao lado do campo na coluna lateral.
+function ViewToggle({ view, onChange }) {
+  const { t } = useTranslation();
+  return (
+    <div className="search-live__views" role="group" aria-label={t("search.views")}>
+      <button
+        type="button"
+        className="search-live__view"
+        aria-pressed={view === "grid"}
+        aria-label={t("search.gridView")}
+        title={t("search.gridView")}
+        onClick={() => onChange("grid")}
+      >
+        <LayoutGrid strokeWidth={1.8} aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        className="search-live__view"
+        aria-pressed={view === "list"}
+        aria-label={t("search.listView")}
+        title={t("search.listView")}
+        onClick={() => onChange("list")}
+      >
+        <List strokeWidth={1.8} aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
+// Painel flutuante, logo abaixo do campo (ou, na coluna lateral, a área abaixo do campo).
+// Não tira o foco do campo: é isso que deixa a busca ao vivo.
 // Sem texto: pastas e subpastas (linhas na lista, cartões na grade); clicar abre o nível dela,
 // com o botão de voltar, nos dois modos. Com texto: os mapas que casam.
-function SearchPanel({ folders, query, results, rows, view, onViewChange, nav, onNavigate, onChoose }) {
+// Na coluna lateral, sem texto e em grade, mostra as miniaturas de todos os mapas.
+function SearchPanel({ docked = false, folders, query, results, rows, view, onViewChange, nav, onNavigate, onChoose }) {
   const { t } = useTranslation();
   const { total, items } = results;
   const idle = query.trim() === "";
+  // Na coluna lateral, a grade sem texto já traz os mapas: não há cartões de pasta nela.
+  const mapsGrid = docked && idle && view !== "list";
   const subfolders = rows.filter((row) => row.folder.name !== ROOT_NAME);
   // Nível aberto (sem texto). A guarda cobre uma pasta que deixou de existir desde a última abertura.
   const folder = idle && nav && folders[nav.folderIndex] ? folders[nav.folderIndex] : null;
@@ -134,7 +209,7 @@ function SearchPanel({ folders, query, results, rows, view, onViewChange, nav, o
   let countText;
   if (level) {
     countText = t("search.maps", { count: levelTotal });
-  } else if (idle) {
+  } else if (idle && !mapsGrid) {
     countText = subfolders.length === 0 ? t("search.noFolders") : t("search.folders", { count: subfolders.length });
   } else if (total === 0) {
     countText = t("search.noResults");
@@ -214,7 +289,7 @@ function SearchPanel({ folders, query, results, rows, view, onViewChange, nav, o
         {level.maps.map((entry) => mapTile({ folderIndex, folder: folder.name, entry }))}
       </div>
     );
-  } else if (idle) {
+  } else if (idle && !mapsGrid) {
     const openRoot = (row) => () => onNavigate({ folderIndex: row.folderIndex, dir: "" });
     body = view === "list" ? (
       <div className="search-live__list">
@@ -253,10 +328,10 @@ function SearchPanel({ folders, query, results, rows, view, onViewChange, nav, o
   return (
     <div
       id="search-live"
-      className="search-live"
+      className={docked ? "search-live search-live--docked" : "search-live"}
       role="region"
       aria-label={t("search.region")}
-      onMouseDown={(e) => e.preventDefault()}
+      onMouseDown={docked ? undefined : (e) => e.preventDefault()}
     >
       <div className="search-live__head">
         {level && (
@@ -266,28 +341,7 @@ function SearchPanel({ folders, query, results, rows, view, onViewChange, nav, o
           </button>
         )}
         <div className="search-live__count">{countText}</div>
-        <div className="search-live__views" role="group" aria-label={t("search.views")}>
-          <button
-            type="button"
-            className="search-live__view"
-            aria-pressed={view === "grid"}
-            aria-label={t("search.gridView")}
-            title={t("search.gridView")}
-            onClick={() => onViewChange?.("grid")}
-          >
-            <LayoutGrid strokeWidth={1.8} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="search-live__view"
-            aria-pressed={view === "list"}
-            aria-label={t("search.listView")}
-            title={t("search.listView")}
-            onClick={() => onViewChange?.("list")}
-          >
-            <List strokeWidth={1.8} aria-hidden="true" />
-          </button>
-        </div>
+        {!docked && <ViewToggle view={view} onChange={onViewChange} />}
       </div>
       {body}
     </div>

@@ -202,3 +202,158 @@ test("na grade, a pasta com subpastas mostra cartões de subpasta junto com os m
   expect(tiles()).toHaveLength(1);
   expect(tiles()[0].textContent).toContain("mapa-02.png");
 });
+
+// ---------- Janela de visualização com a coluna de mapas ao lado ----------
+
+// Abre um mapa pela busca da página; a coluna da visualização fica à direita da janela.
+const openFirstMap = (container, name) => {
+  loadFiles(container, SAMPLE());
+  fireEvent.change(search(), { target: { value: name } });
+  fireEvent.click(files()[0]);
+};
+const viewerColumn = () => document.querySelector(".viewer-library");
+
+test("com a visualização aberta, a coluna ao lado mostra as miniaturas dos mapas da pasta", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  expect(screen.getByRole("dialog", { name: "Preview of mapa-01.png" })).toBeInTheDocument();
+  expect(viewerColumn()).not.toBeNull();
+  expect(viewerColumn().querySelectorAll(".search-live__tile")).toHaveLength(2);
+});
+
+test("clicar numa miniatura da coluna troca o mapa aberto", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  const other = Array.from(viewerColumn().querySelectorAll(".search-live__tile")).find((b) => b.textContent.includes("mapa-02"));
+  fireEvent.click(other);
+  expect(screen.getByRole("dialog", { name: "Preview of mapa-02.pdf" })).toBeInTheDocument();
+  expect(screen.queryByRole("dialog", { name: "Preview of mapa-01.png" })).toBeNull();
+});
+
+test("Esc na busca da coluna limpa o texto e mantém a visualização aberta", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  const input = viewerColumn().querySelector("input");
+  fireEvent.change(input, { target: { value: "mapa" } });
+  fireEvent.keyDown(input, { key: "Escape" });
+  expect(input).toHaveValue("");
+  expect(screen.getByRole("dialog", { name: "Preview of mapa-01.png" })).toBeInTheDocument();
+});
+
+test("tela cheia ocupa a janela e esconde a coluna", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  fireEvent.click(screen.getByRole("button", { name: "Full screen" }));
+  expect(viewerColumn()).toBeNull();
+  expect(document.querySelector(".modal--full")).not.toBeNull();
+});
+
+const viewerModal = () => document.querySelector(".modal--library");
+const panelButton = () => screen.getByRole("button", { name: "Maps panel" });
+
+test("a coluna começa aberta; a tecla L fecha e abre a gaveta", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  expect(viewerModal().classList.contains("is-collapsed")).toBe(false);
+  fireEvent.keyDown(document.body, { key: "l" });
+  expect(viewerModal().classList.contains("is-collapsed")).toBe(true);
+  fireEvent.keyDown(document.body, { key: "L" });
+  expect(viewerModal().classList.contains("is-collapsed")).toBe(false);
+});
+
+test("o botão da barra da visualização abre e fecha a gaveta", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  expect(panelButton()).toHaveAttribute("aria-pressed", "true");
+  fireEvent.click(panelButton());
+  expect(viewerModal().classList.contains("is-collapsed")).toBe(true);
+  expect(panelButton()).toHaveAttribute("aria-pressed", "false");
+  fireEvent.click(panelButton());
+  expect(viewerModal().classList.contains("is-collapsed")).toBe(false);
+});
+
+test("digitar L no campo da coluna não fecha a gaveta", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  const input = viewerColumn().querySelector("input");
+  fireEvent.keyDown(input, { key: "l" });
+  expect(viewerModal().classList.contains("is-collapsed")).toBe(false);
+});
+
+test("L com Ctrl ou Cmd não fecha a gaveta (são atalhos do sistema)", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  fireEvent.keyDown(document.body, { key: "l", metaKey: true });
+  fireEvent.keyDown(document.body, { key: "l", ctrlKey: true });
+  expect(viewerModal().classList.contains("is-collapsed")).toBe(false);
+});
+
+// Mapa avulso: sem pasta, a janela de visualização abre vazia (tecla V) e recebe o arquivo.
+const emptyViewer = () => screen.getByRole("dialog", { name: "Map viewer" });
+const fileDrop = (file) => ({
+  files: [file],
+  items: [{ kind: "file", getAsFile: () => file, webkitGetAsEntry: () => ({ isFile: true, isDirectory: false }) }],
+  types: ["Files"],
+});
+const solo = (name, type = "image/png") => new File(["x"], name, { type });
+
+test("a tecla V abre a janela de visualização vazia, com a área para soltar um mapa", () => {
+  render(<App />);
+  expect(screen.queryByRole("dialog")).toBeNull();
+  fireEvent.keyDown(document.body, { key: "v" });
+  expect(emptyViewer()).toBeInTheDocument();
+  expect(screen.getByText("Drop a map here")).toBeInTheDocument();
+});
+
+test("V não abre a janela enquanto se digita no campo de busca, nem com Ctrl ou Cmd", () => {
+  render(<App />);
+  fireEvent.keyDown(search(), { key: "v" });
+  fireEvent.keyDown(document.body, { key: "v", metaKey: true });
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+test("soltar um mapa na janela vazia abre o mapa, sem carregar a pasta dele", () => {
+  render(<App />);
+  fireEvent.keyDown(document.body, { key: "v" });
+  fireEvent.drop(window, { dataTransfer: fileDrop(solo("mapa-solto.png")) });
+  expect(screen.getByRole("dialog", { name: "Preview of mapa-solto.png" })).toBeInTheDocument();
+  expect(viewerColumn()).toBeNull();
+});
+
+test("soltar um mapa na tela inicial também abre a visualização", () => {
+  render(<App />);
+  fireEvent.drop(window, { dataTransfer: fileDrop(solo("carta.png")) });
+  expect(screen.getByRole("dialog", { name: "Preview of carta.png" })).toBeInTheDocument();
+});
+
+test("escolher um mapa pelo botão da janela vazia abre o arquivo", () => {
+  render(<App />);
+  fireEvent.keyDown(document.body, { key: "v" });
+  fireEvent.change(document.querySelector('[data-testid="file-input"]'), { target: { files: [solo("escolhido.png")] } });
+  expect(screen.getByRole("dialog", { name: "Preview of escolhido.png" })).toBeInTheDocument();
+});
+
+test("arquivo que não é mapa não abre a visualização", () => {
+  render(<App />);
+  fireEvent.drop(window, { dataTransfer: fileDrop(solo("nota.txt", "text/plain")) });
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+test("o botão fechar e o Esc fecham a janela vazia", () => {
+  render(<App />);
+  fireEvent.keyDown(document.body, { key: "v" });
+  fireEvent.click(screen.getByRole("button", { name: "Close" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  fireEvent.keyDown(document.body, { key: "v" });
+  fireEvent.keyDown(document.body, { key: "Escape" });
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+test("com pasta carregada, a janela vazia mostra a coluna de mapas, e L a recolhe", () => {
+  const { container } = render(<App />);
+  loadFiles(container, SAMPLE());
+  fireEvent.keyDown(document.body, { key: "v" });
+  expect(viewerColumn()).not.toBeNull();
+  fireEvent.keyDown(document.body, { key: "l" });
+  expect(viewerModal().classList.contains("is-collapsed")).toBe(true);
+});
