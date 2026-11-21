@@ -6,7 +6,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { readDir, readFile } from "@tauri-apps/plugin-fs";
-import { getPreviewKind } from "./previewKind";
+import { MAP_EXTENSIONS, getPreviewKind } from "./previewKind";
 
 export const isTauri = () =>
   typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -22,6 +22,20 @@ export async function pickDirectory() {
     return path ?? null;
   }
   return window.showDirectoryPicker({ mode: "read" });
+}
+
+// Só no app Tauri: diálogo nativo para escolher um mapa (imagem ou PDF). Devolve o arquivo lido,
+// ou null se o usuário cancelou. No navegador, quem chama usa um <input type="file"> (ver ViewerEmpty).
+export async function pickMapFileNative() {
+  const path = await open({
+    multiple: false,
+    directory: false,
+    filters: [{ name: "Map Reader", extensions: MAP_EXTENSIONS }],
+    title: "Map Reader",
+  });
+  if (!path) return null;
+  const name = path.split(/[\\/]/).filter(Boolean).pop();
+  return new File([await readFile(path)], name);
 }
 
 // Só no app Tauri: libera de novo, no escopo de leitura, uma pasta lembrada de outra execução.

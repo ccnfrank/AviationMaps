@@ -68,10 +68,17 @@
     "en": "Inglês",
     "pt": "Português"
   },
+  "viewer": {
+    "title": "Visualização de mapas",
+    "emptyTitle": "Solte um mapa aqui",
+    "emptyHint": "Uma imagem ou um PDF. Lido neste dispositivo; nada é enviado.",
+    "choose": "Escolher um mapa"
+  },
   "errors": {
     "imageOpen": "O navegador não conseguiu abrir esta imagem.",
     "readFolder": "Não foi possível ler esta pasta.",
-    "notFolder": "Só é possível abrir pastas. Arraste uma pasta, não um arquivo."
+    "readFile": "Não foi possível ler este arquivo.",
+    "unsupportedFile": "Este arquivo não é um mapa. Use uma imagem ou um PDF."
   },
   "common": {
     "close": "Fechar",
@@ -81,7 +88,7 @@
     "loadFolder": "Carregar diretório de mapas",
     "clearFolders": "Limpar pastas",
     "noFiles": "Nenhuma imagem ou PDF encontrado nesta pasta.",
-    "dropTitle": "Solte a pasta para abrir",
+    "dropTitle": "Solte uma pasta ou um mapa para abrir",
     "dropHint": "Lida neste dispositivo. Nada é enviado."
   },
   "search": {
