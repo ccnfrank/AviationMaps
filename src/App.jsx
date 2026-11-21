@@ -84,6 +84,22 @@ export default function App() {
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
 
+  // A coluna ao lado do mapa (gaveta) aparece com pasta carregada, fora da tela cheia (que ocupa a janela toda).
+  // Começa aberta; L, ou o botão da barra da visualização, abre e fecha. L não age enquanto se digita.
+  const showLibrary = hasFolders && !viewFull;
+  const [libraryOpen, setLibraryOpen] = useState(true);
+  const toggleLibrary = () => setLibraryOpen((open) => !open);
+  useEffect(() => {
+    if (!previewEntry || !showLibrary) return undefined;
+    const onKey = (e) => {
+      if (e.key.toLowerCase() !== "l" || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.target.closest?.("input, textarea, [contenteditable]")) return;
+      toggleLibrary();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [previewEntry, showLibrary]);
+
   // Caminho do <input webkitdirectory>, usado quando o navegador não tem o seletor de pasta.
   const onPick = (e) => {
     showFiles(Array.from(e.target.files ?? []));
@@ -193,9 +209,6 @@ export default function App() {
     </div>
   );
 
-  // A coluna ao lado do mapa aparece com pasta carregada, fora da tela cheia (que ocupa a janela toda).
-  const showLibrary = hasFolders && !viewFull;
-
   return (
     <main className={`app app--home${hasFolders ? " app--loaded" : ""}`}>
       <header className="app__bar">
@@ -233,7 +246,7 @@ export default function App() {
       {previewEntry && (
         <Modal
           label={t("preview.dialog", { name: previewEntry.name })}
-          className={viewFull ? "modal--preview modal--full" : showLibrary ? "modal--preview modal--library" : "modal--preview"}
+          className={viewFull ? "modal--preview modal--full" : showLibrary ? `modal--preview modal--library${libraryOpen ? "" : " is-collapsed"}` : "modal--preview"}
           onClose={closePreview}
         >
           <div className="viewer-split">
@@ -247,10 +260,14 @@ export default function App() {
               onClose={closePreview}
               fullscreen={viewFull}
               onToggleFullscreen={() => setViewFull(!viewFull)}
+              libraryOpen={libraryOpen}
+              onToggleLibrary={showLibrary ? toggleLibrary : undefined}
             />
             {showLibrary && (
               <aside className="viewer-library">
-                <Search docked folders={folders} onPreview={openPreview} view={libraryView} onViewChange={setLibraryView} />
+                <div className="viewer-library__inner">
+                  <Search docked folders={folders} onPreview={openPreview} view={libraryView} onViewChange={setLibraryView} />
+                </div>
               </aside>
             )}
           </div>

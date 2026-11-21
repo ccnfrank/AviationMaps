@@ -573,13 +573,24 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 
 /* ---------- Visualização com coluna lateral: a janela do mapa e, ao lado, busca, alternância e miniaturas ----------
    Só com pasta carregada e fora da tela cheia. A janela cresce pela largura da coluna, para o mapa não encolher. */
-.modal--library { --viewer-lib-w: clamp(260px, 24vw, 320px); width: min(calc(1100px + var(--viewer-lib-w)), 100%); }
+.modal--library {
+  --viewer-lib-w: clamp(260px, 24vw, 320px); --lib-now: var(--viewer-lib-w);
+  width: min(calc(1100px + var(--lib-now)), 100%); transition: width var(--dur-base) var(--ease-out);
+}
+.modal--library.is-collapsed { --lib-now: 0px; }
 .viewer-split { flex: 1; min-height: 0; display: flex; }
 .viewer-split > .preview { flex: 1; min-width: 0; }
+/* Gaveta: a coluna abre e fecha pela largura, e a janela do mapa acompanha. Fechada, some e não recebe foco. */
 .viewer-library {
-  width: var(--viewer-lib-w); flex: none; display: flex; flex-direction: column; min-height: 0;
-  border-left: 1px solid var(--line); background: var(--surface);
+  width: var(--lib-now); flex: none; display: flex; min-height: 0; overflow: hidden;
+  background: var(--surface); box-shadow: inset 1px 0 0 var(--line);
+  transition: width var(--dur-base) var(--ease-out), visibility 0s linear 0s;
 }
+.modal--library.is-collapsed .viewer-library {
+  visibility: hidden; transition: width var(--dur-base) var(--ease-out), visibility 0s linear var(--dur-base);
+}
+/* Conteúdo com largura fixa: não espreme enquanto a gaveta anima */
+.viewer-library__inner { width: var(--viewer-lib-w); flex: none; display: flex; flex-direction: column; min-height: 0; }
 
 /* Busca da coluna: campo e alternância de visualização na mesma linha, a alternância à direita */
 .search--docked { position: static; flex: 1; min-height: 0; max-width: none; margin: 0; display: flex; flex-direction: column; }
@@ -613,6 +624,11 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
   .modal--library { width: 100%; }
   .viewer-split { flex-direction: column; }
   .viewer-split > .preview { flex: 1 1 58%; min-height: 0; }
-  .viewer-library { width: auto; flex: 1 1 42%; border-left: 0; border-top: 1px solid var(--line); }
+  .viewer-library {
+    width: auto; flex: 1 1 42%; box-shadow: inset 0 1px 0 var(--line);
+    transition: flex-basis var(--dur-base) var(--ease-out), visibility 0s linear 0s;
+  }
+  .modal--library.is-collapsed .viewer-library { flex: 0 0 0; }
+  .viewer-library__inner { width: 100%; }
   .search__bar { padding: var(--s-3) var(--s-3) var(--s-2); }
 }

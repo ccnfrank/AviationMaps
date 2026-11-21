@@ -243,7 +243,47 @@ test("Esc na busca da coluna limpa o texto e mantém a visualização aberta", (
 test("tela cheia ocupa a janela e esconde a coluna", () => {
   const { container } = render(<App />);
   openFirstMap(container, "mapa-01");
-  fireEvent.click(document.querySelector(".preview__nav button[aria-pressed]"));
+  fireEvent.click(screen.getByRole("button", { name: "Full screen" }));
   expect(viewerColumn()).toBeNull();
   expect(document.querySelector(".modal--full")).not.toBeNull();
+});
+
+const viewerModal = () => document.querySelector(".modal--library");
+const panelButton = () => screen.getByRole("button", { name: "Maps panel" });
+
+test("a coluna começa aberta; a tecla L fecha e abre a gaveta", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  expect(viewerModal().classList.contains("is-collapsed")).toBe(false);
+  fireEvent.keyDown(document.body, { key: "l" });
+  expect(viewerModal().classList.contains("is-collapsed")).toBe(true);
+  fireEvent.keyDown(document.body, { key: "L" });
+  expect(viewerModal().classList.contains("is-collapsed")).toBe(false);
+});
+
+test("o botão da barra da visualização abre e fecha a gaveta", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  expect(panelButton()).toHaveAttribute("aria-pressed", "true");
+  fireEvent.click(panelButton());
+  expect(viewerModal().classList.contains("is-collapsed")).toBe(true);
+  expect(panelButton()).toHaveAttribute("aria-pressed", "false");
+  fireEvent.click(panelButton());
+  expect(viewerModal().classList.contains("is-collapsed")).toBe(false);
+});
+
+test("digitar L no campo da coluna não fecha a gaveta", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  const input = viewerColumn().querySelector("input");
+  fireEvent.keyDown(input, { key: "l" });
+  expect(viewerModal().classList.contains("is-collapsed")).toBe(false);
+});
+
+test("L com Ctrl ou Cmd não fecha a gaveta (são atalhos do sistema)", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  fireEvent.keyDown(document.body, { key: "l", metaKey: true });
+  fireEvent.keyDown(document.body, { key: "l", ctrlKey: true });
+  expect(viewerModal().classList.contains("is-collapsed")).toBe(false);
 });

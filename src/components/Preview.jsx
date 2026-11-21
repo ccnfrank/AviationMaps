@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Maximize, Minimize, Sun, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize, Minimize, PanelRight, Sun, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { formatSize } from "../lib/format";
 import { getPreviewKind } from "../lib/previewKind";
@@ -32,7 +32,11 @@ const BRIGHTNESS_STEP = 5; // de 5 em 5 os botões passam por 75%, e o slider an
 // Janela de visualização de um arquivo. Quem usa deve dar uma `key` por arquivo, assim o estado
 // (zoom, brilho, medições) começa limpo a cada troca. `entry` é { name, size, file }.
 // `fullscreen` e `onToggleFullscreen` vêm de quem abre a janela (App), que muda o tamanho do modal.
-export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClose, fullscreen = false, onToggleFullscreen }) {
+// `libraryOpen` e `onToggleLibrary` controlam o painel de mapas ao lado; o botão só aparece com `onToggleLibrary`.
+export default function Preview({
+  entry, hasPrev, hasNext, onPrev, onNext, onClose, fullscreen = false, onToggleFullscreen,
+  libraryOpen = false, onToggleLibrary,
+}) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage ?? i18n.language;
   const kind = getPreviewKind(entry.name);
@@ -393,6 +397,17 @@ export default function Preview({ entry, hasPrev, hasNext, onPrev, onNext, onClo
           <span className="preview__size">{formatSize(entry.size)}</span>
         </div>
         <button type="button" onClick={onNext} disabled={!hasNext} aria-label={t("preview.next")}><ChevronRight strokeWidth={2} /></button>
+        {onToggleLibrary && (
+          <button
+            type="button"
+            onClick={onToggleLibrary}
+            aria-pressed={libraryOpen}
+            aria-label={t("preview.library")}
+            title={`${t("preview.library")} (L)`}
+          >
+            <PanelRight strokeWidth={2} />
+          </button>
+        )}
         {onToggleFullscreen && (
           <button
             type="button"
