@@ -6,13 +6,14 @@ import { getPreviewKind } from "../lib/previewKind";
 import { getImageBlob } from "../lib/media/decodeImage";
 import { toDisplayUrl } from "../lib/displayUrl";
 import {
-  PDF_CM_PER_UNIT, angleOf, chainLength, cmPerUnitFromCalibration, cmPerUnitFromDpi, formatNumber, parseDeclination,
-  readImageDpi,
+  PDF_CM_PER_UNIT, addDeclination, angleOf, chainLength, cmPerUnitFromCalibration, cmPerUnitFromDpi, formatNumber,
+  parseDeclination, readImageDpi,
 } from "../lib/measure";
+import { distanceNm, formatBearing, routeLinks } from "../lib/route";
 import PdfPages from "./PdfPages";
 import PanView from "./PanView";
 import ImageStage from "./ImageStage";
-import { CalibrateButton, CalibrationField, ClearButton, MeasureToggle } from "./MeasureTools";
+import { CalibrateButton, CalibrationField, ClearButton, MeasureToggle, PlotToggle } from "./MeasureTools";
 import { DeclinationInput, ProtractorToggle } from "./Protractor";
 import ScaleTool from "./ScaleTool";
 import { formatDistance, groundMeters, parseScale } from "../lib/scale";
@@ -62,6 +63,9 @@ export default function Preview({
   const [declination, setDeclination] = useState("");    // texto digitado: desvio magnético em graus, com sinal
   const [mapType, setMapType] = useState(null);          // escala: "aviation", "sea" ou "land" (null: sem tipo)
   const [scaleText, setScaleText] = useState("");        // escala digitada, p. ex. "1:1000000"
+  // Pontos plotados: cada clique marca um ponto numerado. { id, surface, x, y } em unidades da superfície.
+  const [plotOn, setPlotOn] = useState(false);
+  const [plots, setPlots] = useState([]);
 
   // Carrega a imagem (decodifica os formatos que o navegador não mostra).
   useEffect(() => {
@@ -124,6 +128,31 @@ export default function Preview({
       ? `${formatNumber(paperCm, 2, language)} cm`
       : formatDistance(groundMeters(paperCm, denominator), mapType, language);
   };
+
+  // Rota dos pontos plotados, numa superfície: cada trecho traz o rumo (acima da linha) e a distância
+  // em milhas náuticas (abaixo), quando há escala. Com declinação, o rumo magnético vai junto.
+  const declinationValue = parseDeclination(declination);
+  const routeOf = (surface) => {
+    const cm = unitCm(surface);
+    const denom = parseScale(scaleText);
+    return routeLinks(plots, surface).map((link) => {
+      const trueTrack = angleOf(link.from, link.to);
+      const magnetic = declinationValue == null ? null : addDeclination(trueTrack, declinationValue);
+      const nm = distanceNm(link.px, cm, denom);
+      return {
+        key: link.key,
+        from: link.from,
+        to: link.to,
+        trackText: `${formatBearing(trueTrack)}${magnetic == null ? "" : ` · ${formatBearing(magnetic)} ${t("route.magnetic")}`}`,
+        distance: nm == null ? null : t("route.nm", { value: formatNumber(nm, 1, language) }),
+        nm,
+      };
+    });
+  };
+  // Total da rota: soma dos trechos com distância, em todas as superfícies.
+  const routeSurfaces = [...new Set(plots.map((p) => p.surface))];
+  const routeNm = routeSurfaces.reduce((sum, s) => sum + routeOf(s).reduce((acc, l) => acc + (l.nm ?? 0), 0), 0);
+  const hasRouteNm = routeSurfaces.some((s) => routeOf(s).some((l) => l.nm != null));
 
   // Pontos chegam pela camada de medição (um por clique). Cliques repetidos no mesmo lugar são ignorados.
   const addPoint = (surface, p) => {
@@ -212,6 +241,7 @@ export default function Preview({
     if (next) {
       setProtractorOn(false);
       setProtractor(null);
+      setPlotOn(false);
     } else {
       setDraft(null);
       cancelCalibration();
@@ -226,8 +256,40 @@ export default function Preview({
       setMeasureOn(false);
       setDraft(null);
       cancelCalibration();
+      setPlotOn(false);
     }
   };
+
+  // Plotar pontos: exclusivo com a medição e o transferidor. Cada clique na superfície marca um ponto.
+  const togglePlot = () => {
+    const next = !plotOn;
+    setPlotOn(next);
+    if (next) {
+      setMeasureOn(false);
+      setDraft(null);
+      cancelCalibration();
+      setProtractorOn(false);
+      setProtractor(null);
+    }
+  };
+  const addPlot = (surface, p) => {
+    setPlots((list) => [...list, { id: `${Date.now()}-${list.length}`, surface, x: p.x, y: p.y }]);
+  };
+  const clearPlots = () => setPlots([]);
+
+  // Backspace apaga o último ponto plotado (com o plotar ligado e sem campo em foco).
+  useEffect(() => {
+    if (!plotOn) return undefined;
+    const onKey = (e) => {
+      if (e.target.closest?.("input, textarea")) return;
+      if ((e.key === "Backspace" || e.key === "Delete") && plots.length) {
+        e.preventDefault();
+        setPlots((list) => list.slice(0, -1));
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [plotOn, plots.length]);
 
   // Esc com o transferidor na tela apaga o anel ou a seta, sem fechar a janela.
   useEffect(() => {
@@ -288,14 +350,18 @@ export default function Preview({
 
   // Linhas exibidas: as concluídas e, durante a calibração, a linha que aguarda o tamanho real.
   const measureProps = {
-    enabled: (measureOn || protractorOn) && !error,
+    enabled: (measureOn || protractorOn || plotOn) && !error,
     lines: calibLine ? [...lines, calibLine] : lines,
     draft,
     protractor: protractorProps,
     format: formatFor,
     onPoint: addPoint,
     onMove: moveCursor,
-    onFinish: protractorOn ? clearProtractor : finishDraft,
+    onFinish: protractorOn ? clearProtractor : plotOn ? () => {} : finishDraft,
+    plotting: plotOn,
+    plots,
+    onPlot: addPlot,
+    routeOf,
   };
 
   let body;
@@ -356,6 +422,8 @@ export default function Preview({
           {measureOn && (lines.length > 0 || draft) && <ClearButton onClick={clearAll} />}
           <span className="view-tools__sep" aria-hidden="true" />
           <ScaleTool type={mapType} onType={setMapType} text={scaleText} onText={setScaleText} />
+          <PlotToggle enabled={plotOn} onToggle={togglePlot} />
+          {plotOn && plots.length > 0 && <ClearButton label={t("points.clear")} onClick={clearPlots} />}
           <span className="view-tools__sep" aria-hidden="true" />
           <StepSlider
             label={t("preview.brightness")}
@@ -395,6 +463,9 @@ export default function Preview({
         <div className="preview__meta">
           <span className="preview__name">{entry.name}</span>
           <span className="preview__size">{formatSize(entry.size)}</span>
+          {plotOn && hasRouteNm && (
+            <span className="preview__route">{`${t("route.total")}: ${t("route.nm", { value: formatNumber(routeNm, 1, language) })}`}</span>
+          )}
         </div>
         <button type="button" onClick={onNext} disabled={!hasNext} aria-label={t("preview.next")}><ChevronRight strokeWidth={2} /></button>
         {onToggleLibrary && (

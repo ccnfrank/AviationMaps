@@ -48,6 +48,7 @@
   --surface-rgb: 17, 17, 19;
 
   /* Escala tipográfica (razão ~1.2, com passos previsíveis) */
+  --fs-3xs: 9px;
   --fs-2xs: 11px;
   --fs-xs: 12px;
   --fs-sm: 13px;
@@ -217,11 +218,12 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .pdf-pages__page { display: block; background: #fff; border-radius: 6px; box-shadow: var(--shadow-2); -webkit-user-drag: none; }
 /* Ferramentas da visualização: medir, brilho e zoom numa linha só. Em tela estreita a linha rola na horizontal, sem quebrar. */
 .view-tools {
-  display: flex; flex-wrap: nowrap; align-items: center; gap: var(--s-2);
+  /* Numa linha só quando cabe; se não couber, quebra em duas linhas, sem esconder controles na rolagem */
+  display: flex; flex-wrap: wrap; justify-content: center; row-gap: 4px; align-items: center; gap: var(--s-2);
   align-self: center; width: max-content; max-width: calc(100% - var(--s-4)); box-sizing: border-box;
   margin-top: var(--s-2); padding: 4px 6px 4px var(--s-2);
-  border: 1px solid var(--line); border-radius: 999px; background: var(--raised); box-shadow: var(--shadow-1);
-  overflow-x: auto; scrollbar-width: none;
+  border: 1px solid var(--line); border-radius: 20px; background: var(--raised); box-shadow: var(--shadow-1);
+  overflow-x: hidden; scrollbar-width: none;
   animation: zoom-in var(--dur-base) var(--ease-out) both;
 }
 .view-tools::-webkit-scrollbar { display: none; }
@@ -272,7 +274,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .tool-step:hover:not(:disabled), .tool-reset:hover:not(:disabled) { color: var(--text); background: var(--line); }
 .tool-step:disabled, .tool-reset:disabled { opacity: .35; }
 .tool-range {
-  flex: none; width: 120px; height: 22px; margin: 0 var(--s-1); background: transparent; cursor: pointer;
+  flex: none; width: 80px; height: 18px; margin: 0 var(--s-1); background: transparent; cursor: pointer;
   -webkit-appearance: none; appearance: none;
 }
 .tool-range:focus-visible { outline: none; }
@@ -281,8 +283,8 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
   background: linear-gradient(to right, var(--accent) var(--fill), var(--line) var(--fill));
 }
 .tool-range::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 16px; height: 16px; margin-top: -6px; border: 0; border-radius: 50%;
-  background: var(--ink); box-shadow: 0 0 0 4px var(--raised), 0 2px 6px rgba(0, 0, 0, .35);
+  -webkit-appearance: none; width: 12px; height: 12px; margin-top: -4px; border: 0; border-radius: 50%;
+  background: var(--ink); box-shadow: 0 0 0 3px var(--raised), 0 2px 6px rgba(0, 0, 0, .35);
   transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast);
 }
 .tool-range:hover::-webkit-slider-thumb { transform: scale(1.18); }
@@ -291,8 +293,8 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .tool-range::-moz-range-track { height: 4px; border-radius: 999px; background: var(--line); }
 .tool-range::-moz-range-progress { height: 4px; border-radius: 999px; background: var(--accent); }
 .tool-range::-moz-range-thumb {
-  width: 16px; height: 16px; border: 0; border-radius: 50%; background: var(--ink);
-  box-shadow: 0 0 0 4px var(--raised), 0 2px 6px rgba(0, 0, 0, .35);
+  width: 12px; height: 12px; border: 0; border-radius: 50%; background: var(--ink);
+  box-shadow: 0 0 0 3px var(--raised), 0 2px 6px rgba(0, 0, 0, .35);
 }
 .tool-value {
   flex: none; min-width: 56px; padding: 4px var(--s-3); border-radius: 999px; text-align: center;
@@ -328,7 +330,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
   .app { padding: var(--s-4) var(--s-4) 56px; }
   .modal-backdrop { padding: 0; align-items: flex-end; }
   .modal { width: 100%; max-height: 92vh; border-radius: 20px 20px 0 0; }
-  .tool-range { width: 64px; }
+  .tool-range { width: 52px; }
   .tool-group__icon { display: none; }
   .tool-value { min-width: 48px; padding: 4px var(--s-2); }
 }
@@ -360,6 +362,28 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
   background: var(--accent); color: var(--on-accent); box-shadow: var(--shadow-1);
 }
 .measure-layer__label.is-live { background: var(--surface); color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow-1); }
+/* Ponto plotado: marcador numerado, sempre do mesmo tamanho na tela (não cresce com o zoom) */
+.plot-marker {
+  position: absolute; transform: translate(-50%, -50%); display: grid; place-items: center;
+  min-width: 16px; height: 16px; padding: 0 3px; box-sizing: border-box; border-radius: 999px;
+  background: var(--accent); color: var(--on-accent); border: 1.5px solid var(--canvas); box-shadow: var(--shadow-1);
+  font-size: var(--fs-3xs); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1;
+}
+/* Rota: a linha que une os pontos na ordem em que foram plotados */
+.route-line {
+  stroke: var(--c-audio); stroke-width: 2.5; stroke-linecap: round;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .55));
+}
+/* Rótulos do trecho: o rumo acima da linha e a distância abaixo. --ox e --oy vêm da normal da linha. */
+.route-label {
+  position: absolute; white-space: nowrap; padding: 1px 6px; border-radius: 999px;
+  transform: translate(calc(-50% + var(--ox, 0px)), calc(-50% + var(--oy, 0px)));
+  background: rgba(var(--surface-rgb), .92); border: 1px solid var(--line); box-shadow: var(--shadow-1);
+  color: var(--text); font-size: var(--fs-3xs); font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.route-label--track { color: var(--c-audio); border-color: rgba(96, 165, 250, .45); }
+/* Total da rota, embaixo do nome do arquivo: a barra de ferramentas fica só com os controles */
+.preview__route { color: var(--c-audio); font-size: var(--fs-sm); font-weight: 600; font-variant-numeric: tabular-nums; }
 /* Calibração: o tamanho real do traço de referência, digitado na própria barra de ferramentas */
 .measure-calibrate { flex: none; display: inline-flex; align-items: center; gap: 2px; }
 .measure-calibrate__px { padding: 0 var(--s-1); color: var(--muted); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; white-space: nowrap; }

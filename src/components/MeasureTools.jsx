@@ -1,6 +1,23 @@
 import { useState } from "react";
-import { Ruler, Trash2, Crosshair, Check, X } from "lucide-react";
+import { MapPin, Ruler, Trash2, Crosshair, Check, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+
+// Botão de ícone que liga o plotar pontos: cada clique no mapa marca um ponto numerado.
+export function PlotToggle({ enabled, onToggle }) {
+  const { t } = useTranslation();
+  return (
+    <button
+      type="button"
+      className="tool-toggle"
+      aria-pressed={enabled}
+      onClick={onToggle}
+      aria-label={t("points.toggle")}
+      title={t("points.title")}
+    >
+      <MapPin strokeWidth={1.8} aria-hidden="true" />
+    </button>
+  );
+}
 
 // Botão de ícone que liga a medição, em cm. Mesmo jeito do botão do transferidor, na barra de ferramentas.
 export function MeasureToggle({ enabled, onToggle }) {
@@ -71,11 +88,12 @@ export function CalibrationField({ px, onApply, onCancel }) {
   );
 }
 
-// Apaga todas as medições da janela (Backspace apaga só a última).
-export function ClearButton({ onClick }) {
+// Apaga todas as medições da janela (Backspace apaga só a última). `label` troca o texto, para os pontos.
+export function ClearButton({ onClick, label }) {
   const { t } = useTranslation();
+  const text = label ?? t("measure.clear");
   return (
-    <button type="button" className="tool-toggle" onClick={onClick} aria-label={t("measure.clear")} title={t("measure.clear")}>
+    <button type="button" className="tool-toggle" onClick={onClick} aria-label={text} title={text}>
       <Trash2 strokeWidth={1.8} aria-hidden="true" />
     </button>
   );

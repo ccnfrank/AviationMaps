@@ -66,6 +66,10 @@ export default function ImageStage({ src, alt, zoom, brightness = 100, measure, 
           onPoint={(p) => measure.onPoint("img", p)}
           onMove={(p) => measure.onMove("img", p)}
           onFinish={measure.onFinish}
+          plotting={measure.plotting}
+          plots={measure.plots}
+          onPlot={(p) => measure.onPlot("img", p)}
+          route={measure.routeOf("img")}
         />
       )}
     </div>

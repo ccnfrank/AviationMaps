@@ -32,6 +32,16 @@
     "calibrateLabel": "Real length (cm)",
     "apply": "Apply"
   },
+  "points": {
+    "toggle": "Plot points",
+    "title": "Plot points: click on the map to mark, Backspace removes the last one",
+    "clear": "Clear points"
+  },
+  "route": {
+    "total": "Route",
+    "nm": "{{value}} nm",
+    "magnetic": "mag"
+  },
   "scale": {
     "group": "Map scale",
     "type": "Map type",

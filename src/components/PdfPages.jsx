@@ -169,6 +169,10 @@ function PdfPage({ doc, index, name, cssWidth, size, brightness, measure }) {
           onPoint={(p) => measure.onPoint(`pdf:${index}`, p)}
           onMove={(p) => measure.onMove(`pdf:${index}`, p)}
           onFinish={measure.onFinish}
+          plotting={measure.plotting}
+          plots={measure.plots}
+          onPlot={(p) => measure.onPlot(`pdf:${index}`, p)}
+          route={measure.routeOf(`pdf:${index}`)}
         />
       )}
     </div>

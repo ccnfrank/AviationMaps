@@ -32,8 +32,18 @@
     "calibrateLabel": "Tamanho real (cm)",
     "apply": "Aplicar"
   },
+  "points": {
+    "toggle": "Plotar pontos",
+    "title": "Plotar pontos: clique no mapa para marcar; Backspace apaga o último",
+    "clear": "Apagar pontos"
+  },
+  "route": {
+    "total": "Rota",
+    "nm": "{{value}} nm",
+    "magnetic": "mag"
+  },
   "scale": {
-    "group": "Escala do mapa",
+    "group":"Escala do mapa",
     "type": "Tipo de mapa",
     "aviation": "Aviação",
     "sea": "Aquático",
