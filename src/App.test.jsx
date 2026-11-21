@@ -202,3 +202,48 @@ test("na grade, a pasta com subpastas mostra cartões de subpasta junto com os m
   expect(tiles()).toHaveLength(1);
   expect(tiles()[0].textContent).toContain("mapa-02.png");
 });
+
+// ---------- Janela de visualização com a coluna de mapas ao lado ----------
+
+// Abre um mapa pela busca da página; a coluna da visualização fica à direita da janela.
+const openFirstMap = (container, name) => {
+  loadFiles(container, SAMPLE());
+  fireEvent.change(search(), { target: { value: name } });
+  fireEvent.click(files()[0]);
+};
+const viewerColumn = () => document.querySelector(".viewer-library");
+
+test("com a visualização aberta, a coluna ao lado mostra as miniaturas dos mapas da pasta", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  expect(screen.getByRole("dialog", { name: "Preview of mapa-01.png" })).toBeInTheDocument();
+  expect(viewerColumn()).not.toBeNull();
+  expect(viewerColumn().querySelectorAll(".search-live__tile")).toHaveLength(2);
+});
+
+test("clicar numa miniatura da coluna troca o mapa aberto", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  const other = Array.from(viewerColumn().querySelectorAll(".search-live__tile")).find((b) => b.textContent.includes("mapa-02"));
+  fireEvent.click(other);
+  expect(screen.getByRole("dialog", { name: "Preview of mapa-02.pdf" })).toBeInTheDocument();
+  expect(screen.queryByRole("dialog", { name: "Preview of mapa-01.png" })).toBeNull();
+});
+
+test("Esc na busca da coluna limpa o texto e mantém a visualização aberta", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  const input = viewerColumn().querySelector("input");
+  fireEvent.change(input, { target: { value: "mapa" } });
+  fireEvent.keyDown(input, { key: "Escape" });
+  expect(input).toHaveValue("");
+  expect(screen.getByRole("dialog", { name: "Preview of mapa-01.png" })).toBeInTheDocument();
+});
+
+test("tela cheia ocupa a janela e esconde a coluna", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  fireEvent.click(document.querySelector(".preview__nav button[aria-pressed]"));
+  expect(viewerColumn()).toBeNull();
+  expect(document.querySelector(".modal--full")).not.toBeNull();
+});

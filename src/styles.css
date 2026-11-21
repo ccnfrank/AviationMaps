@@ -570,3 +570,49 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 /* Grade sem texto: cartões de pasta, com ícone de pasta no lugar da miniatura */
 .search-live__thumb--folder { display: grid; place-items: center; background: var(--raised); color: var(--accent); }
 .search-live__thumb--folder > svg { width: 44px; height: 44px; }
+
+/* ---------- Visualização com coluna lateral: a janela do mapa e, ao lado, busca, alternância e miniaturas ----------
+   Só com pasta carregada e fora da tela cheia. A janela cresce pela largura da coluna, para o mapa não encolher. */
+.modal--library { --viewer-lib-w: clamp(260px, 24vw, 320px); width: min(calc(1100px + var(--viewer-lib-w)), 100%); }
+.viewer-split { flex: 1; min-height: 0; display: flex; }
+.viewer-split > .preview { flex: 1; min-width: 0; }
+.viewer-library {
+  width: var(--viewer-lib-w); flex: none; display: flex; flex-direction: column; min-height: 0;
+  border-left: 1px solid var(--line); background: var(--surface);
+}
+
+/* Busca da coluna: campo e alternância de visualização na mesma linha, a alternância à direita */
+.search--docked { position: static; flex: 1; min-height: 0; max-width: none; margin: 0; display: flex; flex-direction: column; }
+.search__bar { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-4) var(--s-4) var(--s-3); }
+.search__field { position: relative; flex: 1; min-width: 0; }
+.search--docked .search input { height: 40px; }
+.search--docked .search-live__views { flex: none; height: 40px; box-sizing: border-box; padding: 3px; align-items: center; }
+.search--docked .search-live__view { width: 32px; height: 32px; }
+
+/* O painel ocupa o resto da coluna e rola sozinho; o cabeçalho com a contagem fica preso no topo */
+.search-live--docked {
+  position: static; transform: none; width: auto; max-height: none; flex: 1; min-height: 0;
+  display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain;
+  background: none; border: 0; border-radius: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+  animation: none;
+}
+.search-live--docked .search-live__head {
+  position: sticky; top: 0; z-index: 1; padding: var(--s-1) var(--s-4) var(--s-2);
+  background: var(--surface);
+}
+.search-live--docked .search-live__count { padding: 0; }
+.search-live--docked .search-live__list { max-height: none; overflow: visible; padding: 0 var(--s-3) var(--s-5); }
+.search-live--docked .search-live__grid {
+  grid-auto-rows: auto; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--s-3); max-height: none; overflow: visible; padding: 0 var(--s-4) var(--s-5);
+}
+.search-live--docked .search-live__thumb { height: auto; aspect-ratio: 3 / 2; }
+
+/* No celular não há lado: a coluna desce para baixo da imagem, com rolagem própria */
+@media (max-width: 640px) {
+  .modal--library { width: 100%; }
+  .viewer-split { flex-direction: column; }
+  .viewer-split > .preview { flex: 1 1 58%; min-height: 0; }
+  .viewer-library { width: auto; flex: 1 1 42%; border-left: 0; border-top: 1px solid var(--line); }
+  .search__bar { padding: var(--s-3) var(--s-3) var(--s-2); }
+}

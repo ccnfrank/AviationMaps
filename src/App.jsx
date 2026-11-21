@@ -17,7 +17,8 @@ import { getPreviewKind } from "./lib/previewKind";
 
 // Mapa Reader: a página inicial do Media Manager, só com mapas. Carrega uma pasta (pelo botão ou
 // soltando-a na janela). A busca mostra os mapas (imagens e PDF) que casam com o texto, logo
-// abaixo do campo, e cada um abre na janela de visualização. Os outros arquivos são ignorados.
+// abaixo do campo, e cada um abre na janela de visualização. Dentro da visualização, uma coluna ao
+// lado mostra os mapas da pasta para trocar de mapa. Os outros arquivos são ignorados.
 export default function App() {
   const { t } = useTranslation();
   const inputRef = useRef(null);
@@ -30,6 +31,8 @@ export default function App() {
   // Com subpastas, a busca abre em lista (uma linha por subpasta); sem elas, em grade.
   const hasSubfolders = (folders ?? []).some((f) => f.name !== ROOT_NAME);
   const view = viewMode ?? (hasSubfolders ? "list" : "grid");
+  // Visualização da coluna ao lado do mapa: miniaturas por padrão, independente da busca da página.
+  const [libraryView, setLibraryView] = useState("grid");
 
   // Só os mapas entram na lista: imagens e PDF. Vídeo, áudio, zip e o resto da pasta somem aqui.
   const showFiles = (files) => {
@@ -190,6 +193,9 @@ export default function App() {
     </div>
   );
 
+  // A coluna ao lado do mapa aparece com pasta carregada, fora da tela cheia (que ocupa a janela toda).
+  const showLibrary = hasFolders && !viewFull;
+
   return (
     <main className={`app app--home${hasFolders ? " app--loaded" : ""}`}>
       <header className="app__bar">
@@ -227,20 +233,27 @@ export default function App() {
       {previewEntry && (
         <Modal
           label={t("preview.dialog", { name: previewEntry.name })}
-          className={viewFull ? "modal--preview modal--full" : "modal--preview"}
+          className={viewFull ? "modal--preview modal--full" : showLibrary ? "modal--preview modal--library" : "modal--preview"}
           onClose={closePreview}
         >
-          <Preview
-            key={previewSeq}
-            entry={previewEntry}
-            hasPrev={false}
-            hasNext={false}
-            onPrev={() => {}}
-            onNext={() => {}}
-            onClose={closePreview}
-            fullscreen={viewFull}
-            onToggleFullscreen={() => setViewFull(!viewFull)}
-          />
+          <div className="viewer-split">
+            <Preview
+              key={previewSeq}
+              entry={previewEntry}
+              hasPrev={false}
+              hasNext={false}
+              onPrev={() => {}}
+              onNext={() => {}}
+              onClose={closePreview}
+              fullscreen={viewFull}
+              onToggleFullscreen={() => setViewFull(!viewFull)}
+            />
+            {showLibrary && (
+              <aside className="viewer-library">
+                <Search docked folders={folders} onPreview={openPreview} view={libraryView} onViewChange={setLibraryView} />
+              </aside>
+            )}
+          </div>
         </Modal>
       )}
 
