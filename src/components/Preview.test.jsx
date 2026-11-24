@@ -160,3 +160,291 @@ test("tela cheia alterna o botão entre entrar e sair", () => {
   rerender(<Preview entry={entry("capa.png")} {...nav} onToggleFullscreen={onToggleFullscreen} fullscreen />);
   expect(screen.getByRole("button", { name: "Exit full screen" })).toHaveAttribute("aria-pressed", "true");
 });
+
+test("vento: liga pelo ícone e desliga ao ligar medir", () => {
+  render(<Preview entry={entry("capa.png")} {...nav} />);
+  const wind = screen.getByRole("button", { name: "Wind" });
+  fireEvent.click(wind);
+  expect(wind).toHaveAttribute("aria-pressed", "true");
+  fireEvent.click(screen.getByRole("button", { name: "Measure" }));
+  expect(wind).toHaveAttribute("aria-pressed", "false");
+});
+
+test("vento + TAS: o trecho da rota mostra a proa corrigida e a velocidade sobre o solo", async () => {
+  const { container } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  const img = await screen.findByRole("img", { name: "capa.png" });
+  Object.defineProperty(img, "naturalWidth", { value: 800 });
+  Object.defineProperty(img, "naturalHeight", { value: 600 });
+  fireEvent.load(img);
+  const svg = container.querySelector("svg.measure-layer");
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+
+  // Dois pontos plotados, A → B, leste.
+  fireEvent.click(screen.getByRole("button", { name: "Plot points" }));
+  fireEvent.pointerDown(svg, { clientX: 100, clientY: 300, button: 0 });
+  fireEvent.pointerDown(svg, { clientX: 700, clientY: 300, button: 0 });
+
+  // Vento de norte, 20 kt, plotado no meio do trecho; TAS de 120 kt.
+  fireEvent.click(screen.getByRole("button", { name: "Wind" }));
+  fireEvent.pointerDown(svg, { clientX: 400, clientY: 300, button: 0 });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" }), { target: { value: "0" } });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind speed" }), { target: { value: "20" } });
+  fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
+  fireEvent.change(screen.getByRole("textbox", { name: "True airspeed (TAS)" }), { target: { value: "120" } });
+
+  // Rumo 090°, proa 080° (vento cruzado de norte). A velocidade sobre o solo não aparece no mapa.
+  expect(screen.getByText(/090° · HDG 080°/)).toBeInTheDocument();
+  expect(screen.queryByText(/GS/)).toBeNull();
+});
+
+test("vento sem TAS: a rota pede a TAS, em vez de mostrar uma proa", async () => {
+  const { container } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  const img = await screen.findByRole("img", { name: "capa.png" });
+  Object.defineProperty(img, "naturalWidth", { value: 800 });
+  Object.defineProperty(img, "naturalHeight", { value: 600 });
+  fireEvent.load(img);
+  const svg = container.querySelector("svg.measure-layer");
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+
+  fireEvent.click(screen.getByRole("button", { name: "Plot points" }));
+  fireEvent.pointerDown(svg, { clientX: 100, clientY: 300, button: 0 });
+  fireEvent.pointerDown(svg, { clientX: 700, clientY: 300, button: 0 });
+  fireEvent.click(screen.getByRole("button", { name: "Wind" }));
+  fireEvent.pointerDown(svg, { clientX: 400, clientY: 300, button: 0 });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" }), { target: { value: "0" } });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind speed" }), { target: { value: "20" } });
+  fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
+
+  expect(screen.getByText(/type TAS for heading/)).toBeInTheDocument();
+  expect(screen.getByRole("textbox", { name: "True airspeed (TAS)" }).closest(".tas")).toHaveClass("is-needed");
+});
+
+test("vento magnético: com a declinação, a rota converte para verdadeiro antes da proa", async () => {
+  const { container } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  const img = await screen.findByRole("img", { name: "capa.png" });
+  Object.defineProperty(img, "naturalWidth", { value: 800 });
+  Object.defineProperty(img, "naturalHeight", { value: 600 });
+  fireEvent.load(img);
+  const svg = container.querySelector("svg.measure-layer");
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+
+  fireEvent.click(screen.getByRole("button", { name: "Plot points" }));
+  fireEvent.pointerDown(svg, { clientX: 100, clientY: 300, button: 0 });
+  fireEvent.pointerDown(svg, { clientX: 700, clientY: 300, button: 0 });
+  fireEvent.click(screen.getByRole("button", { name: "Wind" }));
+  fireEvent.pointerDown(svg, { clientX: 400, clientY: 300, button: 0 });
+  // Vento magnético de 040°, declinação +10°: verdadeiro = 030°. Com 20 kt e TAS 100 kt, a proa é 080°.
+  fireEvent.click(screen.getByRole("button", { name: "Magnetic wind (off = true)" }));
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" }), { target: { value: "40" } });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind speed" }), { target: { value: "20" } });
+  fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
+  fireEvent.change(screen.getByRole("textbox", { name: "True airspeed (TAS)" }), { target: { value: "100" } });
+  // Sem declinação, a rota pede a declinação.
+  expect(screen.getByText(/type declination for magnetic wind/)).toBeInTheDocument();
+  fireEvent.change(screen.getByRole("textbox", { name: "Magnetic declination in degrees" }), { target: { value: "10" } });
+  expect(screen.getByText(/HDG 080°/)).toBeInTheDocument();
+});
+
+test("rumo 120 com vento de 240° a 20 kt e TAS 120 kt: o bico do avião aponta para 128°, não para 120°", async () => {
+  const { container } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  const img = await screen.findByRole("img", { name: "capa.png" });
+  Object.defineProperty(img, "naturalWidth", { value: 800 });
+  Object.defineProperty(img, "naturalHeight", { value: 600 });
+  fireEvent.load(img);
+  const svg = container.querySelector("svg.measure-layer");
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+
+  // A → B no rumo 120 (para baixo e à direita), com o vento plotado no meio do trecho.
+  fireEvent.click(screen.getByRole("button", { name: "Plot points" }));
+  fireEvent.pointerDown(svg, { clientX: 300, clientY: 200, button: 0 });
+  fireEvent.pointerDown(svg, { clientX: 646, clientY: 400, button: 0 });
+  fireEvent.click(screen.getByRole("button", { name: "Wind" }));
+  fireEvent.pointerDown(svg, { clientX: 523, clientY: 300, button: 0 });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" }), { target: { value: "240" } });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind speed" }), { target: { value: "20" } });
+  fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
+  fireEvent.change(screen.getByRole("textbox", { name: "True airspeed (TAS)" }), { target: { value: "120" } });
+
+  const plane = container.querySelector(".route-plane");
+  expect(plane).not.toBeNull();
+  expect(plane.getAttribute("transform")).toMatch(/rotate\(128\.\d+\)/);
+  expect(plane.getAttribute("transform")).not.toMatch(/rotate\(120/);
+});
+
+test("o nariz do avião mostra o grau: rumo, depois com declinação, depois com a proa corrigida", async () => {
+  const { container } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  const img = await screen.findByRole("img", { name: "capa.png" });
+  Object.defineProperty(img, "naturalWidth", { value: 800 });
+  Object.defineProperty(img, "naturalHeight", { value: 600 });
+  fireEvent.load(img);
+  const svg = container.querySelector("svg.measure-layer");
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+
+  // Dois pontos no rumo 130°: o nariz aponta para 130°.
+  fireEvent.click(screen.getByRole("button", { name: "Plot points" }));
+  fireEvent.pointerDown(svg, { clientX: 300, clientY: 200, button: 0 });
+  fireEvent.pointerDown(svg, { clientX: 606, clientY: 457, button: 0 });
+  expect(container.querySelector(".nose-label").textContent).toBe("130°");
+
+  // Declinação de +10°: o nariz passa a 140° magnético.
+  fireEvent.change(screen.getByRole("textbox", { name: "Magnetic declination in degrees" }), { target: { value: "10" } });
+  expect(container.querySelector(".nose-label").textContent).toBe("140°");
+});
+
+test("duplo clique no rumo abre o campo; Enter corrige o rumo e o segundo ponto anda sobre a nova direção", async () => {
+  const { container } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  const img = await screen.findByRole("img", { name: "capa.png" });
+  Object.defineProperty(img, "naturalWidth", { value: 800 });
+  Object.defineProperty(img, "naturalHeight", { value: 600 });
+  fireEvent.load(img);
+  const svg = container.querySelector("svg.measure-layer");
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+
+  // Dois pontos no rumo 130°.
+  fireEvent.click(screen.getByRole("button", { name: "Plot points" }));
+  fireEvent.pointerDown(svg, { clientX: 300, clientY: 200, button: 0 });
+  fireEvent.pointerDown(svg, { clientX: 606, clientY: 457, button: 0 });
+  expect(container.querySelector(".route-label--track").textContent).toBe("130°");
+
+  // Duplo clique no grau, corrige para 090°.
+  fireEvent.doubleClick(container.querySelector(".route-label--track"));
+  const field = container.querySelector(".route-edit");
+  expect(field.value).toBe("130");
+  fireEvent.change(field, { target: { value: "090" } });
+  fireEvent.keyDown(field, { key: "Enter" });
+
+  expect(container.querySelector(".route-label--track").textContent).toBe("090°");
+  expect(container.querySelector(".route-edit")).toBeNull();
+});
+
+test("Esc no campo do rumo cancela a correção", async () => {
+  const { container } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  const img = await screen.findByRole("img", { name: "capa.png" });
+  Object.defineProperty(img, "naturalWidth", { value: 800 });
+  Object.defineProperty(img, "naturalHeight", { value: 600 });
+  fireEvent.load(img);
+  const svg = container.querySelector("svg.measure-layer");
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+  fireEvent.click(screen.getByRole("button", { name: "Plot points" }));
+  fireEvent.pointerDown(svg, { clientX: 300, clientY: 200, button: 0 });
+  fireEvent.pointerDown(svg, { clientX: 606, clientY: 457, button: 0 });
+
+  fireEvent.doubleClick(container.querySelector(".route-label--track"));
+  const field = container.querySelector(".route-edit");
+  fireEvent.change(field, { target: { value: "010" } });
+  fireEvent.keyDown(field, { key: "Escape" });
+  expect(container.querySelector(".route-label--track").textContent).toBe("130°");
+});
+
+test("duplo clique na seta de vento abre a correção: direção, velocidade e TAS", async () => {
+  const { container } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  const img = await screen.findByRole("img", { name: "capa.png" });
+  Object.defineProperty(img, "naturalWidth", { value: 800 });
+  Object.defineProperty(img, "naturalHeight", { value: 600 });
+  fireEvent.load(img);
+  const svg = container.querySelector("svg.measure-layer");
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+
+  fireEvent.click(screen.getByRole("button", { name: "Wind" }));
+  fireEvent.pointerDown(svg, { clientX: 400, clientY: 300, button: 0 });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" }), { target: { value: "270" } });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind speed" }), { target: { value: "15" } });
+  fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
+  expect(container.querySelector(".wind-label").textContent).toBe("270° · 15 kt");
+
+  // Duplo clique na seta abre a correção, já preenchida.
+  fireEvent.doubleClick(container.querySelector(".wind-arrow"));
+  const form = container.querySelector(".wind-form");
+  expect(form).not.toBeNull();
+  const [dir, speed, tas] = form.querySelectorAll("input");
+  expect(dir.value).toBe("270");
+  expect(speed.value).toBe("15");
+
+  // Corrige direção, velocidade e TAS, e confirma.
+  fireEvent.change(dir, { target: { value: "90" } });
+  fireEvent.change(speed, { target: { value: "30" } });
+  fireEvent.change(tas, { target: { value: "120" } });
+  fireEvent.submit(form);
+
+  expect(container.querySelector(".wind-label").textContent).toBe("090° · 30 kt");
+  expect(container.querySelector(".wind-form")).toBeNull();
+  expect(screen.getByRole("textbox", { name: "True airspeed (TAS)" })).toHaveValue("120");
+});
+
+test("duplo clique no rótulo do vento também corrige; Esc cancela sem mudar a seta", async () => {
+  const { container } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  const img = await screen.findByRole("img", { name: "capa.png" });
+  Object.defineProperty(img, "naturalWidth", { value: 800 });
+  Object.defineProperty(img, "naturalHeight", { value: 600 });
+  fireEvent.load(img);
+  const svg = container.querySelector("svg.measure-layer");
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+
+  fireEvent.click(screen.getByRole("button", { name: "Wind" }));
+  fireEvent.pointerDown(svg, { clientX: 400, clientY: 300, button: 0 });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" }), { target: { value: "270" } });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind speed" }), { target: { value: "15" } });
+  fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
+
+  fireEvent.doubleClick(container.querySelector(".wind-label"));
+  const form = container.querySelector(".wind-form");
+  fireEvent.change(form.querySelectorAll("input")[0], { target: { value: "10" } });
+  fireEvent.keyDown(form, { key: "Escape" });
+  expect(container.querySelector(".wind-form")).toBeNull();
+  expect(container.querySelector(".wind-label").textContent).toBe("270° · 15 kt");
+});
+
+test("duplo clique no ponto plotado abre o nome; Enter renomeia e nome vazio volta ao número", async () => {
+  const { container } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  const img = await screen.findByRole("img", { name: "capa.png" });
+  Object.defineProperty(img, "naturalWidth", { value: 800 });
+  Object.defineProperty(img, "naturalHeight", { value: 600 });
+  fireEvent.load(img);
+  const svg = container.querySelector("svg.measure-layer");
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+  fireEvent.click(screen.getByRole("button", { name: "Plot points" }));
+  fireEvent.pointerDown(svg, { clientX: 100, clientY: 300, button: 0 });
+  fireEvent.pointerDown(svg, { clientX: 700, clientY: 300, button: 0 });
+
+  const markers = () => [...container.querySelectorAll(".plot-marker")].map((m) => m.textContent);
+  expect(markers()).toEqual(["1", "2"]);
+
+  fireEvent.doubleClick(container.querySelectorAll(".plot-marker")[0]);
+  const field = container.querySelector(".plot-edit");
+  expect(field.value).toBe("1");
+  fireEvent.change(field, { target: { value: "ALFA" } });
+  fireEvent.keyDown(field, { key: "Enter" });
+  expect(markers()).toEqual(["ALFA", "2"]);
+
+  // Nome vazio volta ao número.
+  fireEvent.doubleClick(container.querySelectorAll(".plot-marker")[0]);
+  fireEvent.change(container.querySelector(".plot-edit"), { target: { value: "" } });
+  fireEvent.keyDown(container.querySelector(".plot-edit"), { key: "Enter" });
+  expect(markers()).toEqual(["1", "2"]);
+});
+
+test("exportar rota: o botão aparece com dois pontos e salva um CSV", async () => {
+  const createURL = vi.fn(() => "blob:route");
+  vi.stubGlobal("URL", { ...URL, createObjectURL: createURL, revokeObjectURL: vi.fn() });
+  const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+  const { container } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  const img = await screen.findByRole("img", { name: "capa.png" });
+  Object.defineProperty(img, "naturalWidth", { value: 800 });
+  Object.defineProperty(img, "naturalHeight", { value: 600 });
+  fireEvent.load(img);
+  const svg = container.querySelector("svg.measure-layer");
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+
+  expect(screen.queryByRole("button", { name: "Export route (CSV)" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Plot points" }));
+  fireEvent.pointerDown(svg, { clientX: 300, clientY: 200, button: 0 });
+  fireEvent.pointerDown(svg, { clientX: 606, clientY: 457, button: 0 });
+  const before = createURL.mock.calls.length; // a própria imagem também usa createObjectURL
+  fireEvent.click(screen.getByRole("button", { name: "Export route (CSV)" }));
+
+  await vi.waitFor(() => expect(click).toHaveBeenCalled());
+  expect(createURL.mock.calls.length).toBe(before + 1);
+  expect(createURL.mock.calls.at(-1)[0].size).toBeGreaterThan(0);
+  vi.unstubAllGlobals();
+  click.mockRestore();
+});

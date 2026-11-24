@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { angleOf } from "./measure";
-import { distanceNm, formatBearing, routeLinks } from "./route";
+import { distanceNm, formatBearing, parseBearing, routeLinks } from "./route";
 
 const p = (id, surface, x, y) => ({ id, surface, x, y });
 
@@ -49,5 +49,20 @@ describe("rumo", () => {
   it("três dígitos, e 359,6° arredonda para 000°", () => {
     expect(formatBearing(45.4)).toBe("045°");
     expect(formatBearing(359.6)).toBe("000°");
+  });
+});
+
+describe("parseBearing", () => {
+  it("aceita rumo de 0 a 360, com vírgula decimal, e 360 vira 0", () => {
+    expect(parseBearing("090")).toBe(90);
+    expect(parseBearing("12,5")).toBe(12.5);
+    expect(parseBearing("360")).toBe(0);
+  });
+
+  it("recusa vazio, fora da faixa e texto", () => {
+    expect(parseBearing("")).toBeNull();
+    expect(parseBearing("361")).toBeNull();
+    expect(parseBearing("-5")).toBeNull();
+    expect(parseBearing("abc")).toBeNull();
   });
 });

@@ -1,6 +1,10 @@
-import { useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { segmentsOf } from "../lib/measure";
+import { parseBearing } from "../lib/route";
+import { WIND_ARROW_PX } from "../lib/wind";
 import Protractor from "./Protractor";
+import { NoseLabels, RoutePlanes, WindArrows, WindForm, WindLabels } from "./WindLayer";
 
 // Camada de medição sobre uma superfície (imagem inteira ou uma página de PDF).
 // Cada clique fixa um ponto; a linha ao vivo segue o ponteiro até o próximo clique, e o texto
@@ -8,14 +12,39 @@ import Protractor from "./Protractor";
 // concluem a medição. Com `enabled` desligado, a camada não recebe ponteiro e a área rola.
 // Com `plotting`, cada clique só marca um ponto numerado (`onPlot`); a medição fica de lado.
 // `plots` são todos os pontos plotados ({ id, surface, x, y }); a camada mostra os desta superfície.
+// Com `windOn`, cada clique abre a entrada de vento no ponto (`onWind`); `windPending` é o ponto
+// aguardando a direção e a velocidade, e `winds` são as setas já marcadas ({ id, surface, x, y, dir, speed }).
 export default function MeasureLayer({
   surface, viewW, viewH, enabled, lines, draft, protractor, onPoint, onMove, onFinish, format,
   plotting = false, plots = [], onPlot, route = [],
+  windOn = false, winds = [], windPending = null, onWind, onWindSubmit, onWindCancel, windUnit = "kt",
+  windEdit = null, onRenamePlot,
 }) {
   const svgRef = useRef(null);
   const mine = lines.filter((l) => l.surface === surface);
   // Numeração global, na ordem em que os pontos foram plotados; a camada mostra só os desta superfície.
   const myPlots = plots.map((p, i) => ({ ...p, n: i + 1 })).filter((p) => p.surface === surface);
+  // Vento: só as setas desta superfície. O comprimento é medido na tela, para a seta não crescer com o zoom.
+  const myWinds = winds.filter((w) => w.surface === surface);
+  const pending = windPending && windPending.surface === surface ? windPending : null;
+  // Correção de uma seta existente (duplo clique): o formulário abre na seta, com os valores atuais.
+  const editing = windEdit?.id ? myWinds.find((w) => w.id === windEdit.id) : null;
+  // Pixels da tela por unidade da superfície: a seta mede WIND_ARROW_PX na tela, qualquer que seja o zoom.
+  const [screenScale, setScreenScale] = useState(1);
+  useLayoutEffect(() => {
+    const el = svgRef.current;
+    if (!el) return undefined;
+    const read = () => {
+      const w = el.getBoundingClientRect().width;
+      if (w > 0) setScreenScale(w / viewW);
+    };
+    read();
+    if (typeof ResizeObserver === "undefined") return undefined;
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [viewW]);
+  const windLength = WIND_ARROW_PX / screenScale;
   const live = draft && draft.surface === surface ? draft : null;
   // Transferidor: só desenha na superfície onde ele está.
   const angle = protractor && protractor.surface === surface ? protractor : null;
@@ -32,6 +61,12 @@ export default function MeasureLayer({
     if (!enabled || e.button !== 0) return;
     // Sem isto, o clique também começaria o arraste que rola a área.
     e.stopPropagation();
+    if (windOn) {
+      // Clicar numa seta não cria ponto: o duplo clique é que abre a correção.
+      if (e.target.closest?.(".wind-arrow")) return;
+      onWind?.(toView(e));
+      return;
+    }
     if (plotting) {
       onPlot?.(toView(e));
       return;
@@ -39,10 +74,19 @@ export default function MeasureLayer({
     onPoint(toView(e));
   };
   const onPointerMove = (e) => {
-    if (enabled && !plotting) onMove(toView(e));
+    if (enabled && !plotting && !windOn) onMove(toView(e));
   };
   const finishFrom = (e) => {
-    if (!enabled || plotting) return;
+    if (windOn && e.type === "dblclick") {
+      const arrow = e.target.closest?.(".wind-arrow");
+      if (arrow && windEdit?.onEdit) {
+        e.preventDefault();
+        e.stopPropagation();
+        windEdit.onEdit(arrow.dataset.windId);
+      }
+      return;
+    }
+    if (!enabled || plotting || windOn) return;
     e.preventDefault();
     e.stopPropagation();
     onFinish();
@@ -93,15 +137,25 @@ export default function MeasureLayer({
           />
         ))}
         {liveSegment && <Path points={[live.points[live.points.length - 1], live.cursor]} live />}
+        <WindArrows winds={myWinds} length={windLength} />
+        <RoutePlanes links={route} screenScale={screenScale} />
       </svg>
       <div className="measure-layer__labels" aria-hidden="true">
         {mine.map((l) => labelsOf(l.points, l.id))}
         {live && labelsOf(live.points, "draft")}
         {route.map((l) => <RouteLabels key={l.key} link={l} viewW={viewW} viewH={viewH} />)}
+        <WindLabels winds={myWinds} length={windLength} viewW={viewW} viewH={viewH} onEdit={windEdit?.onEdit} />
+        <NoseLabels links={route} viewW={viewW} viewH={viewH} screenScale={screenScale} />
+        {pending && (
+          <span className="wind-pending" style={{ left: `${(pending.x / viewW) * 100}%`, top: `${(pending.y / viewH) * 100}%` }} />
+        )}
         {myPlots.map((p) => (
-          <span key={p.id} className="plot-marker" style={{ left: `${(p.x / viewW) * 100}%`, top: `${(p.y / viewH) * 100}%` }}>
-            {p.n}
-          </span>
+          <PlotMarker
+            key={p.id}
+            plot={p}
+            style={{ left: `${(p.x / viewW) * 100}%`, top: `${(p.y / viewH) * 100}%` }}
+            onRename={onRenamePlot}
+          />
         ))}
         {angle && (
           <Protractor
@@ -125,6 +179,33 @@ export default function MeasureLayer({
           />
         )}
       </div>
+      {editing && (
+        <WindForm
+          key={`edit-${editing.id}`}
+          x={editing.x}
+          y={editing.y}
+          viewW={viewW}
+          viewH={viewH}
+          unit={windUnit}
+          initial={editing}
+          tas={windEdit.tas}
+          onTas={windEdit.onTas}
+          onSubmit={windEdit.onSubmit}
+          onCancel={windEdit.onCancel}
+        />
+      )}
+      {pending && (
+        <WindForm
+          key={`${pending.x}-${pending.y}`}
+          x={pending.x}
+          y={pending.y}
+          viewW={viewW}
+          viewH={viewH}
+          unit={windUnit}
+          onSubmit={onWindSubmit}
+          onCancel={onWindCancel}
+        />
+      )}
     </>
   );
 }
@@ -160,7 +241,7 @@ function RouteLabels({ link, viewW, viewH }) {
   };
   return (
     <>
-      <span className="route-label route-label--track" style={place(1, link.trackText)}>{link.trackText}</span>
+      <TrackLabel link={link} style={place(1, link.trackText)} />
       {link.distance && (
         <span className="route-label route-label--dist" style={place(-1, link.distance)}>{link.distance}</span>
       )}
@@ -188,6 +269,101 @@ function Label({ x, y, viewW, viewH, text, live = false }) {
       style={{ left: `${(x / viewW) * 100}%`, top: `${(y / viewH) * 100}%` }}
     >
       {text}
+    </span>
+  );
+}
+
+// Rótulo do rumo: o duplo clique abre o campo para corrigir o rumo do trecho. Enter confirma, Esc cancela.
+function TrackLabel({ link, style }) {
+  const { t } = useTranslation();
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState("");
+  // O clique no rótulo não pode começar o arraste da área que rola.
+  const stop = (e) => e.stopPropagation();
+  if (editing) {
+    return (
+      <input
+        className="route-edit"
+        style={style}
+        autoFocus
+        inputMode="decimal"
+        aria-label={t("route.editTrack")}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onPointerDown={stop}
+        onBlur={() => setEditing(false)}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+          if (e.key === "Escape") setEditing(false);
+          if (e.key === "Enter") {
+            const deg = parseBearing(value);
+            if (deg != null) link.onTrack(deg);
+            setEditing(false);
+          }
+        }}
+      />
+    );
+  }
+  return (
+    <span
+      className="route-label route-label--track"
+      style={style}
+      title={t("route.editTitle")}
+      onPointerDown={stop}
+      onDoubleClick={(e) => {
+        e.stopPropagation();
+        setValue(String(Math.round(link.track)));
+        setEditing(true);
+      }}
+    >
+      {link.trackText}
+    </span>
+  );
+}
+
+// Marcador de um ponto plotado. O duplo clique abre o nome para editar: Enter confirma, Esc cancela.
+// Nome vazio volta ao número do ponto.
+function PlotMarker({ plot, style, onRename }) {
+  const { t } = useTranslation();
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState("");
+  const stop = (e) => e.stopPropagation();
+  if (editing) {
+    return (
+      <input
+        className="plot-edit"
+        style={style}
+        autoFocus
+        maxLength={8}
+        aria-label={t("points.renameAria")}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onPointerDown={stop}
+        onBlur={() => setEditing(false)}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+          if (e.key === "Escape") setEditing(false);
+          if (e.key === "Enter") {
+            onRename?.(plot.id, value.trim());
+            setEditing(false);
+          }
+        }}
+      />
+    );
+  }
+  return (
+    <span
+      className="plot-marker"
+      style={style}
+      title={t("points.renameTitle")}
+      onPointerDown={stop}
+      onDoubleClick={(e) => {
+        e.stopPropagation();
+        setValue(plot.name ?? String(plot.n));
+        setEditing(true);
+      }}
+    >
+      {plot.name ?? plot.n}
     </span>
   );
 }

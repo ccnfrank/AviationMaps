@@ -23,6 +23,15 @@ export function distanceNm(px, cmPerUnit, denominator) {
   return groundMeters(px * cmPerUnit, denominator) / NM_METERS;
 }
 
+// Rumo digitado, em graus de 0 a 360 (360 vira 0). Aceita vírgula decimal. Vazio ou fora da faixa vira null.
+export function parseBearing(text) {
+  const s = String(text ?? "").trim().replace(",", ".");
+  if (s === "") return null;
+  const n = Number(s);
+  if (!Number.isFinite(n) || n < 0 || n > 360) return null;
+  return n % 360;
+}
+
 // Rumo com três dígitos, como se lê numa carta: 045°. 359,6° arredonda para 000°.
 export function formatBearing(deg) {
   return `${String(Math.round(deg) % 360).padStart(3, "0")}°`;

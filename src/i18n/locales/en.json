@@ -27,12 +27,60 @@
   "points": {
     "toggle": "Plot points",
     "title": "Plot points: click on the map to mark, Backspace removes the last one",
-    "clear": "Clear points"
+    "clear": "Clear points",
+    "renameTitle": "Double-click to rename the point",
+    "renameAria": "Point name"
+  },
+  "wind": {
+    "toggle": "Wind",
+    "title": "Wind: click on the map, type the direction (where it comes from, in degrees) and the speed in knots. Backspace removes the last one",
+    "unit": "kt",
+    "direction": "Direction",
+    "directionAria": "Wind direction, in degrees, where it comes from",
+    "speed": "Speed",
+    "speedAria": "Wind speed",
+    "add": "Add wind",
+    "clear": "Clear wind",
+    "tas": "TAS",
+    "tasAria": "True airspeed (TAS)",
+    "tasTitle": "TAS: true airspeed in knots. With wind plotted, route legs show the heading to fly and the ground speed",
+    "kmh": "km/h",
+    "unitAria": "Speed unit: knots or km/h",
+    "magneticAria": "Magnetic wind (off = true)",
+    "editTitle": "Double-click to correct direction, speed, reference and TAS"
   },
   "route": {
     "total": "Route",
     "nm": "{{value}} nm",
-    "magnetic": "mag"
+    "magnetic": "mag",
+    "heading": "HDG",
+    "windAboveTas": "wind above TAS",
+    "needTas": "type TAS for heading",
+    "needDeclination": "type declination for magnetic wind",
+    "editTrack": "Track in degrees",
+    "editTitle": "Double-click to correct the track: the second point moves along the new bearing",
+    "export": {
+      "button": "Export route (CSV)",
+      "leg": "Leg",
+      "surface": "Map",
+      "from": "From",
+      "to": "To",
+      "track": "True track (°)",
+      "trackMag": "Magnetic track (°)",
+      "distance": "Distance (nm)",
+      "windDir": "Wind direction (°)",
+      "windSpeed": "Wind speed (kt)",
+      "windRef": "Wind reference",
+      "tas": "TAS (kt)",
+      "drift": "Drift correction (°)",
+      "heading": "True heading (°)",
+      "headingMag": "Magnetic heading (°)",
+      "gs": "Ground speed (kt)",
+      "note": "Note",
+      "image": "Image",
+      "page": "Page",
+      "fileSuffix": "route"
+    }
   },
   "scale": {
     "group": "Map scale",
@@ -167,7 +215,19 @@
         "title": "Plot points and route",
         "paragraphs": [
           "Turn on the pin icon. Each click marks a numbered point. Between points you get the route line, the bearing (above the segment) and the distance in nautical miles (below it, with a scale).",
-          "The route total appears in the bottom bar, next to the file name. The trash icon clears all points."
+          "The route total appears in the bottom bar, next to the file name. The trash icon clears all points.",
+          "Correcting the track: double-click the degree above a leg, type the new bearing and press Enter. The second point of the leg moves along that bearing, keeping the distance. Esc cancels.",
+          "Renaming a point: double-click its marker, type a name (up to 8 characters) and press Enter. Esc cancels; an empty name goes back to the number.",
+          "Export route (button at the end of the bar): saves a CSV file with each leg's track, distance, wind, TAS, drift correction, true and magnetic heading and ground speed."
+        ]
+      },
+      {
+        "title": "Wind",
+        "paragraphs": [
+          "Turn on the wind icon, then click on the map. A box opens at the point: type the direction in degrees, where the wind comes from (0 = north, as in METAR), and the speed in knots. Enter adds the arrow; Esc cancels.",
+          "The arrow points to where the wind blows to: a wind from 280° points to 100°. The speed in knots appears under the arrow. Backspace removes the last arrow; the trash icon clears all of them.",
+          "Drift correction: type the TAS (true airspeed) in the field next to the wind icon. Each route leg shows a small plane on its line: the nose points to the heading (HDG), with the magnetic declination added when typed, and the degree appears at the nose. Without wind the nose shows the leg's track; with wind (and TAS) it shows the corrected heading. The calculation uses the true wind: forecast winds aloft are true (°V); tower or ATIS winds are magnetic, so press the °M button in the wind form (the route then needs the declination). The TAS and the wind speed can be in knots or km/h: the button next to TAS switches the unit.",
+          "Correcting a wind: double-click the arrow or its speed label. A form opens with its direction, speed, reference (°V/°M) and the TAS; press Enter to confirm or Esc to cancel."
         ]
       },
       {
@@ -264,7 +324,7 @@
                 "Delete"
               ]
             ],
-            "text": "Measure or plot: remove the last point. With no segment in progress, remove the last measurement"
+            "text": "Measure, plot or wind: remove the last point or arrow. With no segment in progress, remove the last measurement"
           },
           {
             "keys": [
@@ -279,7 +339,7 @@
       {
         "title": "Mouse",
         "items": [
-          "Click: marks a point, depending on the tool on (measure, plot or protractor).",
+          "Click: marks a point, depending on the tool on (measure, plot, wind or protractor).",
           "Double-click or right-click: ends the measurement.",
           "Click and drag: moves the image when it is zoomed."
         ]

@@ -27,12 +27,60 @@
   "points": {
     "toggle": "Plotar pontos",
     "title": "Plotar pontos: clique no mapa para marcar; Backspace apaga o último",
-    "clear": "Apagar pontos"
+    "clear": "Apagar pontos",
+    "renameTitle": "Duplo clique para renomear o ponto",
+    "renameAria": "Nome do ponto"
+  },
+  "wind": {
+    "toggle": "Vento",
+    "title": "Vento: clique no mapa e informe a direção (de onde sopra, em graus) e a velocidade em nós. Backspace apaga o último",
+    "unit": "kt",
+    "direction": "Direção",
+    "directionAria": "Direção do vento, em graus, de onde ele sopra",
+    "speed": "Velocidade",
+    "speedAria": "Velocidade do vento",
+    "add": "Adicionar vento",
+    "clear": "Apagar ventos",
+    "tas": "TAS",
+    "tasAria": "Velocidade verdadeira (TAS)",
+    "tasTitle": "TAS: velocidade verdadeira em nós. Com vento plotado, os trechos da rota mostram a proa a voar e a velocidade sobre o solo",
+    "kmh": "km/h",
+    "unitAria": "Unidade de velocidade: nós ou km/h",
+    "magneticAria": "Vento magnético (desligado = verdadeiro)",
+    "editTitle": "Duplo clique para corrigir direção, velocidade, referência e TAS"
   },
   "route": {
     "total": "Rota",
     "nm": "{{value}} nm",
-    "magnetic": "mag"
+    "magnetic": "mag",
+    "heading": "proa",
+    "windAboveTas": "vento acima da TAS",
+    "needTas": "digite a TAS para a proa",
+    "needDeclination": "digite a declinação para o vento magnético",
+    "editTrack": "Rumo em graus",
+    "editTitle": "Duplo clique para corrigir o rumo: o segundo ponto anda pela nova direção",
+    "export": {
+      "button": "Exportar rota (CSV)",
+      "leg": "Trecho",
+      "surface": "Mapa",
+      "from": "De",
+      "to": "Para",
+      "track": "Rumo verdadeiro (°)",
+      "trackMag": "Rumo magnético (°)",
+      "distance": "Distância (nm)",
+      "windDir": "Vento direção (°)",
+      "windSpeed": "Vento velocidade (kt)",
+      "windRef": "Referência do vento",
+      "tas": "TAS (kt)",
+      "drift": "Correção de deriva (°)",
+      "heading": "Proa verdadeira (°)",
+      "headingMag": "Proa magnética (°)",
+      "gs": "Velocidade sobre o solo (kt)",
+      "note": "Observação",
+      "image": "Imagem",
+      "page": "Página",
+      "fileSuffix": "rota"
+    }
   },
   "scale": {
     "group": "Escala do mapa",
@@ -167,7 +215,19 @@
         "title": "Plotar pontos e rota",
         "paragraphs": [
           "Ligue o ícone de pino. Cada clique marca um ponto numerado. Entre os pontos aparecem a linha da rota, o rumo (acima do trecho) e a distância em milhas náuticas (abaixo, com escala).",
-          "O total da rota aparece na barra inferior, junto do nome do arquivo. A lixeira apaga todos os pontos."
+          "O total da rota aparece na barra inferior, junto do nome do arquivo. A lixeira apaga todos os pontos.",
+          "Corrigir o rumo: dê duplo clique no grau acima de um trecho, digite o novo rumo e aperte Enter. O segundo ponto do trecho anda sobre essa direção, mantendo a distância. Esc cancela.",
+          "Renomear um ponto: dê duplo clique no marcador, digite um nome (até 8 caracteres) e aperte Enter. Esc cancela; nome vazio volta ao número.",
+          "Exportar rota (botão no fim da barra): salva um arquivo CSV com o rumo, a distância, o vento, a TAS, a correção de deriva, a proa verdadeira e magnética e a velocidade sobre o solo de cada trecho."
+        ]
+      },
+      {
+        "title": "Vento",
+        "paragraphs": [
+          "Ligue o ícone de vento e clique no mapa. Abre uma caixa no ponto: digite a direção em graus, de onde o vento sopra (0 = norte, como no METAR), e a velocidade em nós. Enter adiciona a seta; Esc cancela.",
+          "A seta aponta para onde o vento vai: vento de 280° (de onde ele sopra) aponta para 100°. A velocidade em nós aparece embaixo da seta. Backspace apaga a última seta; a lixeira apaga todas.",
+          "Correção de deriva: digite a TAS (velocidade verdadeira) no campo ao lado do ícone de vento. Cada trecho da rota tem um avião sobre a linha: o nariz aponta para a proa (HDG), com a declinação magnética somada quando digitada, e o grau aparece no bico. Sem vento, o nariz mostra o rumo do trecho; com vento (e TAS), mostra a proa corrigida. O cálculo usa o vento verdadeiro: a previsão em altitude vem em verdadeiro (°V); o vento da torre ou do ATIS vem em magnético, então aperte o botão °M no formulário do vento (a rota então precisa da declinação). A TAS e a velocidade do vento podem ser em nós ou km/h: o botão ao lado da TAS troca a unidade.",
+          "Corrigir um vento: dê duplo clique na seta ou no rótulo da velocidade. Abre um formulário com direção, velocidade, referência (°V/°M) e TAS; Enter confirma e Esc cancela."
         ]
       },
       {
@@ -264,7 +324,7 @@
                 "Delete"
               ]
             ],
-            "text": "Medir ou plotar: apaga o último ponto. Sem trecho em andamento, apaga a última medição"
+            "text": "Medir, plotar ou vento: apaga o último ponto ou seta. Sem trecho em andamento, apaga a última medição"
           },
           {
             "keys": [
@@ -279,7 +339,7 @@
       {
         "title": "Mouse",
         "items": [
-          "Clique: marca um ponto, conforme a ferramenta ligada (medir, plotar ou transferidor).",
+          "Clique: marca um ponto, conforme a ferramenta ligada (medir, plotar, vento ou transferidor).",
           "Duplo clique ou botão direito: encerra a medição.",
           "Clique e arraste: move a imagem quando ela está com zoom."
         ]
