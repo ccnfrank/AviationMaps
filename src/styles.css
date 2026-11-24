@@ -1,12 +1,12 @@
 /* ==========================================================================
    Mapa Reader · sistema de design (herdado do Media Manager)
-   Tokens em :root (tema escuro, o único).
+   Tokens em :root (tema noite, padrão). O tema dia troca só os valores, no bloco [data-theme="day"].
    Só o que a janela de visualização usa: imagem, PDF, zoom, brilho, medição e transferidor.
    ========================================================================== */
 
 /* ==========================================================================
    Media Manager · sistema de design
-   Tokens em :root (tema escuro, o único).
+   Tokens em :root (tema noite, padrão). O tema dia troca só os valores, no bloco [data-theme="day"].
    Escala tipográfica, espaçamento, raios e sombras vêm daqui; componentes não usam valores soltos.
    ========================================================================== */
 
@@ -46,6 +46,17 @@
   --stage-top: #141416;
   --stage-bottom: #070708;
   --surface-rgb: 17, 17, 19;
+  /* Vidro, véu, hover de campo, logo e busca da tela inicial: variam com o tema */
+  --glass-bg: rgba(24, 24, 27, .55);
+  --glass-hover: rgba(39, 39, 42, .7);
+  --scrim: rgba(0, 0, 0, .66);
+  --field-hover: #52525b;
+  --logo-filter: brightness(0) invert(1);
+  --logo-opacity: .5;
+  --dock-accent: #e4e4e7;
+  --dock-accent-rgb: 228, 228, 231;
+  --dock-accent-soft: rgba(228, 228, 231, .12);
+  --dock-on-accent: #0a0a0b;
 
   /* Escala tipográfica (razão ~1.2, com passos previsíveis) */
   --fs-3xs: 9px;
@@ -91,6 +102,47 @@
   --mono: ui-monospace, "SF Mono", Menlo, monospace;
 }
 
+/* Tema dia: monocromático, só tons de cinza (do cinza-claro ao quase preto). O único vermelho é o de erro. */
+:root[data-theme="day"] {
+  color-scheme: light;
+  --canvas: #e4e4e7;
+  --surface: #efeff1;
+  --raised: #f7f7f8;
+  --line: #cfcfd4;
+  --line-strong: #8e8e96;
+  --text: #1c1c20;
+  --muted: #5c5c66;
+  --accent: #3a3a42;
+  --accent-strong: #2a2a30;
+  --accent-rgb: 58, 58, 66;
+  --accent-soft: rgba(58, 58, 66, .1);
+  --on-accent: #f7f7f8;
+  --danger: #b91c1c;
+  --success: #3f6f4f;
+  --c-video: #52525b;
+  --c-audio: #71717a;
+  --c-image: #3f3f46;
+  --c-other: #a1a1aa;
+  --glow-rgb: 39, 39, 42;
+  --ink: #1c1c20;
+  --stage-top: #f7f7f8;
+  --stage-bottom: #d9d9de;
+  --surface-rgb: 239, 239, 241;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .06), 0 4px 12px -4px rgba(0, 0, 0, .12);
+  --shadow-2: 0 12px 32px -12px rgba(0, 0, 0, .22);
+  --shadow-3: 0 30px 80px -24px rgba(0, 0, 0, .3);
+  --glass-bg: rgba(247, 247, 248, .55);
+  --glass-hover: rgba(247, 247, 248, .85);
+  --scrim: rgba(28, 28, 32, .35);
+  --field-hover: #d4d4d8;
+  --logo-filter: grayscale(1) brightness(.25);
+  --logo-opacity: .75;
+  --dock-accent: #1c1c20;
+  --dock-accent-rgb: 28, 28, 32;
+  --dock-accent-soft: rgba(28, 28, 32, .08);
+  --dock-on-accent: #f7f7f8;
+}
+
 /* ---------- Base ---------- */
 * { box-sizing: border-box; }
 html { background: var(--canvas); }
@@ -100,12 +152,6 @@ body {
   font: var(--fs-base)/var(--lh-base) var(--font);
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
-}
-/* Foto de fundo bem apagada (8%): fica atrás de tudo e não atrapalha a leitura */
-body::before {
-  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  background: url("/bg.png") center / cover no-repeat;
-  opacity: .08;
 }
 ::selection { background: rgba(var(--accent-rgb), .35); color: var(--text); }
 button, input, select { font: inherit; color: inherit; }
@@ -157,15 +203,15 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .pixel-btn--bare { background: var(--raised); color: var(--text); box-shadow: inset 0 0 0 1px var(--line); }
 .pixel-btn--bare:hover { background: var(--line); box-shadow: inset 0 0 0 1px var(--line-strong); transform: none; }
 .pixel-btn--bare .pixel-btn__canvas { display: none; }
-/* Vidro escuro: fundo translúcido com desfoque e borda clara. Sem a malha de pixels. */
+/* Vidro: fundo translúcido com desfoque e borda clara. Sem a malha de pixels. */
 .pixel-btn--glass {
-  background: rgba(24, 24, 27, .55); color: #fff;
+  background: var(--glass-bg); color: var(--text);
   -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14), inset 0 1px 0 rgba(255, 255, 255, .12), 0 12px 30px -12px rgba(0, 0, 0, .6);
+  box-shadow: inset 0 0 0 1px rgba(var(--glow-rgb), .14), inset 0 1px 0 rgba(var(--glow-rgb), .12), 0 12px 30px -12px rgba(0, 0, 0, .6);
 }
 .pixel-btn--glass:hover {
-  background: rgba(39, 39, 42, .7); transform: translateY(-1px);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .24), inset 0 1px 0 rgba(255, 255, 255, .16), 0 16px 34px -12px rgba(0, 0, 0, .7);
+  background: var(--glass-hover); transform: translateY(-1px);
+  box-shadow: inset 0 0 0 1px rgba(var(--glow-rgb), .24), inset 0 1px 0 rgba(var(--glow-rgb), .16), 0 16px 34px -12px rgba(0, 0, 0, .7);
 }
 .pixel-btn--glass .pixel-btn__canvas { display: none; }
 
@@ -187,7 +233,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .modal-backdrop {
   position: fixed; inset: 0; z-index: 50;
   display: flex; align-items: center; justify-content: center; padding: var(--s-6);
-  background: rgba(0, 0, 0, .66); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  background: var(--scrim); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
   animation: fade-in var(--dur-fast) ease both;
 }
 .modal {
@@ -202,6 +248,29 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 /* Tela cheia: a visualização toma a janela inteira, sem borda nem margem. Seletor duplo para vencer
    a regra do celular, mais abaixo. */
 .modal.modal--full { position: fixed; inset: 0; width: auto; height: auto; max-height: none; border: 0; border-radius: 0; box-shadow: none; }
+
+/* Ajuda (?): documentação do app dentro de uma janela, com a lista rolando e o X fixo no topo */
+.modal--help { width: min(720px, 100%); }
+.help__head {
+  flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--s-3);
+  padding: var(--s-4) var(--s-5); border-bottom: 1px solid var(--line);
+}
+.help__title { font-size: var(--fs-md); }
+.help__body { flex: 1; min-height: 0; overflow-y: auto; padding: var(--s-4) var(--s-5) var(--s-6); }
+.help__section + .help__section { margin-top: var(--s-5); }
+.help__heading { margin: 0 0 var(--s-2); font-size: var(--fs-sm); font-weight: 600; color: var(--text); letter-spacing: 0; }
+.help__body p, .help__body li { margin: 0 0 var(--s-2); color: var(--muted); font-size: var(--fs-sm); line-height: 1.55; }
+.help__list { margin: 0; padding-left: var(--s-4); }
+.help__shortcuts { display: grid; grid-template-columns: max-content 1fr; gap: var(--s-2) var(--s-4); margin: 0; align-items: baseline; }
+.help__shortcuts dt { white-space: nowrap; }
+.help__shortcuts dd { margin: 0; color: var(--muted); font-size: var(--fs-sm); line-height: 1.5; }
+.help__key {
+  display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; box-sizing: border-box;
+  border: 1px solid var(--line-strong); border-radius: 6px; background: var(--raised); color: var(--text);
+  font-family: inherit; font-size: var(--fs-xs); font-weight: 600;
+}
+.help__plus, .help__or { margin: 0 var(--s-1); color: var(--muted); font-size: var(--fs-xs); }
+.help__or { margin-left: var(--s-2); }
 .preview { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .preview__stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: var(--s-4); background: var(--canvas); }
 .preview__media { max-width: 100%; max-height: 100%; border-radius: var(--r-md); object-fit: contain; }
@@ -216,7 +285,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .pdf-pages__view { padding: var(--s-4); box-sizing: border-box; }
 .pdf-pages__list { display: flex; flex-direction: column; align-items: center; gap: var(--s-3); }
 .pdf-pages__page { display: block; background: #fff; border-radius: 6px; box-shadow: var(--shadow-2); -webkit-user-drag: none; }
-/* Ferramentas da visualização: medir, brilho e zoom numa linha só. Em tela estreita a linha rola na horizontal, sem quebrar. */
+/* Ferramentas da visualização: transferidor, medir, escala e pontos numa linha só. Em tela estreita a linha rola na horizontal, sem quebrar. */
 .view-tools {
   /* Numa linha só quando cabe; se não couber, quebra em duas linhas, sem esconder controles na rolagem */
   display: flex; flex-wrap: wrap; justify-content: center; row-gap: 4px; align-items: center; gap: var(--s-2);
@@ -233,7 +302,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
   flex: none; display: inline-flex; align-items: center; gap: 2px; height: 30px; padding: 0 var(--s-2);
   border-radius: 999px; background: var(--line-strong); cursor: text; transition: background var(--dur-fast), box-shadow var(--dur-fast);
 }
-.declination:hover { background: #52525b; }
+.declination:hover { background: var(--field-hover); }
 .declination:focus-within { box-shadow: inset 0 0 0 1px var(--accent); }
 .declination__input {
   width: 64px; height: 100%; padding: 0; border: 0; background: transparent; color: var(--text);
@@ -243,6 +312,13 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .declination__input:focus-visible { outline: none; }
 .declination__input[aria-invalid="true"] { color: var(--danger); }
 .declination__unit { color: var(--muted); font-size: var(--fs-sm); }
+/* Referência do vento: °V (verdadeiro) ou °M (magnético), no formulário */
+.wind-form__ref {
+  flex: none; height: 26px; padding: 0 var(--s-2); border: 0; border-radius: 999px; background: transparent;
+  color: var(--muted); font-size: var(--fs-xs); font-weight: 600; font-variant-numeric: tabular-nums; cursor: pointer;
+}
+.wind-form__ref:hover { color: var(--text); background: var(--line); }
+.wind-form__ref[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); }
 /* Escala do mapa: tipo (avião, náutico, terrestre), escala digitada e o resultado de 1 cm */
 .scale-tool { flex: none; display: inline-flex; align-items: center; gap: var(--s-1); }
 .scale-tool__types { display: inline-flex; align-items: center; gap: 2px; }
@@ -263,44 +339,6 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .tool-toggle svg { width: 17px; height: 17px; }
 .tool-toggle:hover { color: var(--text); background: var(--line); }
 .tool-toggle[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); }
-.tool-group { flex: none; display: flex; align-items: center; gap: 2px; }
-.tool-group__icon { flex: none; width: 15px; height: 15px; margin: 0 var(--s-1) 0 2px; color: var(--muted); }
-.tool-step, .tool-reset {
-  flex: none; display: grid; place-items: center; width: 30px; height: 30px; padding: 0;
-  border: 0; border-radius: 50%; background: transparent; color: var(--muted);
-  transition: color var(--dur-fast), background var(--dur-fast), opacity var(--dur-fast);
-}
-.tool-step svg, .tool-reset svg { width: 16px; height: 16px; }
-.tool-step:hover:not(:disabled), .tool-reset:hover:not(:disabled) { color: var(--text); background: var(--line); }
-.tool-step:disabled, .tool-reset:disabled { opacity: .35; }
-.tool-range {
-  flex: none; width: 80px; height: 18px; margin: 0 var(--s-1); background: transparent; cursor: pointer;
-  -webkit-appearance: none; appearance: none;
-}
-.tool-range:focus-visible { outline: none; }
-.tool-range::-webkit-slider-runnable-track {
-  height: 4px; border-radius: 999px;
-  background: linear-gradient(to right, var(--accent) var(--fill), var(--line) var(--fill));
-}
-.tool-range::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 12px; height: 12px; margin-top: -4px; border: 0; border-radius: 50%;
-  background: var(--ink); box-shadow: 0 0 0 3px var(--raised), 0 2px 6px rgba(0, 0, 0, .35);
-  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast);
-}
-.tool-range:hover::-webkit-slider-thumb { transform: scale(1.18); }
-.tool-range:active::-webkit-slider-thumb { transform: scale(1.1); }
-.tool-range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px var(--raised), 0 0 0 6px var(--accent); }
-.tool-range::-moz-range-track { height: 4px; border-radius: 999px; background: var(--line); }
-.tool-range::-moz-range-progress { height: 4px; border-radius: 999px; background: var(--accent); }
-.tool-range::-moz-range-thumb {
-  width: 12px; height: 12px; border: 0; border-radius: 50%; background: var(--ink);
-  box-shadow: 0 0 0 3px var(--raised), 0 2px 6px rgba(0, 0, 0, .35);
-}
-.tool-value {
-  flex: none; min-width: 56px; padding: 4px var(--s-3); border-radius: 999px; text-align: center;
-  background: var(--accent-soft); color: var(--accent); font-size: var(--fs-sm); font-weight: 600;
-  font-variant-numeric: tabular-nums; animation: value-pop var(--dur-fast) var(--ease-out) both;
-}
 
 .preview__note { color: var(--muted); margin: 0; text-align: center; }
 
@@ -343,16 +381,12 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 @keyframes fade-in { from { opacity: 0; } }
 @keyframes pop-in { from { opacity: 0; transform: translateY(16px) scale(.98); } }
 @keyframes zoom-in { from { opacity: 0; transform: translateY(6px); } }
-@keyframes value-pop { from { transform: scale(.9); } 50% { transform: scale(1.06); } }
 
 /* ---------- Telas estreitas ---------- */
 @media (max-width: 640px) {
   .app { padding: var(--s-4) var(--s-4) 56px; }
   .modal-backdrop { padding: 0; align-items: flex-end; }
   .modal { width: 100%; max-height: 92vh; border-radius: 20px 20px 0 0; }
-  .tool-range { width: 52px; }
-  .tool-group__icon { display: none; }
-  .tool-value { min-width: 48px; padding: 4px var(--s-2); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -389,6 +423,14 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
   background: var(--accent); color: var(--on-accent); border: 1.5px solid var(--canvas); box-shadow: var(--shadow-1);
   font-size: var(--fs-3xs); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1;
 }
+/* Marcador do ponto: o duplo clique abre o nome para editar */
+.plot-marker { pointer-events: auto; cursor: grab; touch-action: none; }
+.plot-marker:active { cursor: grabbing; }
+.plot-edit {
+  position: absolute; transform: translate(-50%, -50%); width: 64px; height: 18px; box-sizing: border-box;
+  padding: 0 4px; border: 1px solid var(--accent); border-radius: 999px; background: var(--surface); color: var(--text);
+  font-size: var(--fs-3xs); font-weight: 700; font-variant-numeric: tabular-nums; text-align: center; outline: none;
+}
 /* Rota: a linha que une os pontos na ordem em que foram plotados */
 .route-line {
   stroke: var(--c-audio); stroke-width: 2.5; stroke-linecap: round;
@@ -401,7 +443,68 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
   background: rgba(var(--surface-rgb), .92); border: 1px solid var(--line); box-shadow: var(--shadow-1);
   color: var(--text); font-size: var(--fs-3xs); font-weight: 600; font-variant-numeric: tabular-nums;
 }
-.route-label--track { color: var(--c-audio); border-color: rgba(96, 165, 250, .45); }
+.route-label--track { color: var(--c-audio); border-color: rgba(96, 165, 250, .45); pointer-events: auto; cursor: text; }
+/* Campo do rumo, aberto pelo duplo clique: mesmo lugar do rótulo */
+.route-edit {
+  position: absolute; width: 56px; padding: 1px 6px; border: 1px solid var(--accent); border-radius: 999px;
+  background: var(--surface); color: var(--text); font-size: var(--fs-3xs); font-weight: 600; font-variant-numeric: tabular-nums;
+  text-align: center; outline: none; box-shadow: var(--shadow-1);
+}
+/* Avião sobre a rota, com o nariz na proa corrigida pelo vento */
+.route-plane { fill: var(--accent); stroke: var(--canvas); stroke-width: 1; stroke-linejoin: round; pointer-events: none; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .5)); }
+/* Grau que o nariz aponta, na ponta da linha da proa */
+.nose-label {
+  position: absolute; transform: translate(-50%, -50%); white-space: nowrap; padding: 1px 6px; border-radius: 999px;
+  background: var(--accent); color: var(--on-accent); box-shadow: var(--shadow-1);
+  font-size: var(--fs-3xs); font-weight: 700; font-variant-numeric: tabular-nums;
+}
+/* Linha da proa: tracejada, a partir do avião, na direção do nariz */
+.route-heading { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 4 3; stroke-linecap: round; opacity: .85; pointer-events: none; }
+/* Vento: setas sobre o mapa, na cor do vento; a velocidade fica embaixo de cada seta */
+.wind-arrow line {
+  stroke: var(--c-image); stroke-width: 2; stroke-linecap: round;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .5));
+}
+.wind-arrow polygon {
+  fill: var(--c-image); stroke: var(--c-image); stroke-width: 0.75; stroke-linejoin: round;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .5));
+}
+.wind-arrow circle { fill: var(--c-image); filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .5)); }
+.wind-label {
+  position: absolute; transform: translateX(-50%); white-space: nowrap; padding: 1px 6px; border-radius: 999px;
+  pointer-events: auto; cursor: text;
+  background: rgba(var(--surface-rgb), .92); border: 1px solid var(--line); box-shadow: var(--shadow-1);
+  color: var(--c-image); font-size: var(--fs-3xs); font-weight: 600; font-variant-numeric: tabular-nums;
+}
+/* Ponto aguardando a entrada do vento */
+.wind-pending {
+  position: absolute; width: 8px; height: 8px; transform: translate(-50%, -50%); border-radius: 50%;
+  background: var(--c-image); box-shadow: 0 0 0 2px var(--canvas); pointer-events: none;
+}
+/* Entrada de direção e velocidade, logo abaixo do ponto clicado */
+.wind-form {
+  position: absolute; z-index: 2; transform: translate(-50%, 14px); display: flex; align-items: center; gap: var(--s-1);
+  padding: 4px 6px 4px var(--s-2); border: 1px solid var(--line); border-radius: 999px; background: var(--raised);
+  box-shadow: var(--shadow-2); white-space: nowrap; pointer-events: auto; cursor: default;
+}
+.wind-form__field { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: var(--fs-xs); }
+.wind-form__name { color: var(--muted); }
+.wind-form__input {
+  width: 58px; height: 26px; padding: 0 var(--s-2); border: 0; border-radius: 999px;
+  background: var(--line-strong); color: var(--text); font-size: var(--fs-sm); font-variant-numeric: tabular-nums;
+  transition: box-shadow var(--dur-fast);
+}
+.wind-form__input::placeholder { color: var(--muted); }
+.wind-form__input:focus-visible { outline: none; box-shadow: inset 0 0 0 1px var(--accent); }
+.wind-form__unit { color: var(--muted); font-size: var(--fs-xs); }
+.wind-form__btn {
+  flex: none; display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--muted); transition: color var(--dur-fast), background var(--dur-fast);
+}
+.wind-form__btn svg { width: 15px; height: 15px; }
+.wind-form__btn:hover { color: var(--text); background: var(--line); }
+.wind-form__btn[type="submit"] { color: var(--accent); }
+.wind-form__btn:disabled { opacity: .4; cursor: default; background: transparent; }
 /* Total da rota, embaixo do nome do arquivo: a barra de ferramentas fica só com os controles */
 .preview__route { color: var(--c-audio); font-size: var(--fs-sm); font-weight: 600; font-variant-numeric: tabular-nums; }
 /* Calibração: o tamanho real do traço de referência, digitado na própria barra de ferramentas */
@@ -445,10 +548,22 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .dock {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 480px) minmax(0, 1fr);
   align-items: center; gap: var(--s-4); margin-top: var(--s-8);
+  position: relative;
 }
+/* Logo grande na tela inicial. O campo de pesquisa (opaco) fica por cima, cruzando a parte de baixo
+   do logo, como na referência: o nome fica inteiro acima do campo. A altura do logo é 1/3 da largura
+   (o arquivo tem proporção 3:1), então o campo fica a 78% da altura, mais 15 px, a partir do topo do logo.
+   O logo fica o mesmo com pasta carregada: o painel de resultados abre por cima dele. */
+.dock__logo {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, calc(-78% - 15px)); z-index: 0;
+  width: min(520px, 92vw); height: auto; pointer-events: none; user-select: none;
+  filter: var(--logo-filter); /* branco no tema noite, colorido no dia */
+  opacity: var(--logo-opacity);
+}
+
 .dock__actions { display: flex; align-items: center; gap: var(--s-2); }
 .dock .dock__actions { grid-column: 3; justify-self: start; }
-.dock .search { grid-column: 2; max-width: none; margin: 0; }
+.dock .search { grid-column: 2; max-width: none; margin: 0; z-index: 1; }
 .search { position: relative; flex: 1; max-width: 560px; margin-right: auto; }
 .search__icon {
   position: absolute; left: 15px; top: 50%; width: 17px; height: 17px; margin-top: -8.5px;
@@ -469,6 +584,22 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
   color: var(--muted); font: var(--fs-xs)/1.5 var(--font); text-align: center; pointer-events: none;
 }
 .search input:focus ~ .search__key { display: none; }
+
+/* Campo de busca da tela inicial: vidro (translúcido e desfocado), com o logo por trás, também com pasta carregada */
+.dock .search input {
+  background: var(--glass-bg);
+  border-color: rgba(var(--glow-rgb), .12);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2);
+}
+.dock .search input:hover { border-color: rgba(var(--glow-rgb), .22); }
+/* Bordas com brilho desfocado, em branco (sem o laranja do destaque); o foco ganha um anel branco */
+.dock .search input {
+  box-shadow: 0 0 16px 2px rgba(var(--glow-rgb), .08);
+}
+.dock .search input:focus {
+  border-color: rgba(var(--glow-rgb), .55);
+  box-shadow: 0 0 0 4px rgba(var(--glow-rgb), .1), 0 0 22px 4px rgba(var(--glow-rgb), .14);
+}
 
 /* Miniaturas e ícones de tipo */
 .thumb-img { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -675,4 +806,28 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
   .modal--library.is-collapsed .viewer-library { flex: 0 0 0; }
   .viewer-library__inner { width: 100%; }
   .search__bar { padding: var(--s-3) var(--s-3) var(--s-2); }
+}
+
+/* Resultados da pasta carregada (tela inicial): ao passar o mouse, destaque branco com brilho,
+   no lugar do laranja. Vale para as miniaturas, as linhas de arquivo e as linhas de pasta. */
+.dock .search-live__tile:hover .search-live__thumb,
+.dock .search-live__tile:focus-visible .search-live__thumb {
+  border-color: rgba(var(--glow-rgb), .6);
+  box-shadow: 0 0 18px 2px rgba(var(--glow-rgb), .2);
+}
+.dock .search-file:hover,
+.dock .search-file:focus-visible,
+.dock .search-folder:hover,
+.dock .search-folder:focus-visible {
+  background: rgba(var(--glow-rgb), .07);
+  box-shadow: inset 0 0 0 1px rgba(var(--glow-rgb), .18), 0 0 16px 0 rgba(var(--glow-rgb), .14);
+}
+
+/* Tela inicial: os elementos da pasta carregada (ícones, contagens, trechos destacados, botões
+   de visualização) usam cinza-claro no lugar do laranja de destaque. O texto sobre eles fica escuro. */
+.dock .search {
+  --accent: var(--dock-accent);
+  --accent-rgb: var(--dock-accent-rgb);
+  --accent-soft: var(--dock-accent-soft);
+  --on-accent: var(--dock-on-accent);
 }

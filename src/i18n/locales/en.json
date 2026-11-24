@@ -6,21 +6,14 @@
     "loading": "Loading…",
     "browserFormat": "The browser cannot show this format.",
     "decodeImage": "Could not decode this image.",
-    "zoom": "Zoom",
     "switchFile": "Switch file",
     "previous": "Previous",
     "next": "Next",
     "fullscreen": "Full screen",
     "exitFullscreen": "Exit full screen",
     "library": "Maps panel",
-    "zoomOut": "Zoom out",
-    "zoomIn": "Zoom in",
-    "zoomReset": "Reset zoom",
     "tools": "Viewer tools",
-    "brightness": "Brightness",
-    "brightnessDown": "Darken",
-    "brightnessUp": "Brighten",
-    "brightnessReset": "Reset brightness"
+    "resetAll": "Clear everything on the map"
   },
   "measure": {
     "toggle": "Measure",
@@ -35,12 +28,57 @@
   "points": {
     "toggle": "Plot points",
     "title": "Plot points: click on the map to mark, Backspace removes the last one",
-    "clear": "Clear points"
+    "clear": "Clear points",
+    "renameTitle": "Double-click to rename the point",
+    "renameAria": "Point name"
+  },
+  "wind": {
+    "toggle": "Wind",
+    "title": "Wind: click on the map, type the direction (where it comes from, in degrees) and the speed in knots. Backspace removes the last one",
+    "unit": "kt",
+    "direction": "Direction",
+    "directionAria": "Wind direction, in degrees, where it comes from",
+    "speed": "Speed",
+    "speedAria": "Wind speed",
+    "add": "Add wind",
+    "clear": "Clear wind",
+    "tasAria": "True airspeed (TAS)",
+    "kmh": "km/h",
+    "unitAria": "Speed unit: knots or km/h",
+    "magneticAria": "Magnetic wind (off = true)",
+    "editTitle": "Double-click to correct direction, speed, reference and TAS"
   },
   "route": {
     "total": "Route",
     "nm": "{{value}} nm",
-    "magnetic": "mag"
+    "magnetic": "mag",
+    "heading": "HDG",
+    "windAboveTas": "wind above TAS",
+    "needTas": "type TAS for heading",
+    "editTrack": "Track in degrees",
+    "editTitle": "Double-click to correct the track: the second point moves along the new bearing",
+    "export": {
+      "button": "Export route (CSV)",
+      "leg": "Leg",
+      "surface": "Map",
+      "from": "From",
+      "to": "To",
+      "track": "True track (°)",
+      "trackMag": "Magnetic track (°)",
+      "distance": "Distance (nm)",
+      "windDir": "Wind direction (°)",
+      "windSpeed": "Wind speed (kt)",
+      "windRef": "Wind reference",
+      "tas": "TAS (kt)",
+      "drift": "Drift correction (°)",
+      "heading": "True heading (°)",
+      "headingMag": "Magnetic heading (°)",
+      "gs": "Ground speed (kt)",
+      "note": "Note",
+      "image": "Image",
+      "page": "Page",
+      "fileSuffix": "route"
+    }
   },
   "scale": {
     "group": "Map scale",
@@ -108,5 +146,232 @@
     "maps_other": "{{count}} maps",
     "noFolders": "No subfolders",
     "back": "Back"
+  },
+  "help": {
+    "button": "Help",
+    "title": "How to use Map Reader",
+    "or": "or",
+    "sections": [
+      {
+        "title": "Opening maps",
+        "paragraphs": [
+          "Click Load maps directory and choose a folder. Only images and PDFs are listed; other files are ignored. Subfolders appear as groups.",
+          "You can also drag a folder or a file into the window. A loose map opens straight in the viewer.",
+          "No folder: press V to open the empty viewer and drag a map into it, or use the Choose a map button.",
+          "In the desktop app, the last folder you loaded is reopened at startup. Everything is read on this device; nothing is uploaded."
+        ]
+      },
+      {
+        "title": "Searching",
+        "paragraphs": [
+          "The search field looks for maps by name in all folders and shows the results right below it. Click a result to open it, or press Enter to open the first one.",
+          "The view buttons switch between grid (thumbnails) and list. With subfolders, search opens in list view, with one row per subfolder."
+        ]
+      },
+      {
+        "title": "Map viewer",
+        "items": [
+          "Right column: lists the maps in the folder so you can switch maps with one click. Show or hide it with the button next to the navigation, or with L.",
+          "Full screen: the button fills the whole window. Esc leaves it.",
+          "Close: the X, Esc, or a click outside the window.",
+          "PDF: pages appear in sequence, up to 200 pages. When you change the zoom, the pages are redrawn sharply.",
+          "Toolbar, from left to right: protractor, declination, measure, scale, pin (plot points), wind, export route and, last, the reset icon. Reset clears everything on the map: measurements, plotted points, winds and the protractor."
+        ]
+      },
+      {
+        "title": "Zoom and brightness",
+        "paragraphs": [
+          "Zoom from 100% to 600%. Brightness from 50% to 150%, where 100% is the image as it is.",
+          "Adjust them with the keyboard (see the shortcuts below). The toolbar has no sliders, and the value is not shown on screen.",
+          "When zoomed past 100%, drag the image with the mouse to see other parts."
+        ]
+      },
+      {
+        "title": "Protractor",
+        "paragraphs": [
+          "Turn it on with the protractor icon. The first click places the centre; moving the pointer aims the arrow; the second click locks the angle, which appears at the tip. 0° is north, and degrees increase clockwise.",
+          "Magnetic declination: type the declination in degrees, with its sign (for example -20 or 15). A second needle shows the corrected angle, and route bearings also show the magnetic value.",
+          "Esc removes the ring or the arrow without closing the window."
+        ]
+      },
+      {
+        "title": "Measure",
+        "paragraphs": [
+          "Turn on the ruler icon and click to mark points. The length of each segment appears over the line. Double-click or right-click ends the measurement; Esc ends only the segment in progress.",
+          "Without a scale, the measurement is in cm on paper, using the resolution stored in the image when it exists. With the map scale, the measurement becomes a real distance.",
+          "Calibrate (only for images without a stored resolution): turn on Measure, click the crosshair icon, draw a line over something of known size, and type its real length in cm. PDFs already have an exact scale.",
+          "The trash icon clears all measurements."
+        ]
+      },
+      {
+        "title": "Map scale",
+        "paragraphs": [
+          "Choose the map type: Aviation and Nautical measure in nautical miles (NM); Land measures in metres and kilometres. Then type the scale, for example 1:1000000.",
+          "With a scale, measurements and routes show real distances. An invalid scale is marked in red."
+        ]
+      },
+      {
+        "title": "Plot points and route",
+        "paragraphs": [
+          "Turn on the pin icon. Each click marks a numbered point. Between points you get the route line, the true bearing above the segment (with the magnetic one when the declination is typed) and the distance in nautical miles below it (this needs a map scale).",
+          "Each leg shows a small plane on its line. Without wind, its nose points the same way as the line between the two points. With wind and TAS, it points to the corrected heading (see Drift correction).",
+          "Move a point: drag its marker to a new place. The route, the bearings and the distances follow it.",
+          "Rename a point: double-click its marker, type a name (up to 8 characters) and press Enter. Esc cancels; an empty name goes back to the number.",
+          "Correct a track: double-click the degree above a leg, type the new bearing and press Enter. The second point moves along that bearing, keeping the distance, so the legs after it move too. Esc cancels.",
+          "The route total appears in the bottom bar, next to the file name. The trash icon clears all points. The export button, at the end of the bar, saves a CSV file: one row per leg, with bearings, distance, wind, TAS, drift correction, true and magnetic heading and ground speed."
+        ]
+      },
+      {
+        "title": "Wind",
+        "paragraphs": [
+          "Turn on the wind icon, then click on the map. A box opens at the point: type the direction the wind comes from, in degrees (0 = north, as in METAR), and the speed in knots. Enter adds the arrow; Esc cancels.",
+          "The arrow points to where the wind blows to: a wind from 280° points to 100°. The speed appears under the arrow. Clicking an arrow does not add a point.",
+          "Plot as many winds as you need. Each one has its own direction, speed, reference (°V/°M) and TAS (true airspeed); the TAS is optional, but a leg that uses a wind without TAS asks for it. The unit button in the form switches between knots and km/h, and converts the numbers already typed.",
+          "Correct a wind: double-click the arrow or its speed label. The form opens with the current values; Enter confirms, Esc cancels.",
+          "Backspace removes the last arrow; the trash icon clears all of them."
+        ]
+      },
+      {
+        "title": "Drift correction",
+        "paragraphs": [
+          "Drift correction calculates the heading to fly so the aircraft stays on the leg's track. Type the TAS of the aircraft in the wind form, next to the wind it belongs to.",
+          "A leg uses the arrow closest to its middle point, with that arrow's own TAS. To tie a wind to a leg, plot it at the middle of that leg. With wind and TAS, the route shows HDG (the heading to fly), and the plane's nose points to it, with the magnetic declination added (0 if none is typed). Without TAS, or with a wind stronger than the TAS, the route says so.",
+          "Winds are read as true (°V). Forecast winds aloft are true; tower or ATIS winds are magnetic, so press °M in the wind form. A magnetic wind uses the declination, and without one, 0 is used.",
+          "Example: track 090°, wind from 030° at 20 kt, TAS 100 kt. The wind comes from the left, so the correction is 10° and the heading is 080°. The formula is sin(CD) = (wind ÷ TAS) × sin(α), where α is the angle between the wind direction and the track. A wind from the left turns the heading to the left of the track; a wind from the right turns it to the right."
+        ]
+      },
+      {
+        "title": "Shortcuts: start screen and window",
+        "shortcuts": [
+          {
+            "keys": [
+              [
+                "V"
+              ]
+            ],
+            "text": "Open the empty map viewer"
+          },
+          {
+            "keys": [
+              [
+                "L"
+              ]
+            ],
+            "text": "Show or hide the maps panel (with a folder loaded, outside full screen)"
+          },
+          {
+            "keys": [
+              [
+                "/"
+              ]
+            ],
+            "text": "Focus the search field"
+          },
+          {
+            "keys": [
+              [
+                "Enter"
+              ]
+            ],
+            "text": "In search: open the first result"
+          },
+          {
+            "keys": [
+              [
+                "Esc"
+              ]
+            ],
+            "text": "In search: clear the text. In full screen: leave it. In the window: close it"
+          }
+        ]
+      },
+      {
+        "title": "Shortcuts: viewer",
+        "shortcuts": [
+          {
+            "keys": [
+              [
+                "+"
+              ],
+              [
+                "="
+              ]
+            ],
+            "text": "Zoom in"
+          },
+          {
+            "keys": [
+              [
+                "-"
+              ]
+            ],
+            "text": "Zoom out"
+          },
+          {
+            "keys": [
+              [
+                "Alt",
+                "+"
+              ]
+            ],
+            "text": "Brighten. On a Mac, Alt is the Option key"
+          },
+          {
+            "keys": [
+              [
+                "Alt",
+                "-"
+              ]
+            ],
+            "text": "Darken"
+          },
+          {
+            "keys": [
+              [
+                "Backspace"
+              ],
+              [
+                "Delete"
+              ]
+            ],
+            "text": "Measure, plot or wind: remove the last point or arrow. With no segment in progress, remove the last measurement"
+          },
+          {
+            "keys": [
+              [
+                "Enter"
+              ]
+            ],
+            "text": "Confirm the open wind form, a track correction or a point name"
+          },
+          {
+            "keys": [
+              [
+                "Esc"
+              ]
+            ],
+            "text": "Measure: end the segment in progress. Protractor: remove the ring or the arrow. Forms and corrections: cancel"
+          }
+        ]
+      },
+      {
+        "title": "Mouse",
+        "items": [
+          "Click: marks a point, depending on the tool on (measure, plot, wind or protractor).",
+          "Double-click: on a route degree, corrects the track; on a point marker, renames the point; on a wind arrow or its label, corrects the wind. Right-click ends a measurement.",
+          "Drag: on a point marker, moves the point. Click and drag on the empty map: moves the image when it is zoomed."
+        ]
+      },
+      {
+        "title": "Note",
+        "items": [
+          "Cmd or Ctrl with + and - still control the browser's zoom, not the image's zoom."
+        ]
+      }
+    ]
+  },
+  "theme": {
+    "toDay": "Day mode",
+    "toNight": "Night mode"
   }
 }

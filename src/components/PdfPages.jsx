@@ -173,6 +173,16 @@ function PdfPage({ doc, index, name, cssWidth, size, brightness, measure }) {
           plots={measure.plots}
           onPlot={(p) => measure.onPlot(`pdf:${index}`, p)}
           route={measure.routeOf(`pdf:${index}`)}
+          windOn={measure.windOn}
+          winds={measure.winds}
+          windPending={measure.windPending}
+          onWind={(p) => measure.onWind(`pdf:${index}`, p)}
+          onWindSubmit={measure.onWindSubmit}
+          onWindCancel={measure.onWindCancel}
+          windUnit={measure.windUnit}
+          windEdit={measure.windEdit}
+          onRenamePlot={measure.onRenamePlot}
+          onMovePlot={measure.onMovePlot}
         />
       )}
     </div>

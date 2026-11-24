@@ -6,21 +6,14 @@
     "loading": "Carregando…",
     "browserFormat": "O navegador não consegue mostrar este formato.",
     "decodeImage": "Não foi possível decodificar esta imagem.",
-    "zoom": "Zoom",
     "switchFile": "Trocar de arquivo",
     "previous": "Anterior",
     "next": "Próximo",
     "fullscreen": "Tela cheia",
     "exitFullscreen": "Sair da tela cheia",
     "library": "Painel de mapas",
-    "zoomOut": "Diminuir zoom",
-    "zoomIn": "Aumentar zoom",
-    "zoomReset": "Restaurar zoom",
     "tools": "Ferramentas de visualização",
-    "brightness": "Brilho",
-    "brightnessDown": "Diminuir brilho",
-    "brightnessUp": "Aumentar brilho",
-    "brightnessReset": "Restaurar brilho"
+    "resetAll": "Limpar tudo no mapa"
   },
   "measure": {
     "toggle": "Medir",
@@ -35,15 +28,60 @@
   "points": {
     "toggle": "Plotar pontos",
     "title": "Plotar pontos: clique no mapa para marcar; Backspace apaga o último",
-    "clear": "Apagar pontos"
+    "clear": "Apagar pontos",
+    "renameTitle": "Duplo clique para renomear o ponto",
+    "renameAria": "Nome do ponto"
+  },
+  "wind": {
+    "toggle": "Vento",
+    "title": "Vento: clique no mapa e informe a direção (de onde sopra, em graus) e a velocidade em nós. Backspace apaga o último",
+    "unit": "kt",
+    "direction": "Direção",
+    "directionAria": "Direção do vento, em graus, de onde ele sopra",
+    "speed": "Velocidade",
+    "speedAria": "Velocidade do vento",
+    "add": "Adicionar vento",
+    "clear": "Apagar ventos",
+    "tasAria": "Velocidade verdadeira (TAS)",
+    "kmh": "km/h",
+    "unitAria": "Unidade de velocidade: nós ou km/h",
+    "magneticAria": "Vento magnético (desligado = verdadeiro)",
+    "editTitle": "Duplo clique para corrigir direção, velocidade, referência e TAS"
   },
   "route": {
     "total": "Rota",
     "nm": "{{value}} nm",
-    "magnetic": "mag"
+    "magnetic": "mag",
+    "heading": "proa",
+    "windAboveTas": "vento acima da TAS",
+    "needTas": "digite a TAS para a proa",
+    "editTrack": "Rumo em graus",
+    "editTitle": "Duplo clique para corrigir o rumo: o segundo ponto anda pela nova direção",
+    "export": {
+      "button": "Exportar rota (CSV)",
+      "leg": "Trecho",
+      "surface": "Mapa",
+      "from": "De",
+      "to": "Para",
+      "track": "Rumo verdadeiro (°)",
+      "trackMag": "Rumo magnético (°)",
+      "distance": "Distância (nm)",
+      "windDir": "Vento direção (°)",
+      "windSpeed": "Vento velocidade (kt)",
+      "windRef": "Referência do vento",
+      "tas": "TAS (kt)",
+      "drift": "Correção de deriva (°)",
+      "heading": "Proa verdadeira (°)",
+      "headingMag": "Proa magnética (°)",
+      "gs": "Velocidade sobre o solo (kt)",
+      "note": "Observação",
+      "image": "Imagem",
+      "page": "Página",
+      "fileSuffix": "rota"
+    }
   },
   "scale": {
-    "group":"Escala do mapa",
+    "group": "Escala do mapa",
     "type": "Tipo de mapa",
     "aviation": "Aviação",
     "sea": "Aquático",
@@ -108,5 +146,232 @@
     "maps_other": "{{count}} mapas",
     "noFolders": "Nenhuma subpasta",
     "back": "Voltar"
+  },
+  "help": {
+    "button": "Ajuda",
+    "title": "Como usar o Map Reader",
+    "or": "ou",
+    "sections": [
+      {
+        "title": "Abrir mapas",
+        "paragraphs": [
+          "Clique em Carregar diretório de mapas e escolha uma pasta. Só imagens e PDFs entram na lista; os outros arquivos são ignorados. Subpastas aparecem como grupos.",
+          "Também dá para arrastar uma pasta ou um arquivo para a janela. Um mapa solto abre direto na visualização.",
+          "Sem pasta: pressione V para abrir a janela vazia e arraste um mapa para ela, ou use o botão Escolher um mapa.",
+          "No app de desktop, a última pasta carregada é reaberta ao iniciar. Tudo é lido neste dispositivo; nada é enviado."
+        ]
+      },
+      {
+        "title": "Buscar",
+        "paragraphs": [
+          "O campo de busca procura mapas em todas as pastas, pelo nome, e mostra os resultados logo abaixo. Clique num resultado para abri-lo, ou pressione Enter para abrir o primeiro.",
+          "Os botões de visualização alternam entre grade (miniaturas) e lista. Com subpastas, a busca abre em lista, com uma linha por subpasta."
+        ]
+      },
+      {
+        "title": "Janela de visualização",
+        "items": [
+          "Coluna da direita: lista os mapas da pasta para trocar de mapa com um clique. Mostre ou esconda a coluna com o botão ao lado da navegação, ou com L.",
+          "Tela cheia: o botão ocupa a janela inteira. Esc sai.",
+          "Fechar: o X, Esc ou um clique fora da janela.",
+          "PDF: as páginas aparecem em sequência, até 200 páginas. Ao mudar o zoom, as páginas são redesenhadas com nitidez.",
+          "Barra de ferramentas, da esquerda para a direita: transferidor, declinação, medir, escala, pino (plotar pontos), vento, exportar rota e, por último, o ícone de reset. O reset limpa tudo no mapa: medições, pontos plotados, ventos e o transferidor."
+        ]
+      },
+      {
+        "title": "Zoom e brilho",
+        "paragraphs": [
+          "Zoom de 100% a 600%. Brilho de 50% a 150%, sendo 100% a imagem como está.",
+          "Os ajustes são feitos pelo teclado (veja os atalhos abaixo). A barra não tem controles deslizantes, e o valor não aparece na tela.",
+          "Com zoom acima de 100%, arraste a imagem com o mouse para ver outras partes."
+        ]
+      },
+      {
+        "title": "Transferidor",
+        "paragraphs": [
+          "Ligue pelo ícone do transferidor. O primeiro clique põe o centro; mover o ponteiro gira a seta; o segundo clique fixa o ângulo, que aparece na ponta. 0° é o norte, e os graus crescem no sentido horário.",
+          "Desvio magnético: digite a declinação em graus, com sinal (por exemplo -20 ou 15). Uma segunda agulha mostra o ângulo corrigido, e os rumos da rota passam a mostrar também o magnético.",
+          "Esc apaga o anel ou a seta, sem fechar a janela."
+        ]
+      },
+      {
+        "title": "Medir",
+        "paragraphs": [
+          "Ligue o ícone de régua e clique para marcar pontos. A medida de cada trecho aparece sobre a linha. Duplo clique ou botão direito encerra a medição; Esc encerra só o trecho em andamento.",
+          "Sem escala, a medida é em cm no papel, usando a resolução gravada na imagem, quando ela existe. Com a escala do mapa, a medida vira distância real.",
+          "Calibrar (só imagens sem resolução gravada): ligue Medir, clique no ícone de mira, desenhe uma linha sobre algo de tamanho conhecido e digite o tamanho real em cm. PDFs já têm escala exata.",
+          "A lixeira apaga todas as medições."
+        ]
+      },
+      {
+        "title": "Escala do mapa",
+        "paragraphs": [
+          "Escolha o tipo do mapa: Aviação e Náutico medem em milhas náuticas (NM); Terra mede em metros e km. Depois digite a escala, por exemplo 1:1000000.",
+          "Com a escala, as medidas e a rota mostram distância real. Escala inválida fica marcada em vermelho."
+        ]
+      },
+      {
+        "title": "Plotar pontos e rota",
+        "paragraphs": [
+          "Ligue o ícone de pino. Cada clique marca um ponto numerado. Entre os pontos aparecem a linha da rota, o rumo verdadeiro acima do trecho (com o magnético, quando a declinação é digitada) e a distância em milhas náuticas abaixo (isso precisa da escala do mapa).",
+          "Cada trecho tem um avião sobre a linha. Sem vento, o nariz aponta na mesma direção da linha entre os dois pontos. Com vento e TAS, aponta para a proa corrigida (veja Correção de deriva).",
+          "Mover um ponto: arraste o marcador para outro lugar. A rota, os rumos e as distâncias acompanham o ponto.",
+          "Renomear um ponto: dê duplo clique no marcador, digite um nome (até 8 caracteres) e aperte Enter. Esc cancela; nome vazio volta ao número.",
+          "Corrigir o rumo: dê duplo clique no grau acima de um trecho, digite o novo rumo e aperte Enter. O segundo ponto anda sobre essa direção, mantendo a distância, então os trechos seguintes também se movem. Esc cancela.",
+          "O total da rota aparece na barra inferior, junto do nome do arquivo. A lixeira apaga todos os pontos. O botão de exportar, no fim da barra, salva um CSV: uma linha por trecho, com rumos, distância, vento, TAS, correção de deriva, proa verdadeira e magnética e velocidade sobre o solo."
+        ]
+      },
+      {
+        "title": "Vento",
+        "paragraphs": [
+          "Ligue o ícone de vento e clique no mapa. Abre uma caixa no ponto: digite a direção de onde o vento sopra, em graus (0 = norte, como no METAR), e a velocidade em nós. Enter adiciona a seta; Esc cancela.",
+          "A seta aponta para onde o vento vai: vento de 280° aponta para 100°. A velocidade aparece embaixo da seta. Clicar numa seta não cria ponto.",
+          "Plote quantos ventos precisar. Cada um tem a sua direção, velocidade, referência (°V/°M) e TAS (velocidade verdadeira); a TAS é opcional, mas um trecho que usa um vento sem TAS pede a TAS. O botão de unidade no formulário alterna entre nós e km/h, e converte os números já digitados.",
+          "Corrigir um vento: dê duplo clique na seta ou no rótulo da velocidade. O formulário abre com os valores atuais; Enter confirma, Esc cancela.",
+          "Backspace apaga a última seta; a lixeira apaga todas."
+        ]
+      },
+      {
+        "title": "Correção de deriva",
+        "paragraphs": [
+          "A correção de deriva calcula a proa a voar para o avião seguir o rumo do trecho. Digite a TAS do avião no formulário do vento, junto do vento a que ela se refere.",
+          "Cada trecho usa a seta de vento mais perto do seu meio, com a TAS dessa seta. Para ligar um vento a um trecho, plote-o no meio desse trecho. Com vento e TAS, a rota mostra HDG (a proa a voar), e o nariz do avião aponta para ela, com a declinação magnética somada (0 se não digitada). Sem TAS, ou com vento mais forte que a TAS, a rota avisa.",
+          "Os ventos são verdadeiros (°V). A previsão em altitude vem em verdadeiro; o vento da torre ou do ATIS vem em magnético, então aperte °M no formulário do vento. O vento magnético usa a declinação, e sem ela, usa 0.",
+          "Exemplo: rumo 090°, vento de 030° a 20 kt, TAS 100 kt. O vento vem pela esquerda, então a correção é de 10° e a proa é 080°. A conta é sen(CD) = (vento ÷ TAS) × sen(α), em que α é o ângulo entre a direção do vento e o rumo. Vento pela esquerda: a proa vai para a esquerda do rumo; pela direita, para a direita."
+        ]
+      },
+      {
+        "title": "Atalhos da tela inicial e da janela",
+        "shortcuts": [
+          {
+            "keys": [
+              [
+                "V"
+              ]
+            ],
+            "text": "Abrir a janela de visualização vazia"
+          },
+          {
+            "keys": [
+              [
+                "L"
+              ]
+            ],
+            "text": "Mostrar ou esconder o painel de mapas (com pasta carregada, fora da tela cheia)"
+          },
+          {
+            "keys": [
+              [
+                "/"
+              ]
+            ],
+            "text": "Focar o campo de busca"
+          },
+          {
+            "keys": [
+              [
+                "Enter"
+              ]
+            ],
+            "text": "Na busca: abrir o primeiro resultado"
+          },
+          {
+            "keys": [
+              [
+                "Esc"
+              ]
+            ],
+            "text": "Na busca: limpar o texto. Na tela cheia: sair dela. Na janela: fechar"
+          }
+        ]
+      },
+      {
+        "title": "Atalhos da visualização",
+        "shortcuts": [
+          {
+            "keys": [
+              [
+                "+"
+              ],
+              [
+                "="
+              ]
+            ],
+            "text": "Aumentar o zoom"
+          },
+          {
+            "keys": [
+              [
+                "-"
+              ]
+            ],
+            "text": "Diminuir o zoom"
+          },
+          {
+            "keys": [
+              [
+                "Alt",
+                "+"
+              ]
+            ],
+            "text": "Clarear (brilho). No Mac, Alt é a tecla Option"
+          },
+          {
+            "keys": [
+              [
+                "Alt",
+                "-"
+              ]
+            ],
+            "text": "Escurecer (brilho)"
+          },
+          {
+            "keys": [
+              [
+                "Backspace"
+              ],
+              [
+                "Delete"
+              ]
+            ],
+            "text": "Medir, plotar ou vento: apaga o último ponto ou seta. Sem trecho em andamento, apaga a última medição"
+          },
+          {
+            "keys": [
+              [
+                "Enter"
+              ]
+            ],
+            "text": "Confirma o formulário do vento aberto, a correção do rumo ou o nome do ponto"
+          },
+          {
+            "keys": [
+              [
+                "Esc"
+              ]
+            ],
+            "text": "Medir: encerra o trecho em andamento. Transferidor: apaga o anel ou a seta. Formulários e correções: cancela"
+          }
+        ]
+      },
+      {
+        "title": "Mouse",
+        "items": [
+          "Clique: marca um ponto, conforme a ferramenta ligada (medir, plotar, vento ou transferidor).",
+          "Duplo clique: num grau da rota, corrige o rumo; no marcador de um ponto, renomeia o ponto; numa seta de vento ou no rótulo dela, corrige o vento. Botão direito encerra a medição.",
+          "Arrastar: num marcador de ponto, move o ponto. Clique e arraste no mapa vazio: move a imagem quando ela está com zoom."
+        ]
+      },
+      {
+        "title": "Observação",
+        "items": [
+          "Cmd ou Ctrl com + e - continuam sendo o zoom do navegador, e não o zoom da imagem."
+        ]
+      }
+    ]
+  },
+  "theme": {
+    "toDay": "Modo dia",
+    "toNight": "Modo noite"
   }
 }

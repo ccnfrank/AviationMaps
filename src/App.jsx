@@ -7,6 +7,8 @@ import PixelButton from "./components/PixelButton";
 import Preview from "./components/Preview";
 import Search from "./components/Search";
 import LanguageSwitch from "./components/LanguageSwitch";
+import HelpButton from "./components/HelpButton";
+import ThemeButton from "./components/ThemeButton";
 import ViewerEmpty from "./components/ViewerEmpty";
 import {
   allowFolder, canPickDirectory, isTauri, pickDirectory, pickMapFileNative, readDirectory, readDroppedDirectory,
@@ -15,6 +17,8 @@ import { forgetLastFolder, readLastFolder, saveLastFolder } from "./lib/lastFold
 import { setFullscreen } from "./lib/fullscreen";
 import { ROOT_NAME, groupFiles } from "./lib/groupFiles";
 import { firstMapFile, getPreviewKind } from "./lib/previewKind";
+import { readTheme, setTheme } from "./lib/theme";
+import logo from "./assets/aero-logo.png";
 
 // Mapa Reader: a página inicial do Media Manager, só com mapas. Carrega uma pasta (pelo botão ou
 // soltando-a na janela). A busca mostra os mapas (imagens e PDF) que casam com o texto, logo
@@ -25,6 +29,12 @@ import { firstMapFile, getPreviewKind } from "./lib/previewKind";
 export default function App() {
   const { t } = useTranslation();
   const inputRef = useRef(null);
+  const [theme, setThemeState] = useState(readTheme); // "night" (padrão) ou "day"
+  const toggleTheme = () => {
+    const next = theme === "day" ? "night" : "day";
+    setTheme(next);
+    setThemeState(next);
+  };
   const [folders, setFolders] = useState(null); // null: nenhuma pasta carregada ainda
   const [previewEntry, setPreviewEntry] = useState(null);
   const [viewerEmpty, setViewerEmpty] = useState(false); // janela aberta sem mapa, esperando um arquivo
@@ -258,11 +268,14 @@ export default function App() {
       <header className="app__bar">
         <div className="app__controls">
           <LanguageSwitch />
+          <HelpButton />
+          <ThemeButton theme={theme} onToggle={toggleTheme} />
         </div>
       </header>
 
       {/* O X fica à esquerda do campo: aparecer ao carregar não empurra o campo nem o botão de carregar. */}
       <footer className="dock">
+        <img className="dock__logo" src={logo} alt="AeroMap Airspace Maps" draggable={false} />
         {folders && (
           <div className="dock__clear">
             <PixelButton className="pixel-btn--icon pixel-btn--bare" onClick={clearFolders} aria-label={t("app.clearFolders")} title={t("app.clearFolders")}>
@@ -335,7 +348,7 @@ export default function App() {
         </div>
       )}
 
-      <Toaster position="bottom-center" theme="dark" closeButton />
+      <Toaster position="bottom-center" theme={theme === "day" ? "light" : "dark"} closeButton />
     </main>
   );
 }

@@ -70,6 +70,16 @@ export default function ImageStage({ src, alt, zoom, brightness = 100, measure, 
           plots={measure.plots}
           onPlot={(p) => measure.onPlot("img", p)}
           route={measure.routeOf("img")}
+          windOn={measure.windOn}
+          winds={measure.winds}
+          windPending={measure.windPending}
+          onWind={(p) => measure.onWind("img", p)}
+          onWindSubmit={measure.onWindSubmit}
+          onWindCancel={measure.onWindCancel}
+          windUnit={measure.windUnit}
+          windEdit={measure.windEdit}
+          onRenamePlot={measure.onRenamePlot}
+          onMovePlot={measure.onMovePlot}
         />
       )}
     </div>

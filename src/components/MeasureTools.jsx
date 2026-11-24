@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, Ruler, Trash2, Crosshair, Check, X } from "lucide-react";
+import { FileDown, MapPin, Ruler, RotateCcw, Trash2, Crosshair, Check, Wind, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 // Botão de ícone que liga o plotar pontos: cada clique no mapa marca um ponto numerado.
@@ -15,6 +15,23 @@ export function PlotToggle({ enabled, onToggle }) {
       title={t("points.title")}
     >
       <MapPin strokeWidth={1.8} aria-hidden="true" />
+    </button>
+  );
+}
+
+// Botão de ícone que liga o vento: cada clique no mapa abre a entrada de direção e velocidade.
+export function WindToggle({ enabled, onToggle }) {
+  const { t } = useTranslation();
+  return (
+    <button
+      type="button"
+      className="tool-toggle"
+      aria-pressed={enabled}
+      onClick={onToggle}
+      aria-label={t("wind.toggle")}
+      title={t("wind.title")}
+    >
+      <Wind strokeWidth={1.8} aria-hidden="true" />
     </button>
   );
 }
@@ -95,6 +112,26 @@ export function ClearButton({ onClick, label }) {
   return (
     <button type="button" className="tool-toggle" onClick={onClick} aria-label={text} title={text}>
       <Trash2 strokeWidth={1.8} aria-hidden="true" />
+    </button>
+  );
+}
+
+// Botão de ícone que exporta a rota (trecho por trecho) em CSV. Fica sempre na barra; sem rota, desabilitado.
+export function ExportRouteButton({ onClick, disabled = false }) {
+  const { t } = useTranslation();
+  return (
+    <button type="button" className="tool-toggle" onClick={onClick} disabled={disabled} aria-label={t("route.export.button")} title={t("route.export.button")}>
+      <FileDown strokeWidth={1.8} aria-hidden="true" />
+    </button>
+  );
+}
+
+// Botão de ícone que limpa tudo no mapa: medições, pontos, ventos e transferidor. Sem nada para limpar, desabilitado.
+export function ResetButton({ onClick, disabled = false }) {
+  const { t } = useTranslation();
+  return (
+    <button type="button" className="tool-toggle" onClick={onClick} disabled={disabled} aria-label={t("preview.resetAll")} title={t("preview.resetAll")}>
+      <RotateCcw strokeWidth={1.8} aria-hidden="true" />
     </button>
   );
 }
