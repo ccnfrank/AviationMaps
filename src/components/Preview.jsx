@@ -184,7 +184,6 @@ export default function Preview({
       const f = legFigures(link, ctx);
       let headingText = null;
       if (f.wind && tasValue == null) headingText = t("route.needTas");
-      else if (f.needsDeclination) headingText = t("route.needDeclination");
       else if (f.wind && !f.correction) headingText = t("route.windAboveTas");
       if (f.correction) {
         headingText = `${t("route.heading")} ${formatBearing(f.headingTrue)}${f.headingMag == null ? "" : ` · ${formatBearing(f.headingMag)} ${t("route.magnetic")}`}`;
@@ -232,7 +231,6 @@ export default function Preview({
         const f = legFigures(link, ctx);
         let note = "";
         if (f.wind && tasValue == null) note = t("route.needTas");
-        else if (f.needsDeclination) note = t("route.needDeclination");
         else if (f.wind && !f.correction) note = t("route.windAboveTas");
         rows.push([
           leg, surfaceLabel, name(link.from), name(link.to),
@@ -612,7 +610,6 @@ export default function Preview({
           <ScaleTool type={mapType} onType={setMapType} text={scaleText} onText={setScaleText} />
           <PlotToggle enabled={plotOn} onToggle={togglePlot} />
           {plotOn && plots.length > 0 && <ClearButton label={t("points.clear")} onClick={clearPlots} />}
-          {plots.length >= 2 && <ExportRouteButton onClick={exportRoute} />}
           <WindToggle enabled={windOn} onToggle={toggleWind} />
           {(windOn || winds.length > 0) && (
             <TasInput
@@ -624,6 +621,7 @@ export default function Preview({
             />
           )}
           {windOn && winds.length > 0 && <ClearButton label={t("wind.clear")} onClick={clearWinds} />}
+          {plots.length >= 2 && <ExportRouteButton onClick={exportRoute} />}
         </div>
       )}
       <nav className="preview__nav" aria-label={t("preview.switchFile")}>

@@ -56,7 +56,6 @@
     "heading": "proa",
     "windAboveTas": "vento acima da TAS",
     "needTas": "digite a TAS para a proa",
-    "needDeclination": "digite a declinação para o vento magnético",
     "editTrack": "Rumo em graus",
     "editTitle": "Duplo clique para corrigir o rumo: o segundo ponto anda pela nova direção",
     "export": {
@@ -226,7 +225,7 @@
         "paragraphs": [
           "Ligue o ícone de vento e clique no mapa. Abre uma caixa no ponto: digite a direção em graus, de onde o vento sopra (0 = norte, como no METAR), e a velocidade em nós. Enter adiciona a seta; Esc cancela.",
           "A seta aponta para onde o vento vai: vento de 280° (de onde ele sopra) aponta para 100°. A velocidade em nós aparece embaixo da seta. Backspace apaga a última seta; a lixeira apaga todas.",
-          "Correção de deriva: digite a TAS (velocidade verdadeira) no campo ao lado do ícone de vento. Cada trecho da rota tem um avião sobre a linha: o nariz aponta para a proa (HDG), com a declinação magnética somada quando digitada, e o grau aparece no bico. Sem vento, o nariz mostra o rumo do trecho; com vento (e TAS), mostra a proa corrigida. O cálculo usa o vento verdadeiro: a previsão em altitude vem em verdadeiro (°V); o vento da torre ou do ATIS vem em magnético, então aperte o botão °M no formulário do vento (a rota então precisa da declinação). A TAS e a velocidade do vento podem ser em nós ou km/h: o botão ao lado da TAS troca a unidade.",
+          "Correção de deriva: digite a TAS (velocidade verdadeira) no campo ao lado do ícone de vento. Cada trecho da rota tem um avião sobre a linha. Sem vento, o nariz aponta na mesma direção da linha entre os dois pontos. Com vento e TAS, aponta para a proa corrigida (HDG), com a declinação magnética somada (0 se não digitada). O grau aparece no bico. O cálculo usa o vento verdadeiro: a previsão em altitude vem em verdadeiro (°V); o vento da torre ou do ATIS vem em magnético, então aperte o botão °M no formulário do vento (sem declinação digitada, usa 0). A TAS e a velocidade do vento podem ser em nós ou km/h: o botão ao lado da TAS troca a unidade.",
           "Corrigir um vento: dê duplo clique na seta ou no rótulo da velocidade. Abre um formulário com direção, velocidade, referência (°V/°M) e TAS; Enter confirma e Esc cancela."
         ]
       },

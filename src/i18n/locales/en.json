@@ -56,7 +56,6 @@
     "heading": "HDG",
     "windAboveTas": "wind above TAS",
     "needTas": "type TAS for heading",
-    "needDeclination": "type declination for magnetic wind",
     "editTrack": "Track in degrees",
     "editTitle": "Double-click to correct the track: the second point moves along the new bearing",
     "export": {
@@ -226,7 +225,7 @@
         "paragraphs": [
           "Turn on the wind icon, then click on the map. A box opens at the point: type the direction in degrees, where the wind comes from (0 = north, as in METAR), and the speed in knots. Enter adds the arrow; Esc cancels.",
           "The arrow points to where the wind blows to: a wind from 280° points to 100°. The speed in knots appears under the arrow. Backspace removes the last arrow; the trash icon clears all of them.",
-          "Drift correction: type the TAS (true airspeed) in the field next to the wind icon. Each route leg shows a small plane on its line: the nose points to the heading (HDG), with the magnetic declination added when typed, and the degree appears at the nose. Without wind the nose shows the leg's track; with wind (and TAS) it shows the corrected heading. The calculation uses the true wind: forecast winds aloft are true (°V); tower or ATIS winds are magnetic, so press the °M button in the wind form (the route then needs the declination). The TAS and the wind speed can be in knots or km/h: the button next to TAS switches the unit.",
+          "Drift correction: type the TAS (true airspeed) in the field next to the wind icon. Each route leg shows a small plane on its line. Without wind, the nose points the same way as the line between the two points. With wind and TAS, it points to the corrected heading (HDG), with the magnetic declination added (0 if none is typed). The degree appears at the nose. The calculation uses the true wind: forecast winds aloft are true (°V); tower or ATIS winds are magnetic, so press the °M button in the wind form (without a declination, 0 is used). The TAS and the wind speed can be in knots or km/h: the button next to TAS switches the unit.",
           "Correcting a wind: double-click the arrow or its speed label. A form opens with its direction, speed, reference (°V/°M) and the TAS; press Enter to confirm or Esc to cancel."
         ]
       },

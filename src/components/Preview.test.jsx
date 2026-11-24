@@ -239,8 +239,9 @@ test("vento magnético: com a declinação, a rota converte para verdadeiro ante
   fireEvent.change(screen.getByRole("spinbutton", { name: "Wind speed" }), { target: { value: "20" } });
   fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
   fireEvent.change(screen.getByRole("textbox", { name: "True airspeed (TAS)" }), { target: { value: "100" } });
-  // Sem declinação, a rota pede a declinação.
-  expect(screen.getByText(/type declination for magnetic wind/)).toBeInTheDocument();
+  // Sem declinação, considera 0: vento de 040° magnético vale 040° verdadeiro, e a proa é 081°.
+  expect(screen.getByText(/HDG 081°/)).toBeInTheDocument();
+  // Com a declinação de +10°, o vento verdadeiro é 030°, e a proa é 080°.
   fireEvent.change(screen.getByRole("textbox", { name: "Magnetic declination in degrees" }), { target: { value: "10" } });
   expect(screen.getByText(/HDG 080°/)).toBeInTheDocument();
 });
@@ -271,7 +272,7 @@ test("rumo 120 com vento de 240° a 20 kt e TAS 120 kt: o bico do avião aponta 
   expect(plane.getAttribute("transform")).not.toMatch(/rotate\(120/);
 });
 
-test("o nariz do avião mostra o grau: rumo, depois com declinação, depois com a proa corrigida", async () => {
+test("o nariz do avião mostra o grau: segue a linha do trecho; com vento, aponta para a proa corrigida", async () => {
   const { container } = render(<Preview entry={entry("capa.png")} {...nav} />);
   const img = await screen.findByRole("img", { name: "capa.png" });
   Object.defineProperty(img, "naturalWidth", { value: 800 });
@@ -286,9 +287,9 @@ test("o nariz do avião mostra o grau: rumo, depois com declinação, depois com
   fireEvent.pointerDown(svg, { clientX: 606, clientY: 457, button: 0 });
   expect(container.querySelector(".nose-label").textContent).toBe("130°");
 
-  // Declinação de +10°: o nariz passa a 140° magnético.
+  // Sem vento, o nariz segue a linha do trecho, mesmo com a declinação digitada.
   fireEvent.change(screen.getByRole("textbox", { name: "Magnetic declination in degrees" }), { target: { value: "10" } });
-  expect(container.querySelector(".nose-label").textContent).toBe("140°");
+  expect(container.querySelector(".nose-label").textContent).toBe("130°");
 });
 
 test("duplo clique no rumo abre o campo; Enter corrige o rumo e o segundo ponto anda sobre a nova direção", async () => {
