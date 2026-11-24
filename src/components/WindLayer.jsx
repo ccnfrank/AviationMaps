@@ -21,12 +21,18 @@ export function WindArrows({ winds, length }) {
   });
 }
 
-// Velocidade embaixo de cada seta: "270° · 15 kt". Fica abaixo da seta, centralizada no ponto.
-export function WindLabels({ winds, length, viewW, viewH, onEdit }) {
+// Velocidade e TAS embaixo de cada seta: "270° · 15 kt · TAS 120 kt". Fica abaixo da seta, centralizada no ponto.
+// `unit` é a unidade mostrada ("kt" ou "kmh"); a seta guarda tudo em nós.
+export function WindLabels({ winds, length, viewW, viewH, onEdit, unit = "kt" }) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage ?? i18n.language;
+  const unitText = t(unit === "kmh" ? "wind.kmh" : "wind.unit");
+  const num = (kt) => {
+    const v = fromKnots(kt, unit);
+    return formatNumber(v, Number.isInteger(Math.round(v * 10) / 10) ? 0 : 1, language);
+  };
   return winds.map((w) => {
-    const speed = formatNumber(w.speed, Number.isInteger(w.speed) ? 0 : 1, language);
+    const tas = w.tas != null ? ` · TAS ${num(w.tas)} ${unitText}` : "";
     return (
       <span
         key={w.id}
@@ -39,25 +45,27 @@ export function WindLabels({ winds, length, viewW, viewH, onEdit }) {
           onEdit?.(w.id);
         }}
       >
-        {`${formatBearing(w.dir)} · ${speed} ${t("wind.unit")}`}
+        {`${formatBearing(w.dir)} · ${num(w.speed)} ${unitText}${tas}`}
       </span>
     );
   });
 }
 
-// Entrada da direção e da velocidade, no ponto clicado. Enter confirma, Esc cancela.
+// Entrada da direção, da velocidade e da TAS, no ponto clicado (ou para corrigir uma seta). Enter confirma, Esc cancela.
 // Os cliques dentro do formulário não chegam à área que rola, então o campo não arrasta a imagem.
 // Número para o campo: sem casas decimais se for inteiro, senão com uma casa.
 const fieldNumber = (v) => (Number.isInteger(Math.round(v * 10) / 10) ? String(Math.round(v)) : (Math.round(v * 10) / 10).toFixed(1));
 
-// `unit` é a unidade da velocidade digitada ("kt" ou "kmh"); a seta guarda sempre em nós.
+// `unit` é a unidade dos campos ("kt" ou "kmh"); a seta guarda sempre em nós. `onUnit` troca a unidade e os
+// campos já digitados são convertidos, para o valor continuar o mesmo.
 // O botão de referência marca o vento como magnético; sem ele, o vento é verdadeiro.
-// `initial` ({ dir, speed em nós, magnetic }) preenche o formulário para corrigir uma seta existente.
-// `tas` e `onTas` mostram o campo da TAS, também na correção.
-export function WindForm({ x, y, viewW, viewH, unit = "kt", initial = null, tas = null, onTas, onSubmit, onCancel }) {
+// `initial` ({ dir, speed, tas em nós, magnetic }) preenche o formulário para corrigir uma seta existente.
+// A TAS é de cada vento: é opcional, e sem ela o trecho que usa este vento pede a TAS na rota.
+export function WindForm({ x, y, viewW, viewH, unit = "kt", onUnit, initial = null, onSubmit, onCancel }) {
   const { t } = useTranslation();
   const [dir, setDir] = useState(initial ? fieldNumber(initial.dir) : "");
   const [speed, setSpeed] = useState(initial ? fieldNumber(fromKnots(initial.speed, unit)) : "");
+  const [tas, setTas] = useState(initial?.tas != null ? fieldNumber(fromKnots(initial.tas, unit)) : "");
   const [magnetic, setMagnetic] = useState(Boolean(initial?.magnetic));
   const dirRef = useRef(null);
   useEffect(() => {
@@ -65,10 +73,25 @@ export function WindForm({ x, y, viewW, viewH, unit = "kt", initial = null, tas 
   }, []);
 
   const parsed = parseWind(dir, speed);
+  const tasKnots = parseTas(tas, unit);
+  const tasInvalid = tas.trim() !== "" && tasKnots == null;
   const submit = (e) => {
     e.preventDefault();
-    if (parsed) onSubmit({ dir: parsed.dir, speed: toKnots(parsed.speed, unit), magnetic });
+    if (parsed && !tasInvalid) onSubmit({ dir: parsed.dir, speed: toKnots(parsed.speed, unit), magnetic, tas: tasKnots });
   };
+  // Troca a unidade e converte o que já foi digitado na velocidade e na TAS.
+  const switchUnit = () => {
+    const next = unit === "kt" ? "kmh" : "kt";
+    const convert = (text) => {
+      const v = Number(text.trim().replace(",", "."));
+      if (text.trim() === "" || !Number.isFinite(v)) return text;
+      return fieldNumber(fromKnots(toKnots(v, unit), next));
+    };
+    setSpeed(convert(speed));
+    setTas(convert(tas));
+    onUnit?.();
+  };
+  const unitText = t(unit === "kmh" ? "wind.kmh" : "wind.unit");
   // Esc cancela sem chegar aos atalhos da janela; o formulário não deixa o evento subir.
   const onKeyDown = (e) => {
     e.stopPropagation();
@@ -115,23 +138,31 @@ export function WindForm({ x, y, viewW, viewH, unit = "kt", initial = null, tas 
           value={speed}
           onChange={(e) => setSpeed(e.target.value)}
         />
-        <span className="wind-form__unit">{t(unit === "kmh" ? "wind.kmh" : "wind.unit")}</span>
+        <span className="wind-form__unit">{unitText}</span>
       </label>
-      {onTas && (
-        <label className="wind-form__field">
-          <span className="wind-form__name">TAS</span>
-          <input
-            className="wind-form__input"
-            type="text"
-            inputMode="decimal"
-            aria-label={t("wind.tasAria")}
-            placeholder="TAS"
-            value={tas ?? ""}
-            onChange={(e) => onTas(e.target.value)}
-          />
-          <span className="wind-form__unit">{t(unit === "kmh" ? "wind.kmh" : "wind.unit")}</span>
-        </label>
-      )}
+      <label className="wind-form__field">
+        <span className="wind-form__name">TAS</span>
+        <input
+          className="wind-form__input"
+          type="text"
+          inputMode="decimal"
+          aria-label={t("wind.tasAria")}
+          aria-invalid={tasInvalid || undefined}
+          placeholder="TAS"
+          value={tas}
+          onChange={(e) => setTas(e.target.value)}
+        />
+        <span className="wind-form__unit">{unitText}</span>
+      </label>
+      <button
+        type="button"
+        className="wind-form__ref"
+        onClick={switchUnit}
+        aria-label={t("wind.unitAria")}
+        title={t("wind.unitAria")}
+      >
+        {unitText}
+      </button>
       <button
         type="button"
         className="wind-form__ref"
@@ -142,39 +173,13 @@ export function WindForm({ x, y, viewW, viewH, unit = "kt", initial = null, tas 
       >
         {magnetic ? "°M" : "°V"}
       </button>
-      <button type="submit" className="wind-form__btn" disabled={!parsed} aria-label={t("wind.add")} title={t("wind.add")}>
+      <button type="submit" className="wind-form__btn" disabled={!parsed || tasInvalid} aria-label={t("wind.add")} title={t("wind.add")}>
         <Check strokeWidth={2} aria-hidden="true" />
       </button>
       <button type="button" className="wind-form__btn" onClick={onCancel} aria-label={t("common.cancel")} title={t("common.cancel")}>
         <X strokeWidth={2} aria-hidden="true" />
       </button>
     </form>
-  );
-}
-
-// Campo da TAS (velocidade verdadeira, em nós). Com vento plotado, cada trecho da rota ganha a proa
-// e a velocidade sobre o solo.
-// Campo da TAS (velocidade verdadeira). O botão da unidade alterna entre nós e km/h. `needed`: há vento
-// plotado e falta a TAS, então o campo ganha destaque até ser preenchido.
-export function TasInput({ value, onChange, unit = "kt", onUnit, needed = false }) {
-  const { t } = useTranslation();
-  const invalid = value.trim() !== "" && parseTas(value, unit) == null;
-  return (
-    <div className={`tas${needed ? " is-needed" : ""}`} title={t("wind.tasTitle")}>
-      <input
-        type="text"
-        inputMode="decimal"
-        className="tas__input"
-        aria-label={t("wind.tasAria")}
-        aria-invalid={invalid || undefined}
-        placeholder={t("wind.tas")}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      />
-      <button type="button" className="tas__unit" onClick={onUnit} aria-label={t("wind.unitAria")}>
-        {t(unit === "kmh" ? "wind.kmh" : "wind.unit")}
-      </button>
-    </div>
   );
 }
 

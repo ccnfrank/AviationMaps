@@ -189,8 +189,8 @@ test("vento + TAS: o trecho da rota mostra a proa corrigida e a velocidade sobre
   fireEvent.pointerDown(svg, { clientX: 400, clientY: 300, button: 0 });
   fireEvent.change(screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" }), { target: { value: "0" } });
   fireEvent.change(screen.getByRole("spinbutton", { name: "Wind speed" }), { target: { value: "20" } });
-  fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
   fireEvent.change(screen.getByRole("textbox", { name: "True airspeed (TAS)" }), { target: { value: "120" } });
+  fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
 
   // Rumo 090°, proa 080° (vento cruzado de norte). A velocidade sobre o solo não aparece no mapa.
   expect(screen.getByText(/090° · HDG 080°/)).toBeInTheDocument();
@@ -216,7 +216,7 @@ test("vento sem TAS: a rota pede a TAS, em vez de mostrar uma proa", async () =>
   fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
 
   expect(screen.getByText(/type TAS for heading/)).toBeInTheDocument();
-  expect(screen.getByRole("textbox", { name: "True airspeed (TAS)" }).closest(".tas")).toHaveClass("is-needed");
+  expect(screen.getByText("000° · 20 kt")).toHaveClass("wind-label");
 });
 
 test("vento magnético: com a declinação, a rota converte para verdadeiro antes da proa", async () => {
@@ -237,8 +237,8 @@ test("vento magnético: com a declinação, a rota converte para verdadeiro ante
   fireEvent.click(screen.getByRole("button", { name: "Magnetic wind (off = true)" }));
   fireEvent.change(screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" }), { target: { value: "40" } });
   fireEvent.change(screen.getByRole("spinbutton", { name: "Wind speed" }), { target: { value: "20" } });
-  fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
   fireEvent.change(screen.getByRole("textbox", { name: "True airspeed (TAS)" }), { target: { value: "100" } });
+  fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
   // Sem declinação, considera 0: vento de 040° magnético vale 040° verdadeiro, e a proa é 081°.
   expect(screen.getByText(/HDG 081°/)).toBeInTheDocument();
   // Com a declinação de +10°, o vento verdadeiro é 030°, e a proa é 080°.
@@ -263,13 +263,49 @@ test("rumo 120 com vento de 240° a 20 kt e TAS 120 kt: o bico do avião aponta 
   fireEvent.pointerDown(svg, { clientX: 523, clientY: 300, button: 0 });
   fireEvent.change(screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" }), { target: { value: "240" } });
   fireEvent.change(screen.getByRole("spinbutton", { name: "Wind speed" }), { target: { value: "20" } });
-  fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
   fireEvent.change(screen.getByRole("textbox", { name: "True airspeed (TAS)" }), { target: { value: "120" } });
+  fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
 
   const plane = container.querySelector(".route-plane");
   expect(plane).not.toBeNull();
   expect(plane.getAttribute("transform")).toMatch(/rotate\(128\.\d+\)/);
   expect(plane.getAttribute("transform")).not.toMatch(/rotate\(120/);
+});
+
+test("vários ventos, cada um com a sua TAS: cada trecho usa a TAS do vento mais perto do seu meio", async () => {
+  const { container } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  const img = await screen.findByRole("img", { name: "capa.png" });
+  Object.defineProperty(img, "naturalWidth", { value: 800 });
+  Object.defineProperty(img, "naturalHeight", { value: 600 });
+  fireEvent.load(img);
+  const svg = container.querySelector("svg.measure-layer");
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+
+  // Três pontos em linha, para leste: dois trechos, A → B e B → C.
+  fireEvent.click(screen.getByRole("button", { name: "Plot points" }));
+  fireEvent.pointerDown(svg, { clientX: 100, clientY: 300, button: 0 });
+  fireEvent.pointerDown(svg, { clientX: 400, clientY: 300, button: 0 });
+  fireEvent.pointerDown(svg, { clientX: 700, clientY: 300, button: 0 });
+
+  fireEvent.click(screen.getByRole("button", { name: "Wind" }));
+  // Primeiro vento, no meio do trecho A → B: de norte, 20 kt, TAS 120 kt.
+  fireEvent.pointerDown(svg, { clientX: 250, clientY: 300, button: 0 });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" }), { target: { value: "0" } });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind speed" }), { target: { value: "20" } });
+  fireEvent.change(screen.getByRole("textbox", { name: "True airspeed (TAS)" }), { target: { value: "120" } });
+  fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
+  // Segundo vento, no meio do trecho B → C: de sul, 20 kt, TAS 100 kt.
+  fireEvent.pointerDown(svg, { clientX: 550, clientY: 300, button: 0 });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" }), { target: { value: "180" } });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind speed" }), { target: { value: "20" } });
+  fireEvent.change(screen.getByRole("textbox", { name: "True airspeed (TAS)" }), { target: { value: "100" } });
+  fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
+
+  // Cada seta leva a sua TAS no rótulo, e cada trecho tem a sua proa.
+  expect(screen.getByText("000° · 20 kt · TAS 120 kt")).toHaveClass("wind-label");
+  expect(screen.getByText("180° · 20 kt · TAS 100 kt")).toHaveClass("wind-label");
+  expect(screen.getByText(/090° · HDG 080°/)).toBeInTheDocument();
+  expect(screen.getByText(/090° · HDG 102°/)).toBeInTheDocument();
 });
 
 test("o nariz do avião mostra o grau: segue a linha do trecho; com vento, aponta para a proa corrigida", async () => {
@@ -367,9 +403,8 @@ test("duplo clique na seta de vento abre a correção: direção, velocidade e T
   fireEvent.change(tas, { target: { value: "120" } });
   fireEvent.submit(form);
 
-  expect(container.querySelector(".wind-label").textContent).toBe("090° · 30 kt");
+  expect(container.querySelector(".wind-label").textContent).toBe("090° · 30 kt · TAS 120 kt");
   expect(container.querySelector(".wind-form")).toBeNull();
-  expect(screen.getByRole("textbox", { name: "True airspeed (TAS)" })).toHaveValue("120");
 });
 
 test("duplo clique no rótulo do vento também corrige; Esc cancela sem mudar a seta", async () => {
@@ -424,7 +459,43 @@ test("duplo clique no ponto plotado abre o nome; Enter renomeia e nome vazio vol
   expect(markers()).toEqual(["1", "2"]);
 });
 
-test("exportar rota: o botão aparece com dois pontos e salva um CSV", async () => {
+test("reset: limpa pontos, ventos e medições de uma vez, e fica por último, depois do exportar", async () => {
+  const { container } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  const img = await screen.findByRole("img", { name: "capa.png" });
+  Object.defineProperty(img, "naturalWidth", { value: 800 });
+  Object.defineProperty(img, "naturalHeight", { value: 600 });
+  fireEvent.load(img);
+  const svg = container.querySelector("svg.measure-layer");
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+  const reset = screen.getByRole("button", { name: "Clear everything on the map" });
+  const exportBtn = screen.getByRole("button", { name: "Export route (CSV)" });
+
+  expect(reset).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Plot points" }));
+  fireEvent.pointerDown(svg, { clientX: 100, clientY: 300, button: 0 });
+  fireEvent.pointerDown(svg, { clientX: 700, clientY: 300, button: 0 });
+  fireEvent.click(screen.getByRole("button", { name: "Wind" }));
+  fireEvent.pointerDown(svg, { clientX: 400, clientY: 300, button: 0 });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" }), { target: { value: "270" } });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind speed" }), { target: { value: "15" } });
+  fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
+  expect(container.querySelectorAll(".plot-marker")).toHaveLength(2);
+  expect(container.querySelectorAll(".wind-arrow")).toHaveLength(1);
+  expect(reset).toBeEnabled();
+
+  // Export e reset ficam no fim da barra, nesta ordem: exportar, depois reset, à direita.
+  expect(exportBtn.nextElementSibling).toBe(reset);
+  expect(reset.parentElement.lastElementChild).toBe(reset);
+
+  fireEvent.click(reset);
+  expect(container.querySelectorAll(".plot-marker")).toHaveLength(0);
+  expect(container.querySelectorAll(".wind-arrow")).toHaveLength(0);
+  expect(container.querySelectorAll(".route-plane")).toHaveLength(0);
+  expect(reset).toBeDisabled();
+  expect(exportBtn).toBeDisabled();
+});
+
+test("exportar rota: o botão fica desabilitado sem dois pontos, e salva um CSV com dois", async () => {
   const createURL = vi.fn(() => "blob:route");
   vi.stubGlobal("URL", { ...URL, createObjectURL: createURL, revokeObjectURL: vi.fn() });
   const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
@@ -436,10 +507,11 @@ test("exportar rota: o botão aparece com dois pontos e salva um CSV", async () 
   const svg = container.querySelector("svg.measure-layer");
   svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
 
-  expect(screen.queryByRole("button", { name: "Export route (CSV)" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Export route (CSV)" })).toBeDisabled();
   fireEvent.click(screen.getByRole("button", { name: "Plot points" }));
   fireEvent.pointerDown(svg, { clientX: 300, clientY: 200, button: 0 });
   fireEvent.pointerDown(svg, { clientX: 606, clientY: 457, button: 0 });
+  expect(screen.getByRole("button", { name: "Export route (CSV)" })).toBeEnabled();
   const before = createURL.mock.calls.length; // a própria imagem também usa createObjectURL
   fireEvent.click(screen.getByRole("button", { name: "Export route (CSV)" }));
 

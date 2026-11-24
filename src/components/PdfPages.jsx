@@ -182,6 +182,7 @@ function PdfPage({ doc, index, name, cssWidth, size, brightness, measure }) {
           windUnit={measure.windUnit}
           windEdit={measure.windEdit}
           onRenamePlot={measure.onRenamePlot}
+          onMovePlot={measure.onMovePlot}
         />
       )}
     </div>

@@ -312,25 +312,6 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .declination__input:focus-visible { outline: none; }
 .declination__input[aria-invalid="true"] { color: var(--danger); }
 .declination__unit { color: var(--muted); font-size: var(--fs-sm); }
-/* TAS: velocidade verdadeira, digitada ao lado do ícone de vento */
-.tas {
-  flex: none; display: inline-flex; align-items: center; gap: 2px; height: 30px; padding: 0 var(--s-2);
-  border-radius: 999px; background: var(--line-strong); cursor: text; transition: background var(--dur-fast), box-shadow var(--dur-fast);
-}
-.tas:hover { background: var(--field-hover); }
-.tas:focus-within { box-shadow: inset 0 0 0 1px var(--accent); }
-.tas.is-needed { box-shadow: inset 0 0 0 1px var(--accent); }
-.tas__input {
-  width: 56px; height: 100%; padding: 0; border: 0; background: transparent; color: var(--text);
-  font-size: var(--fs-sm); font-variant-numeric: tabular-nums; text-align: right;
-}
-.tas__input::placeholder { color: var(--muted); }
-.tas__input:focus-visible { outline: none; }
-.tas__input[aria-invalid="true"] { color: var(--danger); }
-.tas__unit {
-  padding: 0 2px; border: 0; background: transparent; color: var(--muted); font-size: var(--fs-sm); cursor: pointer;
-}
-.tas__unit:hover { color: var(--text); }
 /* Referência do vento: °V (verdadeiro) ou °M (magnético), no formulário */
 .wind-form__ref {
   flex: none; height: 26px; padding: 0 var(--s-2); border: 0; border-radius: 999px; background: transparent;
@@ -443,7 +424,8 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
   font-size: var(--fs-3xs); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1;
 }
 /* Marcador do ponto: o duplo clique abre o nome para editar */
-.plot-marker { pointer-events: auto; cursor: text; }
+.plot-marker { pointer-events: auto; cursor: grab; touch-action: none; }
+.plot-marker:active { cursor: grabbing; }
 .plot-edit {
   position: absolute; transform: translate(-50%, -50%); width: 64px; height: 18px; box-sizing: border-box;
   padding: 0 4px; border: 1px solid var(--accent); border-radius: 999px; background: var(--surface); color: var(--text);

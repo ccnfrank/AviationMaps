@@ -18,7 +18,7 @@ export default function MeasureLayer({
   surface, viewW, viewH, enabled, lines, draft, protractor, onPoint, onMove, onFinish, format,
   plotting = false, plots = [], onPlot, route = [],
   windOn = false, winds = [], windPending = null, onWind, onWindSubmit, onWindCancel, windUnit = "kt",
-  windEdit = null, onRenamePlot,
+  windEdit = null, onRenamePlot, onMovePlot,
 }) {
   const svgRef = useRef(null);
   const mine = lines.filter((l) => l.surface === surface);
@@ -144,7 +144,7 @@ export default function MeasureLayer({
         {mine.map((l) => labelsOf(l.points, l.id))}
         {live && labelsOf(live.points, "draft")}
         {route.map((l) => <RouteLabels key={l.key} link={l} viewW={viewW} viewH={viewH} />)}
-        <WindLabels winds={myWinds} length={windLength} viewW={viewW} viewH={viewH} onEdit={windEdit?.onEdit} />
+        <WindLabels winds={myWinds} length={windLength} viewW={viewW} viewH={viewH} onEdit={windEdit?.onEdit} unit={windUnit} />
         <NoseLabels links={route} viewW={viewW} viewH={viewH} screenScale={screenScale} />
         {pending && (
           <span className="wind-pending" style={{ left: `${(pending.x / viewW) * 100}%`, top: `${(pending.y / viewH) * 100}%` }} />
@@ -155,6 +155,8 @@ export default function MeasureLayer({
             plot={p}
             style={{ left: `${(p.x / viewW) * 100}%`, top: `${(p.y / viewH) * 100}%` }}
             onRename={onRenamePlot}
+            toView={toView}
+            onDrag={(point) => onMovePlot?.(p.id, { x: clamp(point.x, 0, viewW), y: clamp(point.y, 0, viewH) })}
           />
         ))}
         {angle && (
@@ -188,8 +190,7 @@ export default function MeasureLayer({
           viewH={viewH}
           unit={windUnit}
           initial={editing}
-          tas={windEdit.tas}
-          onTas={windEdit.onTas}
+          onUnit={windEdit?.onUnit}
           onSubmit={windEdit.onSubmit}
           onCancel={windEdit.onCancel}
         />
@@ -202,6 +203,7 @@ export default function MeasureLayer({
           viewW={viewW}
           viewH={viewH}
           unit={windUnit}
+          onUnit={windEdit?.onUnit}
           onSubmit={onWindSubmit}
           onCancel={onWindCancel}
         />
@@ -321,13 +323,35 @@ function TrackLabel({ link, style }) {
   );
 }
 
-// Marcador de um ponto plotado. O duplo clique abre o nome para editar: Enter confirma, Esc cancela.
-// Nome vazio volta ao número do ponto.
-function PlotMarker({ plot, style, onRename }) {
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+// Marcador de um ponto plotado. Arrastar move o ponto. O duplo clique abre o nome para editar:
+// Enter confirma, Esc cancela. Nome vazio volta ao número do ponto.
+function PlotMarker({ plot, style, onRename, toView, onDrag }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState("");
+  // Arraste: distância do ponteiro ao centro do marcador, para o ponto não saltar para o ponteiro.
+  const grab = useRef(null);
   const stop = (e) => e.stopPropagation();
+  const onPointerDown = (e) => {
+    e.stopPropagation();
+    if (e.button !== 0) return;
+    const p = toView(e);
+    grab.current = { dx: p.x - plot.x, dy: p.y - plot.y };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+  const onPointerMove = (e) => {
+    if (!grab.current) return;
+    e.stopPropagation();
+    const p = toView(e);
+    onDrag?.({ x: p.x - grab.current.dx, y: p.y - grab.current.dy });
+  };
+  const onPointerUp = (e) => {
+    if (!grab.current) return;
+    grab.current = null;
+    e.currentTarget.releasePointerCapture?.(e.pointerId);
+  };
   if (editing) {
     return (
       <input
@@ -356,7 +380,10 @@ function PlotMarker({ plot, style, onRename }) {
       className="plot-marker"
       style={style}
       title={t("points.renameTitle")}
-      onPointerDown={stop}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
       onDoubleClick={(e) => {
         e.stopPropagation();
         setValue(plot.name ?? String(plot.n));

@@ -13,9 +13,7 @@ import { distanceNm, formatBearing, routeLinks } from "../lib/route";
 import PdfPages from "./PdfPages";
 import PanView from "./PanView";
 import ImageStage from "./ImageStage";
-import { CalibrateButton, CalibrationField, ClearButton, ExportRouteButton, MeasureToggle, PlotToggle, WindToggle } from "./MeasureTools";
-import { TasInput } from "./WindLayer";
-import { parseTas } from "../lib/wind";
+import { CalibrateButton, CalibrationField, ClearButton, ExportRouteButton, MeasureToggle, PlotToggle, ResetButton, WindToggle } from "./MeasureTools";
 import { legFigures } from "../lib/routeLegs";
 import { routeCsv } from "../lib/routeExport";
 import { saveTextFile } from "../lib/saveFile";
@@ -77,11 +75,10 @@ export default function Preview({
   const [plots, setPlots] = useState([]);
   // Vento: cada clique no mapa abre a entrada; ao confirmar, uma seta fica no ponto.
   const [windOn, setWindOn] = useState(false);
-  const [winds, setWinds] = useState([]);           // setas: { id, surface, x, y, dir, speed }
-  const [windPending, setWindPending] = useState(null); // { surface, x, y }: aguardando direção e velocidade
+  const [winds, setWinds] = useState([]);           // setas: { id, surface, x, y, dir, speed, magnetic, tas }; tas em nós, opcional, de cada vento
+  const [windPending, setWindPending] = useState(null); // { surface, x, y }: aguardando direção, velocidade e TAS
   const [windEditId, setWindEditId] = useState(null);   // seta em correção (duplo clique): id
-  const [tasText, setTasText] = useState("");           // TAS digitada: com vento, a rota ganha a proa
-  const [speedUnit, setSpeedUnit] = useState("kt");     // unidade da TAS e da velocidade do vento: "kt" ou "kmh"
+  const [speedUnit, setSpeedUnit] = useState("kt");     // unidade da velocidade do vento e da TAS nos formulários: "kt" ou "kmh"
 
   // Carrega a imagem (decodifica os formatos que o navegador não mostra).
   useEffect(() => {
@@ -171,19 +168,17 @@ export default function Preview({
   // Rota dos pontos plotados, numa superfície: cada trecho traz o rumo (acima da linha) e a distância
   // em milhas náuticas (abaixo), quando há escala. Com declinação, o rumo magnético vai junto.
   const declinationValue = parseDeclination(declination);
-  const tasValue = parseTas(tasText, speedUnit);
   const routeOf = (surface) => {
     const ctx = {
       winds: winds.filter((w) => w.surface === surface),
       declination: declinationValue,
-      tas: tasValue,
       cmPerUnit: unitCm(surface),
       denominator: parseScale(scaleText),
     };
     return routeLinks(plots, surface).map((link) => {
       const f = legFigures(link, ctx);
       let headingText = null;
-      if (f.wind && tasValue == null) headingText = t("route.needTas");
+      if (f.wind && f.tas == null) headingText = t("route.needTas");
       else if (f.wind && !f.correction) headingText = t("route.windAboveTas");
       if (f.correction) {
         headingText = `${t("route.heading")} ${formatBearing(f.headingTrue)}${f.headingMag == null ? "" : ` · ${formatBearing(f.headingMag)} ${t("route.magnetic")}`}`;
@@ -221,7 +216,6 @@ export default function Preview({
       const ctx = {
         winds: winds.filter((w) => w.surface === surface),
         declination: declinationValue,
-        tas: tasValue,
         cmPerUnit: unitCm(surface),
         denominator: parseScale(scaleText),
       };
@@ -230,13 +224,13 @@ export default function Preview({
         leg += 1;
         const f = legFigures(link, ctx);
         let note = "";
-        if (f.wind && tasValue == null) note = t("route.needTas");
+        if (f.wind && f.tas == null) note = t("route.needTas");
         else if (f.wind && !f.correction) note = t("route.windAboveTas");
         rows.push([
           leg, surfaceLabel, name(link.from), name(link.to),
           n(f.trueTrack), n(f.magTrack), n(f.nm),
           f.wind ? n(f.wind.dir) : "", f.wind ? n(f.wind.speed) : "", f.wind ? (f.wind.magnetic ? "M" : "V") : "",
-          n(tasValue),
+          n(f.tas),
           n(f.correction?.wca), n(f.headingTrue), n(f.headingMag), n(f.correction?.groundSpeed),
           note,
         ]);
@@ -331,6 +325,19 @@ export default function Preview({
     setLines([]);
     setDraft(null);
   };
+  // Reset: limpa tudo no mapa (medições, calibração pendente, transferidor, pontos plotados e ventos).
+  // Os modos ligados (medir, plotar, vento...) e a escala ficam como estão.
+  const resetAll = () => {
+    setLines([]);
+    setDraft(null);
+    cancelCalibration();
+    setProtractor(null);
+    setPlots([]);
+    setWinds([]);
+    setWindPending(null);
+    setWindEditId(null);
+  };
+  const hasAnything = lines.length > 0 || draft != null || protractor != null || plots.length > 0 || winds.length > 0 || windPending != null;
 
   const toggleMeasure = () => {
     const next = !measureOn;
@@ -383,6 +390,10 @@ export default function Preview({
   const renamePlot = (id, name) => {
     setPlots((list) => list.map((p) => (p.id === id ? { ...p, name: name || undefined } : p)));
   };
+  // Arrastar um ponto plotado: a posição nova vem em unidades da superfície (a camada já limita à superfície).
+  const movePlot = (id, p) => {
+    setPlots((list) => list.map((q) => (q.id === id ? { ...q, x: p.x, y: p.y } : q)));
+  };
   // Corrige o rumo de um trecho: o segundo ponto anda sobre a nova direção, mantendo a distância.
   const setLegTrack = (link, deg) => {
     const rad = (deg * Math.PI) / 180;
@@ -414,18 +425,21 @@ export default function Preview({
     setWindPending(null);
     setWindEditId(id);
   };
-  const submitWindEdit = ({ dir, speed, magnetic = false }) => {
+  const submitWindEdit = ({ dir, speed, magnetic = false, tas = null }) => {
     if (windEditId == null) return;
-    setWinds((list) => list.map((w) => (w.id === windEditId ? { ...w, dir, speed, magnetic } : w)));
+    setWinds((list) => list.map((w) => (w.id === windEditId ? { ...w, dir, speed, magnetic, tas } : w)));
     setWindEditId(null);
   };
   const cancelWindEdit = () => setWindEditId(null);
-  const submitWind = ({ dir, speed, magnetic = false }) => {
+  // Cada vento leva a sua direção, velocidade, referência e TAS (em nós; null se não digitada).
+  const submitWind = ({ dir, speed, magnetic = false, tas = null }) => {
     if (!windPending) return;
     const { surface, x, y } = windPending;
-    setWinds((list) => [...list, { id: `${Date.now()}-${list.length}`, surface, x, y, dir, speed, magnetic }]);
+    setWinds((list) => [...list, { id: `${Date.now()}-${list.length}`, surface, x, y, dir, speed, magnetic, tas }]);
     setWindPending(null);
   };
+  // Unidade dos formulários de vento (nós ou km/h), também usada nos rótulos das setas.
+  const toggleWindUnit = () => setSpeedUnit((u) => (u === "kt" ? "kmh" : "kt"));
   const cancelWind = () => setWindPending(null);
   const clearWinds = () => {
     setWinds([]);
@@ -532,6 +546,7 @@ export default function Preview({
     plots,
     onPlot: addPlot,
     onRenamePlot: renamePlot,
+    onMovePlot: movePlot,
     routeOf,
     windOn,
     windUnit: speedUnit,
@@ -542,8 +557,7 @@ export default function Preview({
     onWindCancel: cancelWind,
     windEdit: {
       id: windEditId,
-      tas: tasText,
-      onTas: setTasText,
+      onUnit: toggleWindUnit,
       onEdit: editWind,
       onSubmit: submitWindEdit,
       onCancel: cancelWindEdit,
@@ -611,17 +625,10 @@ export default function Preview({
           <PlotToggle enabled={plotOn} onToggle={togglePlot} />
           {plotOn && plots.length > 0 && <ClearButton label={t("points.clear")} onClick={clearPlots} />}
           <WindToggle enabled={windOn} onToggle={toggleWind} />
-          {(windOn || winds.length > 0) && (
-            <TasInput
-              value={tasText}
-              onChange={setTasText}
-              unit={speedUnit}
-              onUnit={() => setSpeedUnit((u) => (u === "kt" ? "kmh" : "kt"))}
-              needed={winds.length > 0 && parseTas(tasText, speedUnit) == null}
-            />
-          )}
           {windOn && winds.length > 0 && <ClearButton label={t("wind.clear")} onClick={clearWinds} />}
-          {plots.length >= 2 && <ExportRouteButton onClick={exportRoute} />}
+          {/* Exportar e reset ficam sempre no fim da barra, na mesma posição; o reset é o último, à direita. */}
+          <ExportRouteButton onClick={exportRoute} disabled={plots.length < 2} />
+          <ResetButton onClick={resetAll} disabled={!hasAnything} />
         </div>
       )}
       <nav className="preview__nav" aria-label={t("preview.switchFile")}>

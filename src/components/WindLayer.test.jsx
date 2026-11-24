@@ -66,7 +66,29 @@ describe("vento na camada de medição", () => {
     fireEvent.change(speed, { target: { value: "15" } });
     expect(add).toBeEnabled();
     fireEvent.click(add);
-    expect(onWindSubmit).toHaveBeenCalledWith({ dir: 270, speed: 15, magnetic: false });
+    expect(onWindSubmit).toHaveBeenCalledWith({ dir: 270, speed: 15, magnetic: false, tas: null });
+  });
+
+  it("a TAS é de cada vento: com ela, vai junto na confirmação; inválida, não deixa confirmar", () => {
+    const { onWindSubmit } = setupLayer({ windOn: true, windPending: { surface: "img", x: 10, y: 10 } });
+    const tas = screen.getByRole("textbox", { name: "True airspeed (TAS)" });
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" }), { target: { value: "270" } });
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Wind speed" }), { target: { value: "15" } });
+    fireEvent.change(tas, { target: { value: "abc" } });
+    expect(screen.getByRole("button", { name: "Add wind" })).toBeDisabled();
+    fireEvent.change(tas, { target: { value: "120" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
+    expect(onWindSubmit).toHaveBeenCalledWith({ dir: 270, speed: 15, magnetic: false, tas: 120 });
+  });
+
+  it("trocar a unidade converte a velocidade e a TAS já digitadas", () => {
+    setupLayer({ windOn: true, windPending: { surface: "img", x: 10, y: 10 } });
+    const speed = screen.getByRole("spinbutton", { name: "Wind speed" });
+    fireEvent.change(speed, { target: { value: "15" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "True airspeed (TAS)" }), { target: { value: "120" } });
+    fireEvent.click(screen.getByRole("button", { name: "Speed unit: knots or km/h" }));
+    expect(speed).toHaveValue(27.8);
+    expect(screen.getByRole("textbox", { name: "True airspeed (TAS)" })).toHaveValue("222.2");
   });
 
   it("recusa direção acima de 360 e velocidade negativa", () => {
@@ -86,6 +108,33 @@ describe("vento na camada de medição", () => {
     const dir = screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" });
     fireEvent.keyDown(dir, { key: "Escape" });
     expect(onWindCancel).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("pontos plotados arrastáveis", () => {
+  it("arrastar o marcador move o ponto, sem saltar para o ponteiro", () => {
+    const onMovePlot = vi.fn();
+    const plots = [{ id: "p1", surface: "img", x: 50, y: 50 }];
+    setupLayer({ plotting: true, plots, onMovePlot });
+    const marker = screen.getByText("1");
+    // Escala 2 (200 unidades em 100 px). O centro do marcador fica em (50, 50) da superfície.
+    fireEvent.pointerDown(marker, { clientX: 27, clientY: 27, button: 0 });
+    fireEvent.pointerMove(marker, { clientX: 60, clientY: 40 });
+    // Ponteiro em (120, 80) da superfície, com um deslocamento de (4, 4) da pegada: o ponto vai a (116, 76).
+    expect(onMovePlot).toHaveBeenLastCalledWith("p1", { x: 116, y: 76 });
+    fireEvent.pointerUp(marker, { clientX: 60, clientY: 40 });
+    fireEvent.pointerMove(marker, { clientX: 90, clientY: 90 });
+    expect(onMovePlot).toHaveBeenCalledTimes(1);
+  });
+
+  it("o arraste fica dentro da superfície", () => {
+    const onMovePlot = vi.fn();
+    const plots = [{ id: "p1", surface: "img", x: 50, y: 50 }];
+    setupLayer({ plots, onMovePlot });
+    const marker = screen.getByText("1");
+    fireEvent.pointerDown(marker, { clientX: 25, clientY: 25, button: 0 });
+    fireEvent.pointerMove(marker, { clientX: 999, clientY: -50 });
+    expect(onMovePlot).toHaveBeenLastCalledWith("p1", { x: 200, y: 0 });
   });
 });
 

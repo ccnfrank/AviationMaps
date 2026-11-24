@@ -79,6 +79,7 @@ export default function ImageStage({ src, alt, zoom, brightness = 100, measure, 
           windUnit={measure.windUnit}
           windEdit={measure.windEdit}
           onRenamePlot={measure.onRenamePlot}
+          onMovePlot={measure.onMovePlot}
         />
       )}
     </div>
