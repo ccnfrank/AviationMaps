@@ -6,21 +6,13 @@
     "loading": "Loading…",
     "browserFormat": "The browser cannot show this format.",
     "decodeImage": "Could not decode this image.",
-    "zoom": "Zoom",
     "switchFile": "Switch file",
     "previous": "Previous",
     "next": "Next",
     "fullscreen": "Full screen",
     "exitFullscreen": "Exit full screen",
     "library": "Maps panel",
-    "zoomOut": "Zoom out",
-    "zoomIn": "Zoom in",
-    "zoomReset": "Reset zoom",
-    "tools": "Viewer tools",
-    "brightness": "Brightness",
-    "brightnessDown": "Darken",
-    "brightnessUp": "Brighten",
-    "brightnessReset": "Reset brightness"
+    "tools": "Viewer tools"
   },
   "measure": {
     "toggle": "Measure",
@@ -108,5 +100,200 @@
     "maps_other": "{{count}} maps",
     "noFolders": "No subfolders",
     "back": "Back"
+  },
+  "help": {
+    "button": "Help",
+    "title": "How to use Map Reader",
+    "or": "or",
+    "sections": [
+      {
+        "title": "Opening maps",
+        "paragraphs": [
+          "Click Load maps directory and choose a folder. Only images and PDFs are listed; other files are ignored. Subfolders appear as groups.",
+          "You can also drag a folder or a file into the window. A loose map opens straight in the viewer.",
+          "No folder: press V to open the empty viewer and drag a map into it, or use the Choose a map button.",
+          "In the desktop app, the last folder you loaded is reopened at startup. Everything is read on this device; nothing is uploaded."
+        ]
+      },
+      {
+        "title": "Searching",
+        "paragraphs": [
+          "The search field looks for maps by name in all folders and shows the results right below it. Click a result to open it, or press Enter to open the first one.",
+          "The view buttons switch between grid (thumbnails) and list. With subfolders, search opens in list view, with one row per subfolder."
+        ]
+      },
+      {
+        "title": "Map viewer",
+        "items": [
+          "Right column: lists the maps in the folder so you can switch maps with one click. Show or hide it with the button next to the navigation, or with L.",
+          "Full screen: the button fills the whole window. Esc leaves it.",
+          "Close: the X, Esc, or a click outside the window.",
+          "PDF: pages appear in sequence, up to 200 pages. When you change the zoom, the pages are redrawn sharply."
+        ]
+      },
+      {
+        "title": "Zoom and brightness",
+        "paragraphs": [
+          "Zoom from 100% to 600%. Brightness from 50% to 150%, where 100% is the image as it is.",
+          "Adjust them with the keyboard (see the shortcuts below). The toolbar has no sliders, and the value is not shown on screen.",
+          "When zoomed past 100%, drag the image with the mouse to see other parts."
+        ]
+      },
+      {
+        "title": "Protractor",
+        "paragraphs": [
+          "Turn it on with the protractor icon. The first click places the centre; moving the pointer aims the arrow; the second click locks the angle, which appears at the tip. 0° is north, and degrees increase clockwise.",
+          "Magnetic declination: type the declination in degrees, with its sign (for example -20 or 15). A second needle shows the corrected angle, and route bearings also show the magnetic value.",
+          "Esc removes the ring or the arrow without closing the window."
+        ]
+      },
+      {
+        "title": "Measure",
+        "paragraphs": [
+          "Turn on the ruler icon and click to mark points. The length of each segment appears over the line. Double-click or right-click ends the measurement; Esc ends only the segment in progress.",
+          "Without a scale, the measurement is in cm on paper, using the resolution stored in the image when it exists. With the map scale, the measurement becomes a real distance.",
+          "Calibrate (only for images without a stored resolution): turn on Measure, click the crosshair icon, draw a line over something of known size, and type its real length in cm. PDFs already have an exact scale.",
+          "The trash icon clears all measurements."
+        ]
+      },
+      {
+        "title": "Map scale",
+        "paragraphs": [
+          "Choose the map type: Aviation and Nautical measure in nautical miles (NM); Land measures in metres and kilometres. Then type the scale, for example 1:1000000.",
+          "With a scale, measurements and routes show real distances. An invalid scale is marked in red."
+        ]
+      },
+      {
+        "title": "Plot points and route",
+        "paragraphs": [
+          "Turn on the pin icon. Each click marks a numbered point. Between points you get the route line, the bearing (above the segment) and the distance in nautical miles (below it, with a scale).",
+          "The route total appears in the bottom bar, next to the file name. The trash icon clears all points."
+        ]
+      },
+      {
+        "title": "Shortcuts: start screen and window",
+        "shortcuts": [
+          {
+            "keys": [
+              [
+                "V"
+              ]
+            ],
+            "text": "Open the empty map viewer"
+          },
+          {
+            "keys": [
+              [
+                "L"
+              ]
+            ],
+            "text": "Show or hide the maps panel (with a folder loaded, outside full screen)"
+          },
+          {
+            "keys": [
+              [
+                "/"
+              ]
+            ],
+            "text": "Focus the search field"
+          },
+          {
+            "keys": [
+              [
+                "Enter"
+              ]
+            ],
+            "text": "In search: open the first result"
+          },
+          {
+            "keys": [
+              [
+                "Esc"
+              ]
+            ],
+            "text": "In search: clear the text. In full screen: leave it. In the window: close it"
+          }
+        ]
+      },
+      {
+        "title": "Shortcuts: viewer",
+        "shortcuts": [
+          {
+            "keys": [
+              [
+                "+"
+              ],
+              [
+                "="
+              ]
+            ],
+            "text": "Zoom in"
+          },
+          {
+            "keys": [
+              [
+                "-"
+              ]
+            ],
+            "text": "Zoom out"
+          },
+          {
+            "keys": [
+              [
+                "Alt",
+                "+"
+              ]
+            ],
+            "text": "Brighten. On a Mac, Alt is the Option key"
+          },
+          {
+            "keys": [
+              [
+                "Alt",
+                "-"
+              ]
+            ],
+            "text": "Darken"
+          },
+          {
+            "keys": [
+              [
+                "Backspace"
+              ],
+              [
+                "Delete"
+              ]
+            ],
+            "text": "Measure or plot: remove the last point. With no segment in progress, remove the last measurement"
+          },
+          {
+            "keys": [
+              [
+                "Esc"
+              ]
+            ],
+            "text": "Measure: end the segment in progress. Protractor: remove the ring or the arrow"
+          }
+        ]
+      },
+      {
+        "title": "Mouse",
+        "items": [
+          "Click: marks a point, depending on the tool on (measure, plot or protractor).",
+          "Double-click or right-click: ends the measurement.",
+          "Click and drag: moves the image when it is zoomed."
+        ]
+      },
+      {
+        "title": "Note",
+        "items": [
+          "Cmd or Ctrl with + and - still control the browser's zoom, not the image's zoom."
+        ]
+      }
+    ]
+  },
+  "theme": {
+    "toDay": "Day mode",
+    "toNight": "Night mode"
   }
 }

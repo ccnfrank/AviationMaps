@@ -37,83 +37,73 @@ test("nome e tamanho aparecem na barra de navegação, sem botão de renomear", 
   expect(screen.queryByRole("button", { name: "Rename" })).toBeNull();
 });
 
-test("zoom aparece para foto e PDF", () => {
+// Zoom e brilho não têm slider: mudam pelo teclado. + e − mudam o zoom; Alt + e − mudam o brilho.
+afterEach(() => vi.restoreAllMocks());
+
+// O jsdom não calcula layout: dá tamanho à área e à imagem, para o zoom virar largura em pixels.
+async function renderImage() {
+  vi.spyOn(Element.prototype, "clientWidth", "get").mockReturnValue(800);
+  vi.spyOn(Element.prototype, "clientHeight", "get").mockReturnValue(600);
+  render(<Preview entry={entry("capa.png")} {...nav} />);
+  const img = await screen.findByRole("img", { name: "capa.png" });
+  Object.defineProperty(img, "naturalWidth", { value: 800 });
+  Object.defineProperty(img, "naturalHeight", { value: 600 });
+  fireEvent.load(img);
+  return img;
+}
+const stageWidth = () => document.querySelector(".measure-box").style.width;
+
+test("zoom e brilho não aparecem como sliders, nem em foto nem em PDF", () => {
   const { unmount } = render(<Preview entry={entry("capa.png")} {...nav} />);
-  expect(screen.getByRole("slider", { name: "Zoom" })).toBeInTheDocument();
+  expect(screen.queryByRole("slider")).toBeNull();
   unmount();
 
   render(<Preview entry={entry("mapa.pdf")} {...nav} />);
-  expect(screen.getByRole("slider", { name: "Zoom" })).toBeInTheDocument();
+  expect(screen.queryByRole("slider")).toBeNull();
 });
 
-const zoomGroup = () => screen.getByRole("group", { name: "Zoom" });
-
-test("o slider de zoom muda a porcentagem mostrada", () => {
-  render(<Preview entry={entry("capa.png")} {...nav} />);
-  const slider = screen.getByRole("slider", { name: "Zoom" });
-  expect(within(zoomGroup()).getByText("100%")).toBeInTheDocument();
-  fireEvent.change(slider, { target: { value: "2.5" } });
-  expect(within(zoomGroup()).getByText("250%")).toBeInTheDocument();
+test("+ e − mudam o zoom de meio em meio, sem passar de 100% nem de 600%", async () => {
+  await renderImage();
+  expect(stageWidth()).toBe("800px");
+  fireEvent.keyDown(document, { key: "+" });
+  expect(stageWidth()).toBe("1200px"); // 150%
+  fireEvent.keyDown(document, { key: "=" });
+  expect(stageWidth()).toBe("1600px"); // 200%
+  fireEvent.keyDown(document, { key: "-" });
+  fireEvent.keyDown(document, { key: "-" });
+  fireEvent.keyDown(document, { key: "-" });
+  expect(stageWidth()).toBe("800px"); // 100%, não desce mais
+  for (let i = 0; i < 20; i++) fireEvent.keyDown(document, { key: "+" });
+  expect(stageWidth()).toBe("4800px"); // 600%
 });
 
-test("botões + e − andam de meio em meio, e restaurar volta a 100%", () => {
-  render(<Preview entry={entry("capa.png")} {...nav} />);
-  const minus = screen.getByRole("button", { name: "Zoom out" });
-  const plus = screen.getByRole("button", { name: "Zoom in" });
-  const reset = screen.getByRole("button", { name: "Reset zoom" });
-  expect(minus).toBeDisabled();
-  expect(reset).toBeDisabled();
-  fireEvent.click(plus);
-  expect(within(zoomGroup()).getByText("150%")).toBeInTheDocument();
-  fireEvent.click(plus);
-  expect(within(zoomGroup()).getByText("200%")).toBeInTheDocument();
-  expect(reset).toBeEnabled();
-  fireEvent.click(reset);
-  expect(within(zoomGroup()).getByText("100%")).toBeInTheDocument();
-  expect(minus).toBeDisabled();
+test("Cmd + e Alt + + não mexem no zoom (Cmd é do navegador, Alt é do brilho)", async () => {
+  await renderImage();
+  fireEvent.keyDown(document, { key: "+", metaKey: true });
+  fireEvent.keyDown(document, { key: "=", code: "Equal", altKey: true });
+  expect(stageWidth()).toBe("800px");
 });
 
-test("o +/- do zoom não passa de 600%", () => {
-  render(<Preview entry={entry("capa.png")} {...nav} />);
-  const plus = screen.getByRole("button", { name: "Zoom in" });
-  for (let i = 0; i < 20; i++) fireEvent.click(plus);
-  expect(within(zoomGroup()).getByText("600%")).toBeInTheDocument();
-  expect(plus).toBeDisabled();
+test("Alt + + e Alt + − mudam o brilho de 5 em 5, entre 50% e 150%, sem mexer no zoom", async () => {
+  const img = await renderImage();
+  expect(img.style.filter).toBe("brightness(1)");
+  fireEvent.keyDown(document, { key: "=", code: "Equal", altKey: true });
+  expect(img.style.filter).toBe("brightness(1.05)");
+  fireEvent.keyDown(document, { key: "-", code: "Minus", altKey: true });
+  fireEvent.keyDown(document, { key: "-", code: "Minus", altKey: true });
+  expect(img.style.filter).toBe("brightness(0.95)");
+  for (let i = 0; i < 20; i++) fireEvent.keyDown(document, { key: "-", code: "Minus", altKey: true });
+  expect(img.style.filter).toBe("brightness(0.5)");
+  for (let i = 0; i < 40; i++) fireEvent.keyDown(document, { key: "=", code: "Equal", altKey: true });
+  expect(img.style.filter).toBe("brightness(1.5)");
+  expect(stageWidth()).toBe("800px");
 });
 
-test("brilho: + e − andam de 5 em 5, chegam a 75%, respeitam o limite e restaurar volta a 100%", () => {
-  render(<Preview entry={entry("capa.png")} {...nav} />);
-  const group = within(screen.getByRole("group", { name: "Brightness" }));
-  const minus = group.getByRole("button", { name: "Darken" });
-  const plus = group.getByRole("button", { name: "Brighten" });
-  const reset = group.getByRole("button", { name: "Reset brightness" });
-  expect(reset).toBeDisabled();
-  fireEvent.click(plus);
-  expect(group.getByText("105%")).toBeInTheDocument();
-  fireEvent.click(minus);
-  fireEvent.click(minus);
-  expect(group.getByText("95%")).toBeInTheDocument();
-  expect(reset).toBeEnabled();
-  for (let i = 0; i < 4; i++) fireEvent.click(minus);
-  expect(group.getByText("75%")).toBeInTheDocument();
-  for (let i = 0; i < 5; i++) fireEvent.click(minus);
-  expect(group.getByText("50%")).toBeInTheDocument();
-  expect(minus).toBeDisabled();
-  fireEvent.click(reset);
-  expect(group.getByText("100%")).toBeInTheDocument();
-  expect(reset).toBeDisabled();
-  for (let i = 0; i < 20; i++) fireEvent.click(plus);
-  expect(group.getByText("150%")).toBeInTheDocument();
-  expect(plus).toBeDisabled();
-});
-
-test("transferidor, medir, brilho e zoom ficam na mesma barra", () => {
+test("transferidor e medir ficam na barra da visualização", () => {
   render(<Preview entry={entry("capa.png")} {...nav} />);
   const bar = screen.getByRole("toolbar", { name: "Viewer tools" });
   expect(within(bar).getByRole("button", { name: "Protractor" })).toBeInTheDocument();
   expect(within(bar).getByRole("button", { name: "Measure" })).toBeInTheDocument();
-  expect(within(bar).getByRole("group", { name: "Brightness" })).toBeInTheDocument();
-  expect(within(bar).getByRole("group", { name: "Zoom" })).toBeInTheDocument();
 });
 
 test("medir é só um botão de ícone: ligar não abre painel, e calibrar aparece só em imagem", () => {

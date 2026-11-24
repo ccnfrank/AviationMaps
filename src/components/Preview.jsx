@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Maximize, Minimize, PanelRight, Sun, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize, Minimize, PanelRight, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { formatSize } from "../lib/format";
 import { getPreviewKind } from "../lib/previewKind";
@@ -17,18 +17,22 @@ import { CalibrateButton, CalibrationField, ClearButton, MeasureToggle, PlotTogg
 import { DeclinationInput, ProtractorToggle } from "./Protractor";
 import ScaleTool from "./ScaleTool";
 import { formatDistance, groundMeters, parseScale } from "../lib/scale";
-import StepSlider from "./StepSlider";
 
-// Zoom e brilho para foto e PDF. Mapas grandes em PDF precisam de bastante zoom.
+// Zoom e brilho para foto e PDF, mudados pelo teclado. Mapas grandes em PDF precisam de bastante zoom.
 const ZOOM_MIN = 1;
 const ZOOM_MAX = 6;
-// Passo dos botões − e +; o slider anda em frações para ficar suave.
+// Cada + ou − muda o zoom meio passo.
 const ZOOM_STEP = 0.5;
 // Brilho em porcentagem: 100% é a imagem como está.
 const BRIGHTNESS_MIN = 50;
 const BRIGHTNESS_MAX = 150;
 const BRIGHTNESS_DEFAULT = 100;
-const BRIGHTNESS_STEP = 5; // de 5 em 5 os botões passam por 75%, e o slider anda de 1 em 1
+const BRIGHTNESS_STEP = 5;
+
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+// Sentido de cada tecla: +1 aumenta, −1 diminui. Pelo caractere (zoom) ou pelo código (brilho com Alt).
+const KEY_DIRECTION = { "+": 1, "=": 1, "-": -1 };
+const CODE_DIRECTION = { Equal: 1, NumpadAdd: 1, Minus: -1, NumpadSubtract: -1 };
 
 // Janela de visualização de um arquivo. Quem usa deve dar uma `key` por arquivo, assim o estado
 // (zoom, brilho, medições) começa limpo a cada troca. `entry` é { name, size, file }.
@@ -115,6 +119,29 @@ export default function Preview({
   }, [entry, kind]);
 
   const measurable = kind !== "unsupported" && !error;
+
+  // Atalhos de zoom e brilho, sem campo em foco:
+  // + e − mudam o zoom; Alt (Option) com + e − muda o brilho. O zoom usa o caractere da tecla;
+  // o brilho usa o código da tecla, porque o Option troca o caractere no Mac.
+  useEffect(() => {
+    if (!measurable) return undefined;
+    const onKey = (e) => {
+      if (e.target.closest?.("input, textarea, [contenteditable]")) return;
+      if (e.metaKey || e.ctrlKey) return; // Cmd/Ctrl + é do navegador (zoom da página)
+      if (e.altKey) {
+        const dir = CODE_DIRECTION[e.code];
+        if (!dir) return;
+        setBrightness((b) => clamp(b + dir * BRIGHTNESS_STEP, BRIGHTNESS_MIN, BRIGHTNESS_MAX));
+        return;
+      }
+      const dir = KEY_DIRECTION[e.key];
+      if (!dir) return;
+      setZoom((z) => clamp(z + dir * ZOOM_STEP, ZOOM_MIN, ZOOM_MAX));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [measurable]);
+
   const imageCm = calib?.cmPerUnit ?? cmPerUnitFromDpi(dpi);
   const unitCm = (surface) => (surface === "img" ? imageCm : PDF_CM_PER_UNIT);
   // Rótulo de um trecho medido. Com escala digitada, mostra a distância real (no tipo do mapa);
@@ -403,7 +430,7 @@ export default function Preview({
         {body}
       </div>
       {measurable && (
-        // Todas as ferramentas da visualização numa linha só: transferidor, medir, brilho e zoom.
+        // Todas as ferramentas da visualização numa linha só: transferidor, medir, escala e pontos.
         // As ferramentas da medição (calibrar, apagar) aparecem ao lado do botão medir, só quando ligada.
         <div className="view-tools" role="toolbar" aria-label={t("preview.tools")}>
           <ProtractorToggle enabled={protractorOn} onToggle={toggleProtractor} />
@@ -424,38 +451,6 @@ export default function Preview({
           <ScaleTool type={mapType} onType={setMapType} text={scaleText} onText={setScaleText} />
           <PlotToggle enabled={plotOn} onToggle={togglePlot} />
           {plotOn && plots.length > 0 && <ClearButton label={t("points.clear")} onClick={clearPlots} />}
-          <span className="view-tools__sep" aria-hidden="true" />
-          <StepSlider
-            label={t("preview.brightness")}
-            decLabel={t("preview.brightnessDown")}
-            incLabel={t("preview.brightnessUp")}
-            resetLabel={t("preview.brightnessReset")}
-            leading={<Sun className="tool-group__icon" strokeWidth={1.8} aria-hidden="true" />}
-            value={brightness}
-            min={BRIGHTNESS_MIN}
-            max={BRIGHTNESS_MAX}
-            step={1}
-            buttonStep={BRIGHTNESS_STEP}
-            defaultValue={BRIGHTNESS_DEFAULT}
-            format={(v) => `${Math.round(v)}%`}
-            onChange={setBrightness}
-          />
-          <span className="view-tools__sep" aria-hidden="true" />
-          <StepSlider
-            label={t("preview.zoom")}
-            decLabel={t("preview.zoomOut")}
-            incLabel={t("preview.zoomIn")}
-            resetLabel={t("preview.zoomReset")}
-            value={zoom}
-            min={ZOOM_MIN}
-            max={ZOOM_MAX}
-            step={0.1}
-            precision={1}
-            buttonStep={ZOOM_STEP}
-            defaultValue={ZOOM_MIN}
-            format={(v) => `${Math.round(v * 100)}%`}
-            onChange={setZoom}
-          />
         </div>
       )}
       <nav className="preview__nav" aria-label={t("preview.switchFile")}>

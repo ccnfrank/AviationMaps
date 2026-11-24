@@ -6,21 +6,13 @@
     "loading": "Carregando…",
     "browserFormat": "O navegador não consegue mostrar este formato.",
     "decodeImage": "Não foi possível decodificar esta imagem.",
-    "zoom": "Zoom",
     "switchFile": "Trocar de arquivo",
     "previous": "Anterior",
     "next": "Próximo",
     "fullscreen": "Tela cheia",
     "exitFullscreen": "Sair da tela cheia",
     "library": "Painel de mapas",
-    "zoomOut": "Diminuir zoom",
-    "zoomIn": "Aumentar zoom",
-    "zoomReset": "Restaurar zoom",
-    "tools": "Ferramentas de visualização",
-    "brightness": "Brilho",
-    "brightnessDown": "Diminuir brilho",
-    "brightnessUp": "Aumentar brilho",
-    "brightnessReset": "Restaurar brilho"
+    "tools": "Ferramentas de visualização"
   },
   "measure": {
     "toggle": "Medir",
@@ -43,7 +35,7 @@
     "magnetic": "mag"
   },
   "scale": {
-    "group":"Escala do mapa",
+    "group": "Escala do mapa",
     "type": "Tipo de mapa",
     "aviation": "Aviação",
     "sea": "Aquático",
@@ -108,5 +100,200 @@
     "maps_other": "{{count}} mapas",
     "noFolders": "Nenhuma subpasta",
     "back": "Voltar"
+  },
+  "help": {
+    "button": "Ajuda",
+    "title": "Como usar o Map Reader",
+    "or": "ou",
+    "sections": [
+      {
+        "title": "Abrir mapas",
+        "paragraphs": [
+          "Clique em Carregar diretório de mapas e escolha uma pasta. Só imagens e PDFs entram na lista; os outros arquivos são ignorados. Subpastas aparecem como grupos.",
+          "Também dá para arrastar uma pasta ou um arquivo para a janela. Um mapa solto abre direto na visualização.",
+          "Sem pasta: pressione V para abrir a janela vazia e arraste um mapa para ela, ou use o botão Escolher um mapa.",
+          "No app de desktop, a última pasta carregada é reaberta ao iniciar. Tudo é lido neste dispositivo; nada é enviado."
+        ]
+      },
+      {
+        "title": "Buscar",
+        "paragraphs": [
+          "O campo de busca procura mapas em todas as pastas, pelo nome, e mostra os resultados logo abaixo. Clique num resultado para abri-lo, ou pressione Enter para abrir o primeiro.",
+          "Os botões de visualização alternam entre grade (miniaturas) e lista. Com subpastas, a busca abre em lista, com uma linha por subpasta."
+        ]
+      },
+      {
+        "title": "Janela de visualização",
+        "items": [
+          "Coluna da direita: lista os mapas da pasta para trocar de mapa com um clique. Mostre ou esconda a coluna com o botão ao lado da navegação, ou com L.",
+          "Tela cheia: o botão ocupa a janela inteira. Esc sai.",
+          "Fechar: o X, Esc ou um clique fora da janela.",
+          "PDF: as páginas aparecem em sequência, até 200 páginas. Ao mudar o zoom, as páginas são redesenhadas com nitidez."
+        ]
+      },
+      {
+        "title": "Zoom e brilho",
+        "paragraphs": [
+          "Zoom de 100% a 600%. Brilho de 50% a 150%, sendo 100% a imagem como está.",
+          "Os ajustes são feitos pelo teclado (veja os atalhos abaixo). A barra não tem controles deslizantes, e o valor não aparece na tela.",
+          "Com zoom acima de 100%, arraste a imagem com o mouse para ver outras partes."
+        ]
+      },
+      {
+        "title": "Transferidor",
+        "paragraphs": [
+          "Ligue pelo ícone do transferidor. O primeiro clique põe o centro; mover o ponteiro gira a seta; o segundo clique fixa o ângulo, que aparece na ponta. 0° é o norte, e os graus crescem no sentido horário.",
+          "Desvio magnético: digite a declinação em graus, com sinal (por exemplo -20 ou 15). Uma segunda agulha mostra o ângulo corrigido, e os rumos da rota passam a mostrar também o magnético.",
+          "Esc apaga o anel ou a seta, sem fechar a janela."
+        ]
+      },
+      {
+        "title": "Medir",
+        "paragraphs": [
+          "Ligue o ícone de régua e clique para marcar pontos. A medida de cada trecho aparece sobre a linha. Duplo clique ou botão direito encerra a medição; Esc encerra só o trecho em andamento.",
+          "Sem escala, a medida é em cm no papel, usando a resolução gravada na imagem, quando ela existe. Com a escala do mapa, a medida vira distância real.",
+          "Calibrar (só imagens sem resolução gravada): ligue Medir, clique no ícone de mira, desenhe uma linha sobre algo de tamanho conhecido e digite o tamanho real em cm. PDFs já têm escala exata.",
+          "A lixeira apaga todas as medições."
+        ]
+      },
+      {
+        "title": "Escala do mapa",
+        "paragraphs": [
+          "Escolha o tipo do mapa: Aviação e Náutico medem em milhas náuticas (NM); Terra mede em metros e km. Depois digite a escala, por exemplo 1:1000000.",
+          "Com a escala, as medidas e a rota mostram distância real. Escala inválida fica marcada em vermelho."
+        ]
+      },
+      {
+        "title": "Plotar pontos e rota",
+        "paragraphs": [
+          "Ligue o ícone de pino. Cada clique marca um ponto numerado. Entre os pontos aparecem a linha da rota, o rumo (acima do trecho) e a distância em milhas náuticas (abaixo, com escala).",
+          "O total da rota aparece na barra inferior, junto do nome do arquivo. A lixeira apaga todos os pontos."
+        ]
+      },
+      {
+        "title": "Atalhos da tela inicial e da janela",
+        "shortcuts": [
+          {
+            "keys": [
+              [
+                "V"
+              ]
+            ],
+            "text": "Abrir a janela de visualização vazia"
+          },
+          {
+            "keys": [
+              [
+                "L"
+              ]
+            ],
+            "text": "Mostrar ou esconder o painel de mapas (com pasta carregada, fora da tela cheia)"
+          },
+          {
+            "keys": [
+              [
+                "/"
+              ]
+            ],
+            "text": "Focar o campo de busca"
+          },
+          {
+            "keys": [
+              [
+                "Enter"
+              ]
+            ],
+            "text": "Na busca: abrir o primeiro resultado"
+          },
+          {
+            "keys": [
+              [
+                "Esc"
+              ]
+            ],
+            "text": "Na busca: limpar o texto. Na tela cheia: sair dela. Na janela: fechar"
+          }
+        ]
+      },
+      {
+        "title": "Atalhos da visualização",
+        "shortcuts": [
+          {
+            "keys": [
+              [
+                "+"
+              ],
+              [
+                "="
+              ]
+            ],
+            "text": "Aumentar o zoom"
+          },
+          {
+            "keys": [
+              [
+                "-"
+              ]
+            ],
+            "text": "Diminuir o zoom"
+          },
+          {
+            "keys": [
+              [
+                "Alt",
+                "+"
+              ]
+            ],
+            "text": "Clarear (brilho). No Mac, Alt é a tecla Option"
+          },
+          {
+            "keys": [
+              [
+                "Alt",
+                "-"
+              ]
+            ],
+            "text": "Escurecer (brilho)"
+          },
+          {
+            "keys": [
+              [
+                "Backspace"
+              ],
+              [
+                "Delete"
+              ]
+            ],
+            "text": "Medir ou plotar: apaga o último ponto. Sem trecho em andamento, apaga a última medição"
+          },
+          {
+            "keys": [
+              [
+                "Esc"
+              ]
+            ],
+            "text": "Medir: encerra o trecho em andamento. Transferidor: apaga o anel ou a seta"
+          }
+        ]
+      },
+      {
+        "title": "Mouse",
+        "items": [
+          "Clique: marca um ponto, conforme a ferramenta ligada (medir, plotar ou transferidor).",
+          "Duplo clique ou botão direito: encerra a medição.",
+          "Clique e arraste: move a imagem quando ela está com zoom."
+        ]
+      },
+      {
+        "title": "Observação",
+        "items": [
+          "Cmd ou Ctrl com + e - continuam sendo o zoom do navegador, e não o zoom da imagem."
+        ]
+      }
+    ]
+  },
+  "theme": {
+    "toDay": "Modo dia",
+    "toNight": "Modo noite"
   }
 }
