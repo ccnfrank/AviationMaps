@@ -14,11 +14,12 @@ import { NoseLabels, RoutePlanes, WindArrows, WindForm, WindLabels } from "./Win
 // `plots` são todos os pontos plotados ({ id, surface, x, y }); a camada mostra os desta superfície.
 // Com `windOn`, cada clique abre a entrada de vento no ponto (`onWind`); `windPending` é o ponto
 // aguardando a direção e a velocidade, e `winds` são as setas já marcadas ({ id, surface, x, y, dir, speed }).
+// Option + clique num ponto plotado ou num vento apaga o item (`onDeletePlot`, `onDeleteWind`, recebem o id).
 export default function MeasureLayer({
   surface, viewW, viewH, enabled, lines, draft, protractor, onPoint, onMove, onFinish, format,
   plotting = false, plots = [], onPlot, route = [],
   windOn = false, winds = [], windPending = null, onWind, onWindSubmit, onWindCancel, windUnit = "kt",
-  windEdit = null, onRenamePlot, onMovePlot,
+  windEdit = null, onRenamePlot, onMovePlot, onDeletePlot, onDeleteWind, windAim = null,
 }) {
   const svgRef = useRef(null);
   const mine = lines.filter((l) => l.surface === surface);
@@ -46,8 +47,10 @@ export default function MeasureLayer({
   }, [viewW]);
   const windLength = WIND_ARROW_PX / screenScale;
   const live = draft && draft.surface === surface ? draft : null;
-  // Transferidor: só desenha na superfície onde ele está.
-  const angle = protractor && protractor.surface === surface ? protractor : null;
+  // Transferidor: só desenha na superfície onde ele está. O do vento (`windAim`) aparece ao plotar um vento.
+  const angle = protractor && protractor.surface === surface
+    ? protractor
+    : windAim && windAim.surface === surface ? windAim : null;
 
   const toView = (e) => {
     const r = svgRef.current.getBoundingClientRect();
@@ -73,8 +76,9 @@ export default function MeasureLayer({
     }
     onPoint(toView(e));
   };
+  // Com vento ligado, o movimento também alimenta o transferidor do vento (quem trata é `onMove`).
   const onPointerMove = (e) => {
-    if (enabled && !plotting && !windOn) onMove(toView(e));
+    if (enabled && !plotting) onMove(toView(e));
   };
   const finishFrom = (e) => {
     if (windOn && e.type === "dblclick") {
@@ -137,14 +141,22 @@ export default function MeasureLayer({
           />
         ))}
         {liveSegment && <Path points={[live.points[live.points.length - 1], live.cursor]} live />}
-        <WindArrows winds={myWinds} length={windLength} />
+        <WindArrows winds={myWinds} length={windLength} onDelete={onDeleteWind} />
         <RoutePlanes links={route} screenScale={screenScale} />
       </svg>
       <div className="measure-layer__labels" aria-hidden="true">
         {mine.map((l) => labelsOf(l.points, l.id))}
         {live && labelsOf(live.points, "draft")}
         {route.map((l) => <RouteLabels key={l.key} link={l} viewW={viewW} viewH={viewH} />)}
-        <WindLabels winds={myWinds} length={windLength} viewW={viewW} viewH={viewH} onEdit={windEdit?.onEdit} unit={windUnit} />
+        <WindLabels
+          winds={myWinds}
+          length={windLength}
+          viewW={viewW}
+          viewH={viewH}
+          onEdit={windEdit?.onEdit}
+          onDelete={onDeleteWind}
+          unit={windUnit}
+        />
         <NoseLabels links={route} viewW={viewW} viewH={viewH} screenScale={screenScale} />
         {pending && (
           <span className="wind-pending" style={{ left: `${(pending.x / viewW) * 100}%`, top: `${(pending.y / viewH) * 100}%` }} />
@@ -155,6 +167,7 @@ export default function MeasureLayer({
             plot={p}
             style={{ left: `${(p.x / viewW) * 100}%`, top: `${(p.y / viewH) * 100}%` }}
             onRename={onRenamePlot}
+            onDelete={onDeletePlot}
             toView={toView}
             onDrag={(point) => onMovePlot?.(p.id, { x: clamp(point.x, 0, viewW), y: clamp(point.y, 0, viewH) })}
           />
@@ -203,6 +216,7 @@ export default function MeasureLayer({
           viewW={viewW}
           viewH={viewH}
           unit={windUnit}
+          dirFromMap={pending.dir}
           onUnit={windEdit?.onUnit}
           onSubmit={onWindSubmit}
           onCancel={onWindCancel}
@@ -326,8 +340,8 @@ function TrackLabel({ link, style }) {
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 // Marcador de um ponto plotado. Arrastar move o ponto. O duplo clique abre o nome para editar:
-// Enter confirma, Esc cancela. Nome vazio volta ao número do ponto.
-function PlotMarker({ plot, style, onRename, toView, onDrag }) {
+// Enter confirma, Esc cancela. Nome vazio volta ao número do ponto. Option + clique apaga o ponto.
+function PlotMarker({ plot, style, onRename, onDelete, toView, onDrag }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState("");
@@ -337,6 +351,10 @@ function PlotMarker({ plot, style, onRename, toView, onDrag }) {
   const onPointerDown = (e) => {
     e.stopPropagation();
     if (e.button !== 0) return;
+    if (e.altKey) {
+      onDelete?.(plot.id);
+      return;
+    }
     const p = toView(e);
     grab.current = { dx: p.x - plot.x, dy: p.y - plot.y };
     e.currentTarget.setPointerCapture?.(e.pointerId);

@@ -34,7 +34,7 @@
   },
   "wind": {
     "toggle": "Wind",
-    "title": "Wind: click on the map, type the direction (where it comes from, in degrees) and the speed in knots. Backspace removes the last one",
+    "title": "Wind: click on the map, point the protractor to where the wind comes from and click again to set it. Then type the speed in knots. Backspace removes the last one",
     "unit": "kt",
     "direction": "Direction",
     "directionAria": "Wind direction, in degrees, where it comes from",
@@ -94,7 +94,10 @@
     "title": "Protractor: click to place it, move to aim, click again to lock the angle",
     "declination": "Magnetic declination in degrees",
     "declinationPlaceholder": "Declination",
-    "declinationTitle": "Magnetic declination (°), positive or negative: the second needle points to the angle + declination"
+    "declinationTitle": "Magnetic variation (°): next to it, choose east (E) or west (W). A - before the number is east, and a + is west. The second needle points to the angle + declination",
+    "east": "East variation (E)",
+    "west": "West variation (W)",
+    "sideTitle": "Switch between east (E) and west (W)"
   },
   "pdf": {
     "error": "Could not open this PDF.",
@@ -181,7 +184,7 @@
       {
         "title": "Zoom and brightness",
         "paragraphs": [
-          "Zoom from 100% to 600%. Brightness from 50% to 150%, where 100% is the image as it is.",
+          "Zoom from 100% to 600%. Brightness from 0% (black screen) to 150%, where 100% is the image as it is.",
           "Adjust them with the keyboard (see the shortcuts below). The toolbar has no sliders, and the value is not shown on screen.",
           "When zoomed past 100%, drag the image with the mouse to see other parts."
         ]
@@ -190,7 +193,7 @@
         "title": "Protractor",
         "paragraphs": [
           "Turn it on with the protractor icon. The first click places the centre; moving the pointer aims the arrow; the second click locks the angle, which appears at the tip. 0° is north, and degrees increase clockwise.",
-          "Magnetic declination: type the declination in degrees, with its sign (for example -20 or 15). A second needle shows the corrected angle, and route bearings also show the magnetic value.",
+          "Magnetic declination: type the variation in degrees and choose E (east) or W (west) next to the field. You can also type - before the number for east, and + for west: -23 is 23° east. A second needle shows the corrected angle, and route bearings also show the magnetic value.",
           "Esc removes the ring or the arrow without closing the window."
         ]
       },
@@ -227,6 +230,7 @@
           "Turn on the wind icon, then click on the map. A box opens at the point: type the direction the wind comes from, in degrees (0 = north, as in METAR), and the speed in knots. Enter adds the arrow; Esc cancels.",
           "The arrow points to where the wind blows to: a wind from 280° points to 100°. The speed appears under the arrow. Clicking an arrow does not add a point.",
           "Plot as many winds as you need. Each one has its own direction, speed, reference (°V/°M) and TAS (true airspeed); the TAS is optional, but a leg that uses a wind without TAS asks for it. The unit button in the form switches between knots and km/h, and converts the numbers already typed.",
+          "When you click the map, a protractor appears at that point, and the degrees change as you move the mouse. The second click fixes the angle, which becomes the wind direction: point to where the wind comes from. Then type the speed and, if you want, the TAS.",
           "Correct a wind: double-click the arrow or its speed label. The form opens with the current values; Enter confirms, Esc cancels.",
           "Backspace removes the last arrow; the trash icon clears all of them."
         ]
@@ -235,7 +239,7 @@
         "title": "Drift correction",
         "paragraphs": [
           "Drift correction calculates the heading to fly so the aircraft stays on the leg's track. Type the TAS of the aircraft in the wind form, next to the wind it belongs to.",
-          "A leg uses the arrow closest to its middle point, with that arrow's own TAS. To tie a wind to a leg, plot it at the middle of that leg. With wind and TAS, the route shows HDG (the heading to fly), and the plane's nose points to it, with the magnetic declination added (0 if none is typed). Without TAS, or with a wind stronger than the TAS, the route says so.",
+          "A leg uses the arrow closest to its middle point, with that arrow's own TAS. To tie a wind to a leg, plot it at the middle of that leg. With wind and TAS, the route shows HDG (the heading to fly), and the plane's nose points to that true heading. The declination only changes the magnetic values shown next to it. Without TAS, or with a wind stronger than the TAS, the route says so.",
           "Winds are read as true (°V). Forecast winds aloft are true; tower or ATIS winds are magnetic, so press °M in the wind form. A magnetic wind uses the declination, and without one, 0 is used.",
           "Example: track 090°, wind from 030° at 20 kt, TAS 100 kt. The wind comes from the left, so the correction is 10° and the heading is 080°. The formula is sin(CD) = (wind ÷ TAS) × sin(α), where α is the angle between the wind direction and the track. A wind from the left turns the heading to the left of the track; a wind from the right turns it to the right."
         ]
@@ -310,6 +314,14 @@
           {
             "keys": [
               [
+                "X"
+              ]
+            ],
+            "text": "Re-center the image"
+          },
+          {
+            "keys": [
+              [
                 "Alt",
                 "+"
               ]
@@ -359,7 +371,9 @@
         "items": [
           "Click: marks a point, depending on the tool on (measure, plot, wind or protractor).",
           "Double-click: on a route degree, corrects the track; on a point marker, renames the point; on a wind arrow or its label, corrects the wind. Right-click ends a measurement.",
-          "Drag: on a point marker, moves the point. Click and drag on the empty map: moves the image when it is zoomed."
+          "Drag: on a point marker, moves the point. Click and drag on the empty map: moves the image when it is zoomed.",
+          "Mouse wheel: zooms in or out at the pointer's position. Option (Alt) + wheel: brightens or darkens the image, down to black. X re-centers the image.",
+          "Option (Alt) + click on a plotted point, on a wind arrow or on its label: deletes only that item."
         ]
       },
       {

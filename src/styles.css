@@ -312,6 +312,13 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .declination__input:focus-visible { outline: none; }
 .declination__input[aria-invalid="true"] { color: var(--danger); }
 .declination__unit { color: var(--muted); font-size: var(--fs-sm); }
+/* Lado da variação (E ou W), dentro da mesma cápsula: clique troca */
+.declination__side {
+  border: 0; padding: 0 0 0 2px; background: transparent; color: var(--accent); cursor: pointer;
+  font: inherit; font-size: var(--fs-sm); font-weight: 600; line-height: 1;
+}
+.declination__side:hover { color: var(--text); }
+.declination__side:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
 /* Referência do vento: °V (verdadeiro) ou °M (magnético), no formulário */
 .wind-form__ref {
   flex: none; height: 26px; padding: 0 var(--s-2); border: 0; border-radius: 999px; background: transparent;
@@ -460,7 +467,11 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 }
 /* Linha da proa: tracejada, a partir do avião, na direção do nariz */
 .route-heading { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 4 3; stroke-linecap: round; opacity: .85; pointer-events: none; }
-/* Vento: setas sobre o mapa, na cor do vento; a velocidade fica embaixo de cada seta */
+/* Vento: setas sobre o mapa, na cor do vento; a velocidade fica embaixo de cada seta.
+   A seta recebe clique mesmo com a camada de medição desligada (Option + clique apaga o vento). */
+.wind-arrow { pointer-events: auto; }
+/* Faixa transparente sobre a haste: a seta fina ganha uma área de clique razoável */
+.wind-arrow .wind-hit { stroke: transparent; stroke-width: 12px; pointer-events: stroke; filter: none; }
 .wind-arrow line {
   stroke: var(--c-image); stroke-width: 2; stroke-linecap: round;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .5));

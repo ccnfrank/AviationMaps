@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Maximize, Minimize, PanelRight, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { formatSize } from "../lib/format";
+import { BRIGHTNESS_DEFAULT, BRIGHTNESS_MAX, BRIGHTNESS_MIN, ZOOM_MAX, ZOOM_MIN, clamp } from "../lib/viewRange";
 import { getPreviewKind } from "../lib/previewKind";
 import { getImageBlob } from "../lib/media/decodeImage";
 import { toDisplayUrl } from "../lib/displayUrl";
 import {
   PDF_CM_PER_UNIT, addDeclination, angleOf, chainLength, cmPerUnitFromCalibration, cmPerUnitFromDpi, formatNumber,
-  parseDeclination, readImageDpi,
+  declinationFrom, readImageDpi,
 } from "../lib/measure";
 import { distanceNm, formatBearing, routeLinks } from "../lib/route";
 import PdfPages from "./PdfPages";
@@ -21,18 +22,9 @@ import { DeclinationInput, ProtractorToggle } from "./Protractor";
 import ScaleTool from "./ScaleTool";
 import { formatDistance, groundMeters, parseScale } from "../lib/scale";
 
-// Zoom e brilho para foto e PDF, mudados pelo teclado. Mapas grandes em PDF precisam de bastante zoom.
-const ZOOM_MIN = 1;
-const ZOOM_MAX = 6;
-// Cada + ou − muda o zoom meio passo.
+// Cada + ou − muda o zoom meio passo, e o brilho 5 pontos. Os limites ficam em lib/viewRange.
 const ZOOM_STEP = 0.5;
-// Brilho em porcentagem: 100% é a imagem como está.
-const BRIGHTNESS_MIN = 50;
-const BRIGHTNESS_MAX = 150;
-const BRIGHTNESS_DEFAULT = 100;
 const BRIGHTNESS_STEP = 5;
-
-const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 // Sentido de cada tecla: +1 aumenta, −1 diminui. Pelo caractere (zoom) ou pelo código (brilho com Alt).
 const KEY_DIRECTION = { "+": 1, "=": 1, "-": -1 };
 const CODE_DIRECTION = { Equal: 1, NumpadAdd: 1, Minus: -1, NumpadSubtract: -1 };
@@ -67,7 +59,8 @@ export default function Preview({
   // a seta segue o ponteiro, e o segundo clique fixa o ângulo.
   const [protractorOn, setProtractorOn] = useState(false);
   const [protractor, setProtractor] = useState(null);    // { surface, pivot, cursor, locked }
-  const [declination, setDeclination] = useState("");    // texto digitado: desvio magnético em graus, com sinal
+  const [declination, setDeclination] = useState("");    // texto digitado: variação magnética em graus, sem sinal
+  const [declinationSide, setDeclinationSide] = useState("W"); // lado da variação: "E" (leste) ou "W" (oeste)
   const [mapType, setMapType] = useState(null);          // escala: "aviation", "sea" ou "land" (null: sem tipo)
   const [scaleText, setScaleText] = useState("");        // escala digitada, p. ex. "1:1000000"
   // Pontos plotados: cada clique marca um ponto numerado. { id, surface, x, y } em unidades da superfície.
@@ -76,7 +69,10 @@ export default function Preview({
   // Vento: cada clique no mapa abre a entrada; ao confirmar, uma seta fica no ponto.
   const [windOn, setWindOn] = useState(false);
   const [winds, setWinds] = useState([]);           // setas: { id, surface, x, y, dir, speed, magnetic, tas }; tas em nós, opcional, de cada vento
-  const [windPending, setWindPending] = useState(null); // { surface, x, y }: aguardando direção, velocidade e TAS
+  const [windPending, setWindPending] = useState(null); // { surface, x, y, dir? }: aguardando direção, velocidade e TAS
+  // Transferidor do vento: o centro é o clique que abre o formulário; o ponteiro aponta de onde o vento vem.
+  // O segundo clique fixa o ângulo (vira a direção) e deixa a seta parada. { surface, pivot, cursor, locked }.
+  const [windAim, setWindAim] = useState(null);
   const [windEditId, setWindEditId] = useState(null);   // seta em correção (duplo clique): id
   const [speedUnit, setSpeedUnit] = useState("kt");     // unidade da velocidade do vento e da TAS nos formulários: "kt" ou "kmh"
 
@@ -167,7 +163,8 @@ export default function Preview({
 
   // Rota dos pontos plotados, numa superfície: cada trecho traz o rumo (acima da linha) e a distância
   // em milhas náuticas (abaixo), quando há escala. Com declinação, o rumo magnético vai junto.
-  const declinationValue = parseDeclination(declination);
+  // Desvio com sinal (leste negativo, oeste positivo): é ele que entra nos cálculos e no transferidor.
+  const declinationValue = declinationFrom(declination, declinationSide);
   const routeOf = (surface) => {
     const ctx = {
       winds: winds.filter((w) => w.surface === surface),
@@ -191,8 +188,8 @@ export default function Preview({
         trackText: headingText ? `${track} · ${headingText}` : track,
         distance: f.nm == null ? null : t("route.nm", { value: formatNumber(f.nm, 1, language) }),
         nm: f.nm,
-        // Avião sobre o trecho: o nariz aponta para a proa do cálculo (ou o rumo, sem vento), com a declinação
-        // somada. Fica no vento mais perto, ou no meio do trecho sem vento.
+        // Avião sobre o trecho: o nariz aponta para a proa verdadeira do cálculo (ou o rumo, sem vento).
+        // Fica no vento mais perto, ou no meio do trecho sem vento.
         heading: f.noseHeading,
         anchor: f.wind ? { x: f.wind.x, y: f.wind.y } : f.mid,
         // Rumo verdadeiro do trecho, e como corrigi-lo pelo duplo clique: o segundo ponto anda sobre a nova direção.
@@ -270,6 +267,11 @@ export default function Preview({
       protractorMove(surface, p);
       return;
     }
+    if (windOn) {
+      // Transferidor do vento: a seta acompanha o ponteiro até o segundo clique.
+      setWindAim((a) => (a && a.surface === surface && !a.locked ? { ...a, cursor: p } : a));
+      return;
+    }
     setDraft((d) => (d && d.surface === surface ? { ...d, cursor: p } : d));
   };
 
@@ -335,6 +337,7 @@ export default function Preview({
     setPlots([]);
     setWinds([]);
     setWindPending(null);
+    setWindAim(null);
     setWindEditId(null);
   };
   const hasAnything = lines.length > 0 || draft != null || protractor != null || plots.length > 0 || winds.length > 0 || windPending != null;
@@ -386,6 +389,8 @@ export default function Preview({
     setPlots((list) => [...list, { id: `${Date.now()}-${list.length}`, surface, x: p.x, y: p.y }]);
   };
   const clearPlots = () => setPlots([]);
+  // Option + clique no ponto apaga só esse ponto.
+  const deletePlot = (id) => setPlots((list) => list.filter((p) => p.id !== id));
   // Nome do ponto (até 8 letras). Vazio volta ao número do ponto.
   const renamePlot = (id, name) => {
     setPlots((list) => list.map((p) => (p.id === id ? { ...p, name: name || undefined } : p)));
@@ -407,6 +412,7 @@ export default function Preview({
     const next = !windOn;
     setWindOn(next);
     setWindPending(null);
+    setWindAim(null);
     if (next) {
       setMeasureOn(false);
       setDraft(null);
@@ -416,13 +422,24 @@ export default function Preview({
       setPlotOn(false);
     }
   };
+  // Clique no mapa com vento ligado. Com o transferidor do vento solto, o clique fixa o ângulo do centro
+  // ao ponteiro e preenche a direção. Sem ele, abre o formulário no ponto e começa o transferidor ali.
   const windClick = (surface, p) => {
     setWindEditId(null);
+    if (windAim && windAim.surface === surface && !windAim.locked && windPending) {
+      if (Math.hypot(p.x - windAim.pivot.x, p.y - windAim.pivot.y) < 1) return;
+      const dir = Math.round(angleOf(windAim.pivot, p)) % 360;
+      setWindAim({ ...windAim, cursor: p, locked: true });
+      setWindPending({ ...windPending, dir });
+      return;
+    }
     setWindPending({ surface, x: p.x, y: p.y });
+    setWindAim({ surface, pivot: p, cursor: p, locked: false });
   };
   // Duplo clique numa seta: abre a correção dela. Direção, velocidade, referência e TAS.
   const editWind = (id) => {
     setWindPending(null);
+    setWindAim(null);
     setWindEditId(id);
   };
   const submitWindEdit = ({ dir, speed, magnetic = false, tas = null }) => {
@@ -437,13 +454,23 @@ export default function Preview({
     const { surface, x, y } = windPending;
     setWinds((list) => [...list, { id: `${Date.now()}-${list.length}`, surface, x, y, dir, speed, magnetic, tas }]);
     setWindPending(null);
+    setWindAim(null);
   };
   // Unidade dos formulários de vento (nós ou km/h), também usada nos rótulos das setas.
   const toggleWindUnit = () => setSpeedUnit((u) => (u === "kt" ? "kmh" : "kt"));
-  const cancelWind = () => setWindPending(null);
+  const cancelWind = () => {
+    setWindPending(null);
+    setWindAim(null);
+  };
   const clearWinds = () => {
     setWinds([]);
     setWindPending(null);
+    setWindAim(null);
+  };
+  // Option + clique na seta (ou no rótulo) apaga só esse vento; se ele estava em correção, fecha a correção.
+  const deleteWind = (id) => {
+    setWinds((list) => list.filter((w) => w.id !== id));
+    setWindEditId((current) => (current === id ? null : current));
   };
 
   // Backspace com o vento ligado: primeiro cancela a entrada em andamento; depois apaga a última seta.
@@ -490,6 +517,17 @@ export default function Preview({
     return () => window.removeEventListener("keydown", onKey, true);
   }, [protractorOn, protractor]);
 
+  // Transferidor do vento para a camada: o ângulo aparece em graus inteiros, enquanto o ponteiro se move.
+  const windAimProps = windOn && windAim
+    ? {
+      surface: windAim.surface,
+      pivot: windAim.pivot,
+      cursor: windAim.cursor,
+      locked: windAim.locked,
+      text: `${Math.round(angleOf(windAim.pivot, windAim.cursor)) % 360}°`,
+    }
+    : null;
+
   // Dados do transferidor para a camada: o texto do ângulo só aparece com centro e ponteiro.
   const protractorProps = protractorOn && protractor
     ? {
@@ -497,7 +535,7 @@ export default function Preview({
       pivot: protractor.pivot,
       cursor: protractor.cursor,
       locked: protractor.locked,
-      declination: parseDeclination(declination),
+      declination: declinationValue,
       text: protractor.pivot && protractor.cursor
         ? `${formatNumber(angleOf(protractor.pivot, protractor.cursor), 1, language)}°`
         : null,
@@ -547,14 +585,17 @@ export default function Preview({
     onPlot: addPlot,
     onRenamePlot: renamePlot,
     onMovePlot: movePlot,
+    onDeletePlot: deletePlot,
     routeOf,
     windOn,
     windUnit: speedUnit,
     winds,
     windPending,
+    windAim: windAimProps,
     onWind: windClick,
     onWindSubmit: submitWind,
     onWindCancel: cancelWind,
+    onDeleteWind: deleteWind,
     windEdit: {
       id: windEditId,
       onUnit: toggleWindUnit,
@@ -575,7 +616,9 @@ export default function Preview({
         file={entry.file}
         name={entry.name}
         zoom={zoom}
+        onZoom={setZoom}
         brightness={brightness}
+        onBrightness={setBrightness}
         measure={measureProps}
       />
     );
@@ -584,7 +627,14 @@ export default function Preview({
   } else {
     // Com zoom, a imagem ganha a largura do zoom. A área sempre pode ser arrastada.
     body = (
-      <PanView grabbable className="pan-view--media">
+      <PanView
+        grabbable
+        className="pan-view--media"
+        zoom={zoom}
+        onZoom={setZoom}
+        brightness={brightness}
+        onBrightness={setBrightness}
+      >
         <ImageStage
           src={url}
           alt={entry.name}
@@ -607,7 +657,7 @@ export default function Preview({
         // As ferramentas da medição (calibrar, apagar) aparecem ao lado do botão medir, só quando ligada.
         <div className="view-tools" role="toolbar" aria-label={t("preview.tools")}>
           <ProtractorToggle enabled={protractorOn} onToggle={toggleProtractor} />
-          <DeclinationInput value={declination} onChange={setDeclination} />
+          <DeclinationInput value={declination} onChange={setDeclination} side={declinationSide} onSide={setDeclinationSide} />
           <MeasureToggle enabled={measureOn} onToggle={toggleMeasure} />
           {measureOn && kind === "image" && !calibLine && (
             <CalibrateButton active={calibrating} onToggle={() => setCalibrating((on) => !on)} />

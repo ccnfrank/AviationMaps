@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import MeasureLayer from "./MeasureLayer";
+import { WindForm } from "./WindLayer";
 
 // jsdom não faz layout: o SVG ocupa uma área de 100 × 100 px, e a superfície tem 200 × 200 unidades.
 const setupLayer = (props = {}) => {
@@ -30,6 +31,35 @@ describe("vento na camada de medição", () => {
     const { container } = setupLayer({ windOn: true, winds: [arrow] });
     expect(container.querySelectorAll(".wind-arrow")).toHaveLength(1);
     expect(screen.getByText("270° · 15 kt")).toHaveClass("wind-label");
+  });
+
+  it("o rótulo no mapa mostra direção e velocidade, sem a TAS (ela fica no vento e na rota)", () => {
+    const { container } = setupLayer({ windOn: true, winds: [{ ...arrow, tas: 120 }] });
+    const label = container.querySelector(".wind-label");
+    expect(label.textContent).toBe("270° · 15 kt");
+    expect(container.textContent).not.toMatch(/TAS/);
+  });
+
+  it("Option + clique na seta apaga esse vento, sem marcar outro", () => {
+    const onDeleteWind = vi.fn();
+    const { container, onWind } = setupLayer({ windOn: true, winds: [arrow], onDeleteWind });
+    fireEvent.pointerDown(container.querySelector(".wind-arrow polygon"), { button: 0, altKey: true });
+    expect(onDeleteWind).toHaveBeenCalledWith("a1");
+    expect(onWind).not.toHaveBeenCalled();
+  });
+
+  it("Option + clique no rótulo do vento apaga esse vento", () => {
+    const onDeleteWind = vi.fn();
+    setupLayer({ windOn: true, winds: [arrow], onDeleteWind });
+    fireEvent.pointerDown(screen.getByText("270° · 15 kt"), { button: 0, altKey: true });
+    expect(onDeleteWind).toHaveBeenCalledWith("a1");
+  });
+
+  it("clique na seta sem Option não apaga o vento", () => {
+    const onDeleteWind = vi.fn();
+    const { container } = setupLayer({ windOn: true, winds: [arrow], onDeleteWind });
+    fireEvent.pointerDown(container.querySelector(".wind-arrow polygon"), { button: 0 });
+    expect(onDeleteWind).not.toHaveBeenCalled();
   });
 
   it("não desenha ventos de outra superfície", () => {
@@ -176,5 +206,16 @@ describe("avião sobre a rota", () => {
       <MeasureLayer surface="img" viewW={200} viewH={200} enabled={false} lines={[]} draft={null} format={() => null} onPoint={vi.fn()} onMove={vi.fn()} onFinish={vi.fn()} route={[link]} />,
     );
     expect(container.querySelector(".route-plane")).toBeNull();
+  });
+});
+
+describe("direção vinda do transferidor no mapa", () => {
+  it("o formulário preenche a direção quando chega dirFromMap, e atualiza quando muda", () => {
+    const { rerender } = render(<WindForm x={0} y={0} viewW={100} viewH={100} onSubmit={() => {}} onCancel={() => {}} />);
+    expect(screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" })).toHaveValue(null);
+    rerender(<WindForm x={0} y={0} viewW={100} viewH={100} dirFromMap={270} onSubmit={() => {}} onCancel={() => {}} />);
+    expect(screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" })).toHaveValue(270);
+    rerender(<WindForm x={0} y={0} viewW={100} viewH={100} dirFromMap={45} onSubmit={() => {}} onCancel={() => {}} />);
+    expect(screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" })).toHaveValue(45);
   });
 });

@@ -84,7 +84,7 @@ test("Cmd + e Alt + + não mexem no zoom (Cmd é do navegador, Alt é do brilho)
   expect(stageWidth()).toBe("800px");
 });
 
-test("Alt + + e Alt + − mudam o brilho de 5 em 5, entre 50% e 150%, sem mexer no zoom", async () => {
+test("Alt + + e Alt + − mudam o brilho de 5 em 5, entre 0% (preto) e 150%, sem mexer no zoom", async () => {
   const img = await renderImage();
   expect(img.style.filter).toBe("brightness(1)");
   fireEvent.keyDown(document, { key: "=", code: "Equal", altKey: true });
@@ -92,11 +92,76 @@ test("Alt + + e Alt + − mudam o brilho de 5 em 5, entre 50% e 150%, sem mexer 
   fireEvent.keyDown(document, { key: "-", code: "Minus", altKey: true });
   fireEvent.keyDown(document, { key: "-", code: "Minus", altKey: true });
   expect(img.style.filter).toBe("brightness(0.95)");
-  for (let i = 0; i < 20; i++) fireEvent.keyDown(document, { key: "-", code: "Minus", altKey: true });
-  expect(img.style.filter).toBe("brightness(0.5)");
+  for (let i = 0; i < 40; i++) fireEvent.keyDown(document, { key: "-", code: "Minus", altKey: true });
+  expect(img.style.filter).toBe("brightness(0)");
   for (let i = 0; i < 40; i++) fireEvent.keyDown(document, { key: "=", code: "Equal", altKey: true });
   expect(img.style.filter).toBe("brightness(1.5)");
   expect(stageWidth()).toBe("800px");
+});
+
+test("roda do mouse aumenta e diminui o zoom, sem passar de 100% nem de 600%", async () => {
+  await renderImage();
+  const area = document.querySelector(".pan-view--media");
+  fireEvent.wheel(area, { deltaY: -100, clientX: 400, clientY: 300 });
+  expect(parseFloat(stageWidth())).toBeGreaterThan(800);
+  fireEvent.wheel(area, { deltaY: 100000, clientX: 400, clientY: 300 });
+  expect(stageWidth()).toBe("800px"); // não desce de 100%
+  fireEvent.wheel(area, { deltaY: -100000, clientX: 400, clientY: 300 });
+  expect(stageWidth()).toBe("4800px"); // 600%
+});
+
+test("o zoom pela roda mantém sob o mouse o ponto da imagem que estava lá", async () => {
+  await renderImage();
+  const area = document.querySelector(".pan-view--media");
+  const box = document.querySelector(".measure-box");
+  // Simula o layout: a imagem começa na origem da área e anda com a rolagem.
+  vi.spyOn(box, "getBoundingClientRect").mockImplementation(() => ({
+    left: -area.scrollLeft, top: -area.scrollTop,
+    width: parseFloat(box.style.width), height: parseFloat(box.style.height),
+  }));
+  // Mouse no meio da imagem (400, 300): fração 0,5 nos dois eixos.
+  fireEvent.wheel(area, { deltaY: -100, clientX: 400, clientY: 300 });
+  expect(parseFloat(stageWidth())).toBeGreaterThan(800);
+  expect(-area.scrollLeft + 0.5 * parseFloat(box.style.width)).toBeCloseTo(400);
+  expect(-area.scrollTop + 0.5 * parseFloat(box.style.height)).toBeCloseTo(300);
+});
+
+test("Option + roda do mouse muda o brilho, até 0% (preto), sem mexer no zoom", async () => {
+  const img = await renderImage();
+  const area = document.querySelector(".pan-view--media");
+  fireEvent.wheel(area, { deltaY: -100, altKey: true, clientX: 400, clientY: 300 });
+  expect(img.style.filter).toBe("brightness(1.1)");
+  fireEvent.wheel(area, { deltaY: 100000, altKey: true, clientX: 400, clientY: 300 });
+  expect(img.style.filter).toBe("brightness(0)");
+  expect(stageWidth()).toBe("800px");
+});
+
+test("Option + clique num ponto plotado apaga só esse ponto da imagem", async () => {
+  await renderImage();
+  const svg = document.querySelector(".measure-layer");
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+  fireEvent.click(screen.getByRole("button", { name: "Plot points" }));
+  fireEvent.pointerDown(svg, { clientX: 100, clientY: 100, button: 0 });
+  fireEvent.pointerDown(svg, { clientX: 300, clientY: 200, button: 0 });
+  expect(document.querySelectorAll(".plot-marker")).toHaveLength(2);
+  fireEvent.pointerDown(document.querySelectorAll(".plot-marker")[0], { button: 0, altKey: true });
+  const left = document.querySelectorAll(".plot-marker");
+  expect(left).toHaveLength(1);
+  expect(left[0].style.left).toBe("37.5%"); // o ponto que sobrou estava em x = 300 de 800
+});
+
+test("X centraliza a área rolada, sem mudar o zoom", async () => {
+  await renderImage();
+  const area = document.querySelector(".pan-view--media");
+  fireEvent.wheel(area, { deltaY: -100, clientX: 400, clientY: 300 });
+  Object.defineProperty(area, "scrollWidth", { configurable: true, value: 1200 });
+  Object.defineProperty(area, "scrollHeight", { configurable: true, value: 900 });
+  area.scrollLeft = 0;
+  area.scrollTop = 0;
+  fireEvent.keyDown(document, { key: "x" });
+  expect(area.scrollLeft).toBe(200); // (1200 − 800) / 2
+  expect(area.scrollTop).toBe(150); // (900 − 600) / 2
+  expect(parseFloat(stageWidth())).toBeGreaterThan(800);
 });
 
 test("transferidor e medir ficam na barra da visualização", () => {
@@ -246,6 +311,107 @@ test("vento magnético: com a declinação, a rota converte para verdadeiro ante
   expect(screen.getByText(/HDG 080°/)).toBeInTheDocument();
 });
 
+test("com desvio W, o nariz continua na proa verdadeira (TH), não na magnética (MH)", async () => {
+  const { container } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  const img = await screen.findByRole("img", { name: "capa.png" });
+  Object.defineProperty(img, "naturalWidth", { value: 800 });
+  Object.defineProperty(img, "naturalHeight", { value: 600 });
+  fireEvent.load(img);
+  const svg = container.querySelector("svg.measure-layer");
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+
+  // Trecho A → B a 090° verdadeiro, com o vento plotado no meio.
+  fireEvent.click(screen.getByRole("button", { name: "Plot points" }));
+  fireEvent.pointerDown(svg, { clientX: 100, clientY: 300, button: 0 });
+  fireEvent.pointerDown(svg, { clientX: 700, clientY: 300, button: 0 });
+  fireEvent.click(screen.getByRole("button", { name: "Wind" }));
+  fireEvent.pointerDown(svg, { clientX: 400, clientY: 300, button: 0 });
+  // Vento de 046° a 11 kt, TAS 90 kt: TH 085°. Sem desvio, o nariz já aponta para 085°.
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" }), { target: { value: "46" } });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind speed" }), { target: { value: "11" } });
+  fireEvent.change(screen.getByRole("textbox", { name: "True airspeed (TAS)" }), { target: { value: "90" } });
+  fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
+  expect(container.querySelector(".nose-label").textContent).toBe("085°");
+
+  // Com W 23 (magnético = verdadeiro + 23), o nariz continua em 085°; o 108° aparece só como magnético.
+  fireEvent.change(screen.getByRole("textbox", { name: "Magnetic declination in degrees" }), { target: { value: "23" } });
+  expect(container.querySelector(".nose-label").textContent).toBe("085°");
+  expect(screen.getByText(/HDG 085°/)).toBeInTheDocument();
+  expect(screen.getByText(/108°/)).toBeInTheDocument();
+});
+
+test("vento: o primeiro clique abre o transferidor no ponto; os graus mudam com o mouse; o segundo clique fixa a direção", async () => {
+  const { container } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  const img = await screen.findByRole("img", { name: "capa.png" });
+  Object.defineProperty(img, "naturalWidth", { value: 800 });
+  Object.defineProperty(img, "naturalHeight", { value: 600 });
+  fireEvent.load(img);
+  const svg = container.querySelector("svg.measure-layer");
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+  const dirField = () => screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" });
+
+  fireEvent.click(screen.getByRole("button", { name: "Wind" }));
+  // Primeiro clique: o formulário abre e o transferidor começa no ponto (centro).
+  fireEvent.pointerDown(svg, { clientX: 400, clientY: 300, button: 0 });
+  expect(dirField()).toHaveValue(null);
+  expect(container.querySelector(".protractor")).not.toBeNull();
+
+  // Movimento: os graus aparecem ao vivo. Para a direita do centro é 090°.
+  fireEvent.pointerMove(svg, { clientX: 700, clientY: 300 });
+  expect(container.querySelector(".protractor").textContent).toContain("90°");
+
+  // Segundo clique: fixa 090° como direção, e a seta para de acompanhar o mouse.
+  fireEvent.pointerDown(svg, { clientX: 700, clientY: 300, button: 0 });
+  expect(dirField()).toHaveValue(90);
+  fireEvent.pointerMove(svg, { clientX: 400, clientY: 50 });
+  expect(container.querySelector(".protractor").textContent).toContain("90°");
+  expect(document.querySelectorAll(".wind-form")).toHaveLength(1);
+
+  // O formulário continua pedindo velocidade e TAS, e o vento sai com a direção do transferidor.
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind speed" }), { target: { value: "20" } });
+  fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
+  expect(screen.getByText("090° · 20 kt")).toHaveClass("wind-label");
+});
+
+test("desvio com lado: 10 com W é +10°; trocando para E vira −10°, e a proa do vento magnético muda de 080° para 083°", async () => {
+  const { container } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  const img = await screen.findByRole("img", { name: "capa.png" });
+  Object.defineProperty(img, "naturalWidth", { value: 800 });
+  Object.defineProperty(img, "naturalHeight", { value: 600 });
+  fireEvent.load(img);
+  const svg = container.querySelector("svg.measure-layer");
+  svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+
+  fireEvent.click(screen.getByRole("button", { name: "Plot points" }));
+  fireEvent.pointerDown(svg, { clientX: 100, clientY: 300, button: 0 });
+  fireEvent.pointerDown(svg, { clientX: 700, clientY: 300, button: 0 });
+  fireEvent.click(screen.getByRole("button", { name: "Wind" }));
+  fireEvent.pointerDown(svg, { clientX: 400, clientY: 300, button: 0 });
+  fireEvent.click(screen.getByRole("button", { name: "Magnetic wind (off = true)" }));
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind direction, in degrees, where it comes from" }), { target: { value: "40" } });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Wind speed" }), { target: { value: "20" } });
+  fireEvent.change(screen.getByRole("textbox", { name: "True airspeed (TAS)" }), { target: { value: "100" } });
+  fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
+
+  // Começa em W (oeste): 10 vira +10°, e o vento verdadeiro é 030°. Proa 080°.
+  fireEvent.change(screen.getByRole("textbox", { name: "Magnetic declination in degrees" }), { target: { value: "10" } });
+  expect(screen.getByRole("button", { name: "West variation (W)" })).toHaveTextContent("W");
+  expect(screen.getByText(/HDG 080°/)).toBeInTheDocument();
+
+  // Troca para E (leste): 10 vira −10°, e o vento verdadeiro é 050°. Proa 083°.
+  fireEvent.click(screen.getByRole("button", { name: "West variation (W)" }));
+  expect(screen.getByRole("button", { name: "East variation (E)" })).toHaveTextContent("E");
+  expect(screen.getByText(/HDG 083°/)).toBeInTheDocument();
+
+  // Digitar "+10" põe o lado em W de volta, sem deixar o sinal no campo nem o campo vermelho.
+  const field = screen.getByRole("textbox", { name: "Magnetic declination in degrees" });
+  fireEvent.change(field, { target: { value: "+10" } });
+  expect(field).toHaveValue("10");
+  expect(field).not.toHaveAttribute("aria-invalid");
+  expect(screen.getByRole("button", { name: "West variation (W)" })).toHaveTextContent("W");
+  expect(screen.getByText(/HDG 080°/)).toBeInTheDocument();
+});
+
 test("rumo 120 com vento de 240° a 20 kt e TAS 120 kt: o bico do avião aponta para 128°, não para 120°", async () => {
   const { container } = render(<Preview entry={entry("capa.png")} {...nav} />);
   const img = await screen.findByRole("img", { name: "capa.png" });
@@ -301,9 +467,9 @@ test("vários ventos, cada um com a sua TAS: cada trecho usa a TAS do vento mais
   fireEvent.change(screen.getByRole("textbox", { name: "True airspeed (TAS)" }), { target: { value: "100" } });
   fireEvent.click(screen.getByRole("button", { name: "Add wind" }));
 
-  // Cada seta leva a sua TAS no rótulo, e cada trecho tem a sua proa.
-  expect(screen.getByText("000° · 20 kt · TAS 120 kt")).toHaveClass("wind-label");
-  expect(screen.getByText("180° · 20 kt · TAS 100 kt")).toHaveClass("wind-label");
+  // O rótulo de cada seta mostra direção e velocidade (sem TAS); cada trecho tem a sua proa.
+  expect(screen.getByText("000° · 20 kt")).toHaveClass("wind-label");
+  expect(screen.getByText("180° · 20 kt")).toHaveClass("wind-label");
   expect(screen.getByText(/090° · HDG 080°/)).toBeInTheDocument();
   expect(screen.getByText(/090° · HDG 102°/)).toBeInTheDocument();
 });
@@ -403,7 +569,7 @@ test("duplo clique na seta de vento abre a correção: direção, velocidade e T
   fireEvent.change(tas, { target: { value: "120" } });
   fireEvent.submit(form);
 
-  expect(container.querySelector(".wind-label").textContent).toBe("090° · 30 kt · TAS 120 kt");
+  expect(container.querySelector(".wind-label").textContent).toBe("090° · 30 kt");
   expect(container.querySelector(".wind-form")).toBeNull();
 });
 

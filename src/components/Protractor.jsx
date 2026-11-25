@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { addDeclination, angleOf, parseDeclination } from "../lib/measure";
+import { addDeclination, angleOf, declinationFrom } from "../lib/measure";
 
 // Transferidor de aviação, sem fundo: anel com marcas de 1° em 1°, médias a cada 5° e longas a
 // cada 10°. Os números ficam por dentro do anel, escritos ao longo da borda; N, E, S e W e as
@@ -118,12 +118,23 @@ export default function Protractor({ viewW, viewH, pivot, cursor, locked, text, 
   );
 }
 
-// Campo do desvio magnético, logo à direita do botão do transferidor. Aceita número com sinal.
-export function DeclinationInput({ value, onChange }) {
+// Campo do desvio magnético, logo à direita do botão do transferidor. Recebe a variação sem sinal e o lado:
+// "E" (leste) ou "W" (oeste). O botão troca o lado; o sinal sai de `declinationFrom`.
+// Um sinal digitado no começo também escolhe o lado: "-" é leste (E), "+" é oeste (W). O sinal não fica no campo.
+export function DeclinationInput({ value, onChange, side = "W", onSide }) {
   const { t } = useTranslation();
-  const invalid = value.trim() !== "" && parseDeclination(value) == null;
+  const invalid = value.trim() !== "" && declinationFrom(value, side) == null;
+  const onText = (text) => {
+    const sign = /^\s*([+-])(.*)$/.exec(text);
+    if (!sign) {
+      onChange(text);
+      return;
+    }
+    onSide?.(sign[1] === "-" ? "E" : "W");
+    onChange(sign[2]);
+  };
   return (
-    <label className="declination" title={t("protractor.declinationTitle")}>
+    <div className="declination" title={t("protractor.declinationTitle")}>
       <input
         type="text"
         inputMode="decimal"
@@ -132,10 +143,19 @@ export function DeclinationInput({ value, onChange }) {
         aria-invalid={invalid || undefined}
         placeholder={t("protractor.declinationPlaceholder")}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => onText(e.target.value)}
       />
       <span className="declination__unit" aria-hidden="true">°</span>
-    </label>
+      <button
+        type="button"
+        className="declination__side"
+        onClick={() => onSide?.(side === "E" ? "W" : "E")}
+        aria-label={side === "E" ? t("protractor.east") : t("protractor.west")}
+        title={t("protractor.sideTitle")}
+      >
+        {side}
+      </button>
+    </div>
   );
 }
 

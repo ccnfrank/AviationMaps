@@ -17,8 +17,9 @@ const REDRAW_DELAY = 120;
 // Desenha o PDF com pdf.js em canvas, página por página. Não depende do visualizador
 // embutido do navegador. Cada página ocupa a largura da área vezes o zoom, e a área
 // rola e arrasta nos dois sentidos quando o zoom passa de 100%.
-// `measure` (opcional) liga a medição em cada página.
-export default function PdfPages({ file, name, zoom = 1, brightness = 100, measure }) {
+// `measure` (opcional) liga a medição em cada página. `onZoom` e `onBrightness` recebem os valores
+// da roda do mouse (ver PanView).
+export default function PdfPages({ file, name, zoom = 1, brightness = 100, onZoom, onBrightness, measure }) {
   const { t } = useTranslation();
   const viewRef = useRef(null);
   const [doc, setDoc] = useState(null);
@@ -92,7 +93,15 @@ export default function PdfPages({ file, name, zoom = 1, brightness = 100, measu
       {status === "ready" && doc.numPages > MAX_PAGES && (
         <p className="preview__note">{t("pdf.first", { max: MAX_PAGES, total: doc.numPages })}</p>
       )}
-      <PanView ref={viewRef} grabbable className="pdf-pages__view">
+      <PanView
+        ref={viewRef}
+        grabbable
+        className="pdf-pages__view"
+        zoom={zoom}
+        onZoom={onZoom}
+        brightness={brightness}
+        onBrightness={onBrightness}
+      >
         <div className="pdf-pages__list">
           {sizes.map((size, i) => (
             <PdfPage
@@ -165,6 +174,7 @@ function PdfPage({ doc, index, name, cssWidth, size, brightness, measure }) {
           lines={measure.lines}
           draft={measure.draft}
           protractor={measure.protractor}
+          windAim={measure.windAim}
           format={measure.format(`pdf:${index}`)}
           onPoint={(p) => measure.onPoint(`pdf:${index}`, p)}
           onMove={(p) => measure.onMove(`pdf:${index}`, p)}
@@ -183,6 +193,8 @@ function PdfPage({ doc, index, name, cssWidth, size, brightness, measure }) {
           windEdit={measure.windEdit}
           onRenamePlot={measure.onRenamePlot}
           onMovePlot={measure.onMovePlot}
+          onDeletePlot={measure.onDeletePlot}
+          onDeleteWind={measure.onDeleteWind}
         />
       )}
     </div>

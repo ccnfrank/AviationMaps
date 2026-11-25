@@ -7,7 +7,8 @@ import { nearestWind, windCorrection } from "./wind";
 // Sem declinação digitada, considera 0. O vento é o mais perto do meio do trecho, e a TAS é a desse vento
 // (cada vento tem a sua). Ele é verdadeiro; se for magnético, vira verdadeiro pela declinação
 // (verdadeiro = magnético − declinação).
-// O nariz do avião segue a linha do trecho; com vento e TAS, aponta para a proa corrigida, com a declinação somada.
+// O nariz do avião fica no rumo verdadeiro, como a linha do trecho: sem vento, segue a linha; com vento e TAS,
+// aponta para a proa verdadeira (TH). A declinação não entra no nariz; ela só aparece nos valores magnéticos.
 export function legFigures(link, ctx) {
   const { winds, declination, cmPerUnit, denominator } = ctx;
   const dev = declination ?? 0;
@@ -32,8 +33,8 @@ export function legFigures(link, ctx) {
     // Proa a voar: verdadeira e magnética (com a declinação, se houver).
     headingTrue: correction ? correction.heading : null,
     headingMag: correction && declination != null ? addDeclination(correction.heading, declination) : null,
-    // Direção do nariz do avião: sem vento, a mesma direção da linha entre os dois pontos. Com vento e TAS,
-    // a proa corrigida, com a declinação somada (0 se não digitada).
-    noseHeading: correction ? addDeclination(correction.heading, dev) : trueTrack,
+    // Direção do nariz do avião, em verdadeiro: sem vento, a mesma direção da linha entre os dois pontos.
+    // Com vento e TAS, a proa verdadeira (TH), sem declinação, para bater com a linha verdadeira do mapa.
+    noseHeading: correction ? correction.heading : trueTrack,
   };
 }

@@ -62,6 +62,7 @@ export default function ImageStage({ src, alt, zoom, brightness = 100, measure, 
           lines={measure.lines}
           draft={measure.draft}
           protractor={measure.protractor}
+          windAim={measure.windAim}
           format={measure.format("img")}
           onPoint={(p) => measure.onPoint("img", p)}
           onMove={(p) => measure.onMove("img", p)}
@@ -80,6 +81,8 @@ export default function ImageStage({ src, alt, zoom, brightness = 100, measure, 
           windEdit={measure.windEdit}
           onRenamePlot={measure.onRenamePlot}
           onMovePlot={measure.onMovePlot}
+          onDeletePlot={measure.onDeletePlot}
+          onDeleteWind={measure.onDeleteWind}
         />
       )}
     </div>

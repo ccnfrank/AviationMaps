@@ -163,6 +163,15 @@ export function parseDeclination(text) {
   return String(text ?? "").trim() !== "" && Number.isFinite(value) ? value : null;
 }
 
+// Desvio magnético com sinal, a partir da variação digitada (sem sinal) e do lado: "E" (leste) ou "W" (oeste).
+// Magnético = verdadeiro + desvio, então a variação Leste entra negativa e a Oeste, positiva
+// (leste é menos: 23° E vira −23). Vazio, inválido ou negativo vira null.
+export function declinationFrom(text, side) {
+  const magnitude = parseDeclination(text);
+  if (magnitude == null || magnitude < 0) return null;
+  return side === "E" ? -magnitude : magnitude;
+}
+
 // Ângulo somado ao desvio, normalizado para 0 a 360 graus.
 export function addDeclination(deg, declination) {
   const wrapped = (((deg + declination) % 360) + 360) % 360;

@@ -6,13 +6,25 @@ import { formatBearing } from "../lib/route";
 import { fromKnots, parseTas, parseWind, toKnots, windArrow } from "../lib/wind";
 
 // Setas de vento, dentro do SVG da camada de medição. `length` é o comprimento da seta, em unidades da superfície.
-export function WindArrows({ winds, length }) {
+// Option + clique numa seta apaga o vento (`onDelete` recebe o id). Sem Option, o clique segue como antes.
+export function WindArrows({ winds, length, onDelete }) {
   return winds.map((w) => {
     const arrow = windArrow({ x: w.x, y: w.y }, w.dir, length);
     // Haste fina, cabeça com o recorte e um pino no início: a seta lê como uma só, mesmo pequena.
     const head = [arrow.end, arrow.heads[0], arrow.notch, arrow.heads[1]].map((p) => `${p.x},${p.y}`).join(" ");
     return (
-      <g key={w.id} className="wind-arrow" data-wind-id={w.id}>
+      <g
+        key={w.id}
+        className="wind-arrow"
+        data-wind-id={w.id}
+        onPointerDown={(e) => {
+          if (e.button !== 0 || !e.altKey || !onDelete) return;
+          e.stopPropagation();
+          onDelete(w.id);
+        }}
+      >
+        {/* Faixa transparente e larga sobre a haste: dá área de clique à seta fina. */}
+        <line className="wind-hit" x1={arrow.start.x} y1={arrow.start.y} x2={arrow.end.x} y2={arrow.end.y} vectorEffect="non-scaling-stroke" />
         <line x1={arrow.start.x} y1={arrow.start.y} x2={arrow.end.x} y2={arrow.end.y} vectorEffect="non-scaling-stroke" />
         <polygon points={head} vectorEffect="non-scaling-stroke" />
         <circle cx={arrow.start.x} cy={arrow.start.y} r={2.5} vectorEffect="non-scaling-stroke" />
@@ -21,9 +33,9 @@ export function WindArrows({ winds, length }) {
   });
 }
 
-// Velocidade e TAS embaixo de cada seta: "270° · 15 kt · TAS 120 kt". Fica abaixo da seta, centralizada no ponto.
-// `unit` é a unidade mostrada ("kt" ou "kmh"); a seta guarda tudo em nós.
-export function WindLabels({ winds, length, viewW, viewH, onEdit, unit = "kt" }) {
+// Direção e velocidade embaixo de cada seta: "270° · 15 kt". A TAS não aparece no mapa (ela segue no formulário e na rota). Fica abaixo da seta, centralizada no ponto.
+// `unit` é a unidade mostrada ("kt" ou "kmh"); a seta guarda tudo em nós. Option + clique apaga o vento (`onDelete`).
+export function WindLabels({ winds, length, viewW, viewH, onEdit, onDelete, unit = "kt" }) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage ?? i18n.language;
   const unitText = t(unit === "kmh" ? "wind.kmh" : "wind.unit");
@@ -32,20 +44,22 @@ export function WindLabels({ winds, length, viewW, viewH, onEdit, unit = "kt" })
     return formatNumber(v, Number.isInteger(Math.round(v * 10) / 10) ? 0 : 1, language);
   };
   return winds.map((w) => {
-    const tas = w.tas != null ? ` · TAS ${num(w.tas)} ${unitText}` : "";
     return (
       <span
         key={w.id}
         className="wind-label"
         title={t("wind.editTitle")}
         style={{ left: `${(w.x / viewW) * 100}%`, top: `${((w.y + length * 0.6) / viewH) * 100}%` }}
-        onPointerDown={(e) => e.stopPropagation()}
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          if (e.button === 0 && e.altKey) onDelete?.(w.id);
+        }}
         onDoubleClick={(e) => {
           e.stopPropagation();
           onEdit?.(w.id);
         }}
       >
-        {`${formatBearing(w.dir)} · ${num(w.speed)} ${unitText}${tas}`}
+        {`${formatBearing(w.dir)} · ${num(w.speed)} ${unitText}`}
       </span>
     );
   });
@@ -61,7 +75,8 @@ const fieldNumber = (v) => (Number.isInteger(Math.round(v * 10) / 10) ? String(M
 // O botão de referência marca o vento como magnético; sem ele, o vento é verdadeiro.
 // `initial` ({ dir, speed, tas em nós, magnetic }) preenche o formulário para corrigir uma seta existente.
 // A TAS é de cada vento: é opcional, e sem ela o trecho que usa este vento pede a TAS na rota.
-export function WindForm({ x, y, viewW, viewH, unit = "kt", onUnit, initial = null, onSubmit, onCancel }) {
+// `dirFromMap` é a direção apontada no mapa (transferidor): quando chega ou muda, preenche o campo da direção.
+export function WindForm({ x, y, viewW, viewH, unit = "kt", onUnit, initial = null, dirFromMap = null, onSubmit, onCancel }) {
   const { t } = useTranslation();
   const [dir, setDir] = useState(initial ? fieldNumber(initial.dir) : "");
   const [speed, setSpeed] = useState(initial ? fieldNumber(fromKnots(initial.speed, unit)) : "");
@@ -71,6 +86,9 @@ export function WindForm({ x, y, viewW, viewH, unit = "kt", onUnit, initial = nu
   useEffect(() => {
     dirRef.current?.focus();
   }, []);
+  useEffect(() => {
+    if (dirFromMap != null) setDir(fieldNumber(dirFromMap));
+  }, [dirFromMap]);
 
   const parsed = parseWind(dir, speed);
   const tasKnots = parseTas(tas, unit);
@@ -204,7 +222,7 @@ function planeOf(link) {
   return { p, rad: (link.heading * Math.PI) / 180 };
 }
 
-// Aviõezinhos sobre os trechos. O nariz aponta para a proa (com a declinação, se houver), e uma linha tracejada
+// Aviõezinhos sobre os trechos. O nariz aponta para a proa verdadeira (sem declinação), e uma linha tracejada
 // sai dele na mesma direção. `screenScale` (pixels da tela por unidade da superfície) mantém os tamanhos na tela.
 export function RoutePlanes({ links, screenScale }) {
   return links

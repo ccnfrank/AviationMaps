@@ -45,6 +45,23 @@ describe("plotar pontos na camada", () => {
     expect(onFinish).not.toHaveBeenCalled();
   });
 
+  it("Option + clique num ponto plotado apaga esse ponto, sem marcar outro nem arrastar", () => {
+    const plots = [{ id: "a", surface: "img", x: 50, y: 100 }];
+    const onDeletePlot = vi.fn();
+    const { container, onPlot } = setupLayer({ plots, onDeletePlot });
+    fireEvent.pointerDown(container.querySelector(".plot-marker"), { clientX: 25, clientY: 50, button: 0, altKey: true });
+    expect(onDeletePlot).toHaveBeenCalledWith("a");
+    expect(onPlot).not.toHaveBeenCalled();
+  });
+
+  it("clique no ponto sem Option não apaga o ponto", () => {
+    const plots = [{ id: "a", surface: "img", x: 50, y: 100 }];
+    const onDeletePlot = vi.fn();
+    const { container } = setupLayer({ plots, onDeletePlot });
+    fireEvent.pointerDown(container.querySelector(".plot-marker"), { clientX: 25, clientY: 50, button: 0 });
+    expect(onDeletePlot).not.toHaveBeenCalled();
+  });
+
   it("mostra só os pontos desta superfície, numerados na ordem em que foram plotados", () => {
     const plots = [
       { id: "a", surface: "pdf:0", x: 10, y: 10 },

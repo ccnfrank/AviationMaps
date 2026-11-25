@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   PDF_CM_PER_UNIT, lineMetrics, cmPerUnitFromDpi, cmPerUnitFromCalibration,
   formatNumber, parsePngDpi, parseJpegDpi, readImageDpi, segmentsOf, chainLength, angleOf,
-  parseDeclination, addDeclination,
+  parseDeclination, addDeclination, declinationFrom,
 } from "./measure";
 
 describe("transferidor", () => {
@@ -18,6 +18,16 @@ describe("transferidor", () => {
     const deg = angleOf(O, { x: 20, y: 10 - 1e-12 });
     expect(deg).toBeGreaterThanOrEqual(0);
     expect(deg).toBeLessThan(360);
+  });
+
+  it("variação com lado: leste (E) entra negativa, oeste (W) positiva, e negativo ou vazio é inválido", () => {
+    expect(declinationFrom("23", "E")).toBe(-23);
+    expect(declinationFrom("23", "W")).toBe(23);
+    expect(declinationFrom("3,5", "E")).toBe(-3.5);
+    // Exemplo do deriva.md: MH = TH − 23 (23° E). Com TH 080,59, o magnético é 057,59.
+    expect(addDeclination(80.59, declinationFrom("23", "E"))).toBeCloseTo(57.59, 2);
+    expect(declinationFrom("-12", "W")).toBeNull();
+    expect(declinationFrom("", "E")).toBeNull();
   });
 
   it("desvio magnético: aceita sinal, vírgula decimal e rejeita vazio ou inválido", () => {

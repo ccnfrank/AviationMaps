@@ -34,7 +34,7 @@
   },
   "wind": {
     "toggle": "Vento",
-    "title": "Vento: clique no mapa e informe a direção (de onde sopra, em graus) e a velocidade em nós. Backspace apaga o último",
+    "title": "Vento: clique no mapa e aponte o transferidor para de onde o vento sopra; clique de novo para fixar. Depois informe a velocidade em nós. Backspace apaga o último",
     "unit": "kt",
     "direction": "Direção",
     "directionAria": "Direção do vento, em graus, de onde ele sopra",
@@ -94,7 +94,10 @@
     "title": "Transferidor: clique para pôr, mova para apontar, clique de novo para fixar o ângulo",
     "declination": "Desvio magnético em graus",
     "declinationPlaceholder": "Desvio",
-    "declinationTitle": "Desvio magnético (°), positivo ou negativo: a segunda agulha aponta para o ângulo + desvio"
+    "declinationTitle": "Variação magnética (°): ao lado, escolha leste (E) ou oeste (W). Um - antes do número é leste, e um + é oeste. A segunda agulha aponta para o ângulo + desvio",
+    "east": "Variação a leste (E)",
+    "west": "Variação a oeste (W)",
+    "sideTitle": "Trocar entre leste (E) e oeste (W)"
   },
   "pdf": {
     "error": "Não foi possível abrir este PDF.",
@@ -181,7 +184,7 @@
       {
         "title": "Zoom e brilho",
         "paragraphs": [
-          "Zoom de 100% a 600%. Brilho de 50% a 150%, sendo 100% a imagem como está.",
+          "Zoom de 100% a 600%. Brilho de 0% (tela preta) a 150%, sendo 100% a imagem como está.",
           "Os ajustes são feitos pelo teclado (veja os atalhos abaixo). A barra não tem controles deslizantes, e o valor não aparece na tela.",
           "Com zoom acima de 100%, arraste a imagem com o mouse para ver outras partes."
         ]
@@ -190,7 +193,7 @@
         "title": "Transferidor",
         "paragraphs": [
           "Ligue pelo ícone do transferidor. O primeiro clique põe o centro; mover o ponteiro gira a seta; o segundo clique fixa o ângulo, que aparece na ponta. 0° é o norte, e os graus crescem no sentido horário.",
-          "Desvio magnético: digite a declinação em graus, com sinal (por exemplo -20 ou 15). Uma segunda agulha mostra o ângulo corrigido, e os rumos da rota passam a mostrar também o magnético.",
+          "Desvio magnético: digite a variação em graus e escolha E (leste) ou W (oeste) ao lado do campo. Também dá para digitar - antes do número para leste, e + para oeste: -23 é 23° leste. Uma segunda agulha mostra o ângulo corrigido, e os rumos da rota passam a mostrar também o magnético.",
           "Esc apaga o anel ou a seta, sem fechar a janela."
         ]
       },
@@ -227,6 +230,7 @@
           "Ligue o ícone de vento e clique no mapa. Abre uma caixa no ponto: digite a direção de onde o vento sopra, em graus (0 = norte, como no METAR), e a velocidade em nós. Enter adiciona a seta; Esc cancela.",
           "A seta aponta para onde o vento vai: vento de 280° aponta para 100°. A velocidade aparece embaixo da seta. Clicar numa seta não cria ponto.",
           "Plote quantos ventos precisar. Cada um tem a sua direção, velocidade, referência (°V/°M) e TAS (velocidade verdadeira); a TAS é opcional, mas um trecho que usa um vento sem TAS pede a TAS. O botão de unidade no formulário alterna entre nós e km/h, e converte os números já digitados.",
+          "Ao clicar no mapa, aparece o transferidor no ponto, e os graus mudam conforme você move o mouse. O segundo clique fixa o ângulo, que vira a direção do vento: aponte para onde o vento vem. Depois digite a velocidade e, se quiser, a TAS.",
           "Corrigir um vento: dê duplo clique na seta ou no rótulo da velocidade. O formulário abre com os valores atuais; Enter confirma, Esc cancela.",
           "Backspace apaga a última seta; a lixeira apaga todas."
         ]
@@ -235,7 +239,7 @@
         "title": "Correção de deriva",
         "paragraphs": [
           "A correção de deriva calcula a proa a voar para o avião seguir o rumo do trecho. Digite a TAS do avião no formulário do vento, junto do vento a que ela se refere.",
-          "Cada trecho usa a seta de vento mais perto do seu meio, com a TAS dessa seta. Para ligar um vento a um trecho, plote-o no meio desse trecho. Com vento e TAS, a rota mostra HDG (a proa a voar), e o nariz do avião aponta para ela, com a declinação magnética somada (0 se não digitada). Sem TAS, ou com vento mais forte que a TAS, a rota avisa.",
+          "Cada trecho usa a seta de vento mais perto do seu meio, com a TAS dessa seta. Para ligar um vento a um trecho, plote-o no meio desse trecho. Com vento e TAS, a rota mostra HDG (a proa a voar), e o nariz do avião aponta para essa proa verdadeira (TH). A declinação só muda os valores magnéticos que aparecem ao lado. Sem TAS, ou com vento mais forte que a TAS, a rota avisa.",
           "Os ventos são verdadeiros (°V). A previsão em altitude vem em verdadeiro; o vento da torre ou do ATIS vem em magnético, então aperte °M no formulário do vento. O vento magnético usa a declinação, e sem ela, usa 0.",
           "Exemplo: rumo 090°, vento de 030° a 20 kt, TAS 100 kt. O vento vem pela esquerda, então a correção é de 10° e a proa é 080°. A conta é sen(CD) = (vento ÷ TAS) × sen(α), em que α é o ângulo entre a direção do vento e o rumo. Vento pela esquerda: a proa vai para a esquerda do rumo; pela direita, para a direita."
         ]
@@ -310,6 +314,14 @@
           {
             "keys": [
               [
+                "X"
+              ]
+            ],
+            "text": "Centralizar a imagem de novo"
+          },
+          {
+            "keys": [
+              [
                 "Alt",
                 "+"
               ]
@@ -359,7 +371,9 @@
         "items": [
           "Clique: marca um ponto, conforme a ferramenta ligada (medir, plotar, vento ou transferidor).",
           "Duplo clique: num grau da rota, corrige o rumo; no marcador de um ponto, renomeia o ponto; numa seta de vento ou no rótulo dela, corrige o vento. Botão direito encerra a medição.",
-          "Arrastar: num marcador de ponto, move o ponto. Clique e arraste no mapa vazio: move a imagem quando ela está com zoom."
+          "Arrastar: num marcador de ponto, move o ponto. Clique e arraste no mapa vazio: move a imagem quando ela está com zoom.",
+          "Roda do mouse: aumenta ou diminui o zoom no ponto onde está o ponteiro. Option (Alt) + roda: clareia ou escurece a imagem, até ficar preta. X centraliza a imagem de novo.",
+          "Option (Alt) + clique num ponto plotado, numa seta de vento ou no rótulo dele: apaga só esse item."
         ]
       },
       {
