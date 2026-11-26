@@ -51,6 +51,15 @@
   --glass-hover: rgba(39, 39, 42, .7);
   --scrim: rgba(0, 0, 0, .66);
   --field-hover: #52525b;
+  --field: #3f3f46;             /* fundo dos campos de texto das janelas (rotas salvas) */
+  /* Rota sobre o mapa: linha, rumos e avião. No tema dia são escuros, com contorno claro, para aparecer sobre o mapa. */
+  --route-ink: #60a5fa;         /* linha da rota, rumo acima do trecho e contorno do rumo */
+  --route-edge: rgba(96, 165, 250, .45); /* borda do rótulo do rumo */
+  --route-plane: #f5b540;       /* avião e linha da proa */
+  --route-plane-edge: #0a0a0b;  /* contorno do avião */
+  --route-halo: drop-shadow(0 1px 2px rgba(0, 0, 0, .55));
+  --plot-ink: #f5b540;          /* pontos plotados: marcador e campo do nome */
+  --wind-ink: #4ade80;          /* ventos: setas, rótulo e ponto de espera */
   --logo-filter: brightness(0) invert(1);
   --logo-opacity: .5;
   --dock-accent: #e4e4e7;
@@ -111,7 +120,7 @@
   --line: #cfcfd4;
   --line-strong: #8e8e96;
   --text: #1c1c20;
-  --muted: #5c5c66;
+  --muted: #4a4a52;
   --accent: #3a3a42;
   --accent-strong: #2a2a30;
   --accent-rgb: 58, 58, 66;
@@ -135,6 +144,15 @@
   --glass-hover: rgba(247, 247, 248, .85);
   --scrim: rgba(28, 28, 32, .35);
   --field-hover: #d4d4d8;
+  --field: #ffffff;
+  /* Rota, pontos e ventos têm cores próprias no tema dia, para se distinguir uns dos outros sobre o mapa */
+  --route-ink: #1d4ed8;
+  --route-edge: #93c5fd;
+  --route-plane: #1d4ed8;
+  --plot-ink: #a21caf;
+  --wind-ink: #15803d;
+  --route-plane-edge: #ffffff;
+  --route-halo: drop-shadow(0 0 1px #ffffff) drop-shadow(0 0 1px #ffffff) drop-shadow(0 1px 1.5px rgba(0, 0, 0, .35));
   --logo-filter: grayscale(1) brightness(.25);
   --logo-opacity: .75;
   --dock-accent: #1c1c20;
@@ -271,6 +289,50 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 }
 .help__plus, .help__or { margin: 0 var(--s-1); color: var(--muted); font-size: var(--fs-xs); }
 .help__or { margin-left: var(--s-2); }
+
+/* Rotas salvas (ler/salvar): salvar a rota atual com um nome, e abrir ou apagar as rotas deste mapa */
+.modal--routes { width: min(560px, 100%); height: min(60vh, 560px); }
+.routes__head {
+  flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--s-3);
+  padding: var(--s-4) var(--s-5); border-bottom: 1px solid var(--line);
+}
+.routes__title { margin: 0; font-size: var(--fs-md); }
+.routes__save { flex: none; display: flex; gap: var(--s-2); padding: var(--s-4) var(--s-5) 0; }
+.routes__input {
+  flex: 1; min-width: 0; height: 34px; padding: 0 var(--s-3); border: 1px solid var(--line); border-radius: var(--r-sm);
+  background: var(--field); color: var(--text); font: inherit; font-size: var(--fs-sm);
+  transition: box-shadow var(--dur-fast);
+}
+.routes__input::placeholder { color: var(--muted); }
+.routes__input:focus-visible { outline: none; box-shadow: inset 0 0 0 1px var(--accent); }
+.routes__input:disabled { opacity: .5; }
+/* Busca das rotas: lupa dentro do campo, na largura toda da janela */
+.routes__search { position: relative; margin: var(--s-3) var(--s-5) 0; }
+.routes__search svg {
+  position: absolute; left: var(--s-3); top: 50%; width: 15px; height: 15px;
+  transform: translateY(-50%); color: var(--muted); pointer-events: none;
+}
+.routes__search .routes__input { display: block; width: 100%; padding-left: 34px; }
+.routes__btn {
+  flex: none; height: 34px; padding: 0 var(--s-3); border: 1px solid var(--line-strong); border-radius: var(--r-sm);
+  background: transparent; color: var(--text); font: inherit; font-size: var(--fs-sm); font-weight: 600;
+  transition: color var(--dur-fast), border-color var(--dur-fast);
+}
+.routes__btn:hover { border-color: var(--accent); color: var(--accent); }
+.routes__btn:disabled { opacity: .4; cursor: default; border-color: var(--line-strong); color: var(--text); }
+.routes__empty, .routes__error { margin: var(--s-2) var(--s-5) 0; color: var(--muted); font-size: var(--fs-sm); line-height: 1.5; }
+.routes__error { color: var(--danger); }
+.routes__list {
+  flex: 1; min-height: 0; list-style: none; margin: 0;
+  padding: var(--s-3) var(--s-5) var(--s-5); display: grid; align-content: start; gap: var(--s-2); overflow-y: auto;
+}
+.routes__item {
+  display: flex; align-items: center; gap: var(--s-3); padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--line); border-radius: var(--r-md);
+}
+.routes__info { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.routes__name { overflow: hidden; color: var(--text); font-size: var(--fs-sm); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.routes__meta { color: var(--muted); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
 .preview { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .preview__stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: var(--s-4); background: var(--canvas); }
 .preview__media { max-width: 100%; max-height: 100%; border-radius: var(--r-md); object-fit: contain; }
@@ -300,7 +362,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 /* Campo do desvio magnético: mesma altura dos botões da barra, com o sufixo ° */
 .declination {
   flex: none; display: inline-flex; align-items: center; gap: 2px; height: 30px; padding: 0 var(--s-2);
-  border-radius: 999px; background: var(--line-strong); cursor: text; transition: background var(--dur-fast), box-shadow var(--dur-fast);
+  border-radius: 999px; background: var(--field); cursor: text; transition: background var(--dur-fast), box-shadow var(--dur-fast);
 }
 .declination:hover { background: var(--field-hover); }
 .declination:focus-within { box-shadow: inset 0 0 0 1px var(--accent); }
@@ -331,7 +393,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .scale-tool__types { display: inline-flex; align-items: center; gap: 2px; }
 .scale-tool__input {
   width: 116px; height: 30px; padding: 0 var(--s-2); border: 0; border-radius: 999px;
-  background: var(--line-strong); color: var(--text); font-size: var(--fs-sm); font-variant-numeric: tabular-nums;
+  background: var(--field); color: var(--text); font-size: var(--fs-sm); font-variant-numeric: tabular-nums;
   transition: box-shadow var(--dur-fast);
 }
 .scale-tool__input::placeholder { color: var(--muted); }
@@ -427,7 +489,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .plot-marker {
   position: absolute; transform: translate(-50%, -50%); display: grid; place-items: center;
   min-width: 16px; height: 16px; padding: 0 3px; box-sizing: border-box; border-radius: 999px;
-  background: var(--accent); color: var(--on-accent); border: 1.5px solid var(--canvas); box-shadow: var(--shadow-1);
+  background: var(--plot-ink); color: var(--on-accent); border: 1.5px solid var(--canvas); box-shadow: var(--shadow-1);
   font-size: var(--fs-3xs); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1;
 }
 /* Marcador do ponto: o duplo clique abre o nome para editar */
@@ -435,13 +497,13 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .plot-marker:active { cursor: grabbing; }
 .plot-edit {
   position: absolute; transform: translate(-50%, -50%); width: 64px; height: 18px; box-sizing: border-box;
-  padding: 0 4px; border: 1px solid var(--accent); border-radius: 999px; background: var(--surface); color: var(--text);
+  padding: 0 4px; border: 1px solid var(--plot-ink); border-radius: 999px; background: var(--surface); color: var(--text);
   font-size: var(--fs-3xs); font-weight: 700; font-variant-numeric: tabular-nums; text-align: center; outline: none;
 }
 /* Rota: a linha que une os pontos na ordem em que foram plotados */
 .route-line {
-  stroke: var(--c-audio); stroke-width: 2.5; stroke-linecap: round;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .55));
+  stroke: var(--route-ink); stroke-width: 2.5; stroke-linecap: round;
+  filter: var(--route-halo);
 }
 /* Rótulos do trecho: o rumo acima da linha e a distância abaixo. --ox e --oy vêm da normal da linha. */
 .route-label {
@@ -450,7 +512,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
   background: rgba(var(--surface-rgb), .92); border: 1px solid var(--line); box-shadow: var(--shadow-1);
   color: var(--text); font-size: var(--fs-3xs); font-weight: 600; font-variant-numeric: tabular-nums;
 }
-.route-label--track { color: var(--c-audio); border-color: rgba(96, 165, 250, .45); pointer-events: auto; cursor: text; }
+.route-label--track { color: var(--route-ink); border-color: var(--route-edge); pointer-events: auto; cursor: text; }
 /* Campo do rumo, aberto pelo duplo clique: mesmo lugar do rótulo */
 .route-edit {
   position: absolute; width: 56px; padding: 1px 6px; border: 1px solid var(--accent); border-radius: 999px;
@@ -458,39 +520,39 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
   text-align: center; outline: none; box-shadow: var(--shadow-1);
 }
 /* Avião sobre a rota, com o nariz na proa corrigida pelo vento */
-.route-plane { fill: var(--accent); stroke: var(--canvas); stroke-width: 1; stroke-linejoin: round; pointer-events: none; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .5)); }
+.route-plane { fill: var(--route-plane); stroke: var(--route-plane-edge); stroke-width: 1; stroke-linejoin: round; pointer-events: none; filter: var(--route-halo); }
 /* Grau que o nariz aponta, na ponta da linha da proa */
 .nose-label {
   position: absolute; transform: translate(-50%, -50%); white-space: nowrap; padding: 1px 6px; border-radius: 999px;
-  background: var(--accent); color: var(--on-accent); box-shadow: var(--shadow-1);
+  background: var(--route-plane); color: var(--on-accent); box-shadow: var(--shadow-1);
   font-size: var(--fs-3xs); font-weight: 700; font-variant-numeric: tabular-nums;
 }
 /* Linha da proa: tracejada, a partir do avião, na direção do nariz */
-.route-heading { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 4 3; stroke-linecap: round; opacity: .85; pointer-events: none; }
+.route-heading { stroke: var(--route-plane); stroke-width: 1.5; stroke-dasharray: 4 3; stroke-linecap: round; opacity: .85; pointer-events: none; }
 /* Vento: setas sobre o mapa, na cor do vento; a velocidade fica embaixo de cada seta.
    A seta recebe clique mesmo com a camada de medição desligada (Option + clique apaga o vento). */
 .wind-arrow { pointer-events: auto; }
 /* Faixa transparente sobre a haste: a seta fina ganha uma área de clique razoável */
 .wind-arrow .wind-hit { stroke: transparent; stroke-width: 12px; pointer-events: stroke; filter: none; }
 .wind-arrow line {
-  stroke: var(--c-image); stroke-width: 2; stroke-linecap: round;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .5));
+  stroke: var(--wind-ink); stroke-width: 2; stroke-linecap: round;
+  filter: var(--route-halo);
 }
 .wind-arrow polygon {
-  fill: var(--c-image); stroke: var(--c-image); stroke-width: 0.75; stroke-linejoin: round;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .5));
+  fill: var(--wind-ink); stroke: var(--wind-ink); stroke-width: 0.75; stroke-linejoin: round;
+  filter: var(--route-halo);
 }
-.wind-arrow circle { fill: var(--c-image); filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .5)); }
+.wind-arrow circle { fill: var(--wind-ink); filter: var(--route-halo); }
 .wind-label {
   position: absolute; transform: translateX(-50%); white-space: nowrap; padding: 1px 6px; border-radius: 999px;
   pointer-events: auto; cursor: text;
   background: rgba(var(--surface-rgb), .92); border: 1px solid var(--line); box-shadow: var(--shadow-1);
-  color: var(--c-image); font-size: var(--fs-3xs); font-weight: 600; font-variant-numeric: tabular-nums;
+  color: var(--wind-ink); font-size: var(--fs-3xs); font-weight: 600; font-variant-numeric: tabular-nums;
 }
 /* Ponto aguardando a entrada do vento */
 .wind-pending {
   position: absolute; width: 8px; height: 8px; transform: translate(-50%, -50%); border-radius: 50%;
-  background: var(--c-image); box-shadow: 0 0 0 2px var(--canvas); pointer-events: none;
+  background: var(--wind-ink); box-shadow: 0 0 0 2px var(--canvas); pointer-events: none;
 }
 /* Entrada de direção e velocidade, logo abaixo do ponto clicado */
 .wind-form {
@@ -502,7 +564,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .wind-form__name { color: var(--muted); }
 .wind-form__input {
   width: 58px; height: 26px; padding: 0 var(--s-2); border: 0; border-radius: 999px;
-  background: var(--line-strong); color: var(--text); font-size: var(--fs-sm); font-variant-numeric: tabular-nums;
+  background: var(--field); color: var(--text); font-size: var(--fs-sm); font-variant-numeric: tabular-nums;
   transition: box-shadow var(--dur-fast);
 }
 .wind-form__input::placeholder { color: var(--muted); }

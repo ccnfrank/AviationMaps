@@ -14,7 +14,9 @@ import { distanceNm, formatBearing, routeLinks } from "../lib/route";
 import PdfPages from "./PdfPages";
 import PanView from "./PanView";
 import ImageStage from "./ImageStage";
-import { CalibrateButton, CalibrationField, ClearButton, ExportRouteButton, MeasureToggle, PlotToggle, ResetButton, WindToggle } from "./MeasureTools";
+import { CalibrateButton, CalibrationField, ClearButton, ExportRouteButton, MeasureToggle, PlotToggle, ResetButton, RoutesButton, WindToggle } from "./MeasureTools";
+import RoutesDialog from "./RoutesDialog";
+import { deleteRoute, listRoutes, mapKeyOf, saveRoute } from "../lib/savedRoutes";
 import { legFigures } from "../lib/routeLegs";
 import { routeCsv } from "../lib/routeExport";
 import { saveTextFile } from "../lib/saveFile";
@@ -75,6 +77,10 @@ export default function Preview({
   const [windAim, setWindAim] = useState(null);
   const [windEditId, setWindEditId] = useState(null);   // seta em correção (duplo clique): id
   const [speedUnit, setSpeedUnit] = useState("kt");     // unidade da velocidade do vento e da TAS nos formulários: "kt" ou "kmh"
+  // Rotas salvas: só as deste mapa (a chave do arquivo). A janela abre com a tecla R ou pelo botão da barra.
+  const mapKey = mapKeyOf(entry);
+  const [savedRoutes, setSavedRoutes] = useState(() => listRoutes(mapKey));
+  const [routesOpen, setRoutesOpen] = useState(false);
 
   // Carrega a imagem (decodifica os formatos que o navegador não mostra).
   useEffect(() => {
@@ -102,16 +108,16 @@ export default function Preview({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entry, kind]);
 
-  // Setas do teclado trocam de arquivo, exceto quando o foco está num campo.
+  // Setas do teclado trocam de arquivo, exceto quando o foco está num campo ou numa janela de rotas aberta.
   useEffect(() => {
     const onKey = (e) => {
-      if (e.target.closest?.("input, textarea")) return;
+      if (routesOpen || e.target.closest?.("input, textarea")) return;
       if (e.key === "ArrowLeft" && hasPrev) onPrev();
       else if (e.key === "ArrowRight" && hasNext) onNext();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [hasPrev, hasNext, onPrev, onNext]);
+  }, [hasPrev, hasNext, onPrev, onNext, routesOpen]);
 
   const fail = (msg) => () => setError(msg);
 
@@ -146,6 +152,18 @@ export default function Preview({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [measurable]);
+
+  // Tecla R: abre as rotas salvas do mapa. Sem campo em foco, sem Cmd, Ctrl ou Alt, e sem a janela já aberta.
+  useEffect(() => {
+    if (!measurable) return undefined;
+    const onKey = (e) => {
+      if (e.key.toLowerCase() !== "r" || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (routesOpen || e.target.closest?.("input, textarea, [contenteditable]")) return;
+      setRoutesOpen(true);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [measurable, routesOpen]);
 
   const imageCm = calib?.cmPerUnit ?? cmPerUnitFromDpi(dpi);
   const unitCm = (surface) => (surface === "img" ? imageCm : PDF_CM_PER_UNIT);
@@ -235,6 +253,32 @@ export default function Preview({
     }
     const fileName = `${entry.name.replace(/\.[^.]+$/, "")} - ${t("route.export.fileSuffix")}.csv`;
     await saveTextFile(routeCsv(rows, language), fileName);
+  };
+
+  // Rotas salvas: guarda a rota do mapa (pontos, ventos e os ajustes das contas) com o nome dado.
+  // Devolve false se o armazenamento recusou; a lista da janela volta a ler o que ficou guardado.
+  const saveCurrentRoute = (name) => {
+    const saved = saveRoute(mapKey, name, { plots, winds, declination, declinationSide, scaleText, mapType });
+    setSavedRoutes(listRoutes(mapKey));
+    return saved !== null;
+  };
+  // Abrir uma rota salva põe os pontos, os ventos e os ajustes dela no lugar da rota atual. Ids novos evitam repetição.
+  const loadSavedRoute = (route) => {
+    const stamp = Date.now();
+    setPlots(route.plots.map((p, i) => ({ ...p, id: `${stamp}-p${i}` })));
+    setWinds(route.winds.map((w, i) => ({ ...w, id: `${stamp}-w${i}` })));
+    setDeclination(route.declination);
+    setDeclinationSide(route.declinationSide);
+    setScaleText(route.scaleText);
+    setMapType(route.mapType);
+    setWindPending(null);
+    setWindAim(null);
+    setWindEditId(null);
+    setRoutesOpen(false);
+  };
+  const removeSavedRoute = (id) => {
+    deleteRoute(id);
+    setSavedRoutes(listRoutes(mapKey));
   };
 
   // Total da rota: soma dos trechos com distância, em todas as superfícies.
@@ -676,10 +720,21 @@ export default function Preview({
           {plotOn && plots.length > 0 && <ClearButton label={t("points.clear")} onClick={clearPlots} />}
           <WindToggle enabled={windOn} onToggle={toggleWind} />
           {windOn && winds.length > 0 && <ClearButton label={t("wind.clear")} onClick={clearWinds} />}
-          {/* Exportar e reset ficam sempre no fim da barra, na mesma posição; o reset é o último, à direita. */}
+          {/* Rotas salvas, exportar e reset ficam no fim da barra, nesta ordem; o reset é o último, à direita. */}
+          <RoutesButton onClick={() => setRoutesOpen(true)} />
           <ExportRouteButton onClick={exportRoute} disabled={plots.length < 2} />
           <ResetButton onClick={resetAll} disabled={!hasAnything} />
         </div>
+      )}
+      {routesOpen && (
+        <RoutesDialog
+          routes={savedRoutes}
+          canSave={plots.length > 0}
+          onSave={saveCurrentRoute}
+          onLoad={loadSavedRoute}
+          onDelete={removeSavedRoute}
+          onClose={() => setRoutesOpen(false)}
+        />
       )}
       <nav className="preview__nav" aria-label={t("preview.switchFile")}>
         <button type="button" onClick={onPrev} disabled={!hasPrev} aria-label={t("preview.previous")}><ChevronLeft strokeWidth={2} /></button>

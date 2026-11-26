@@ -80,6 +80,24 @@
       "fileSuffix": "rota"
     }
   },
+  "routes": {
+    "button": "Rotas salvas",
+    "tooltip": "Salvar a rota atual ou abrir uma salva",
+    "title": "Rotas salvas",
+    "nameAria": "Nome da rota",
+    "namePlaceholder": "Nome da rota (vazio usa a data e a hora)",
+    "save": "Salvar rota atual",
+    "saveError": "Não foi possível salvar: o armazenamento deste app está cheio ou indisponível.",
+    "search": "Buscar rota pelo nome",
+    "noMatch": "Nenhuma rota encontrada.",
+    "open": "Abrir",
+    "delete": "Apagar rota",
+    "deleteNamed": "Apagar a rota {{name}}",
+    "points_one": "{{count}} ponto",
+    "points_other": "{{count}} pontos",
+    "winds_one": "{{count}} vento",
+    "winds_other": "{{count}} ventos"
+  },
   "scale": {
     "group": "Escala do mapa",
     "type": "Tipo de mapa",
@@ -178,7 +196,7 @@
           "Tela cheia: o botão ocupa a janela inteira. Esc sai.",
           "Fechar: o X, Esc ou um clique fora da janela.",
           "PDF: as páginas aparecem em sequência, até 200 páginas. Ao mudar o zoom, as páginas são redesenhadas com nitidez.",
-          "Barra de ferramentas, da esquerda para a direita: transferidor, declinação, medir, escala, pino (plotar pontos), vento, exportar rota e, por último, o ícone de reset. O reset limpa tudo no mapa: medições, pontos plotados, ventos e o transferidor."
+          "Barra de ferramentas, da esquerda para a direita: transferidor, declinação, medir, escala, pino (plotar pontos), vento, rotas salvas (ler/salvar), exportar rota e, por último, o ícone de reset. O reset limpa tudo no mapa: medições, pontos plotados, ventos e o transferidor."
         ]
       },
       {
@@ -221,7 +239,8 @@
           "Mover um ponto: arraste o marcador para outro lugar. A rota, os rumos e as distâncias acompanham o ponto.",
           "Renomear um ponto: dê duplo clique no marcador, digite um nome (até 8 caracteres) e aperte Enter. Esc cancela; nome vazio volta ao número.",
           "Corrigir o rumo: dê duplo clique no grau acima de um trecho, digite o novo rumo e aperte Enter. O segundo ponto anda sobre essa direção, mantendo a distância, então os trechos seguintes também se movem. Esc cancela.",
-          "O total da rota aparece na barra inferior, junto do nome do arquivo. A lixeira apaga todos os pontos. O botão de exportar, no fim da barra, salva um CSV: uma linha por trecho, com rumos, distância, vento, TAS, correção de deriva, proa verdadeira e magnética e velocidade sobre o solo."
+          "O total da rota aparece na barra inferior, junto do nome do arquivo. A lixeira apaga todos os pontos. O botão de exportar, no fim da barra, salva um CSV: uma linha por trecho, com rumos, distância, vento, TAS, correção de deriva, proa verdadeira e magnética e velocidade sobre o solo.",
+          "Rotas salvas: o ícone de ler/salvar (ou a tecla R) abre a janela das rotas do mapa. Digite um nome e clique em Salvar rota atual: ficam guardados os pontos, os ventos, o desvio com o lado e a escala. Abrir uma rota salva substitui a rota que está no mapa. Cada rota vale só para o mapa em que foi feita e fica guardada neste dispositivo. Para encontrar uma rota pelo nome, use o campo de busca: a lista filtra enquanto você digita. Para apagar uma rota, use a lixeira ao lado dela."
         ]
       },
       {
@@ -322,6 +341,14 @@
           {
             "keys": [
               [
+                "R"
+              ]
+            ],
+            "text": "Abrir as rotas salvas: salvar a rota atual ou abrir uma salva"
+          },
+          {
+            "keys": [
+              [
                 "Alt",
                 "+"
               ]
@@ -364,6 +391,13 @@
             ],
             "text": "Medir: encerra o trecho em andamento. Transferidor: apaga o anel ou a seta. Formulários e correções: cancela"
           }
+        ]
+      },
+      {
+        "title": "Tema escuro e claro",
+        "paragraphs": [
+          "O botão de tema, no canto superior direito da tela inicial, alterna entre o escuro e o claro. A escolha fica guardada neste dispositivo.",
+          "No tema escuro, a rota é azul, os aviões e os pontos plotados são âmbar, e os ventos são verdes. No tema claro, a rota e os aviões são azuis, os pontos plotados são magenta e os ventos são verdes, para aparecerem sobre o mapa."
         ]
       },
       {

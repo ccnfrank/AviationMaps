@@ -169,6 +169,21 @@ vento no novo ponto.
 -   O desvio com sinal entra nos cálculos e no transferidor (a segunda
     agulha mostra ângulo + desvio).
 
+### Salvar e abrir rotas
+
+-   O ícone de **ler/salvar** (ou a tecla **R**), antes do exportar, abre a
+    janela das rotas salvas do mapa.
+-   **Salvar:** digite um nome (vazio usa a data e a hora) e clique em
+    **Salvar rota atual**. Fica guardado: os pontos (com os nomes), os ventos
+    (com TAS e referência), o desvio com o lado e a escala.
+-   **Abrir:** substitui a rota que está no mapa agora. A lista mostra só as
+    rotas deste mapa.
+-   **Buscar:** o campo de busca filtra a lista pelo nome enquanto você
+    digita.
+-   **Apagar:** a lixeira ao lado da rota.
+-   As rotas ficam no armazenamento do app, neste dispositivo. O mapa é
+    identificado pelo nome e pelo tamanho do arquivo.
+
 ### Apagar
 
 -   **Option (Alt) + clique** num ponto plotado, numa seta de vento ou no

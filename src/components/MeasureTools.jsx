@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileDown, MapPin, Ruler, RotateCcw, Trash2, Crosshair, Check, Wind, X } from "lucide-react";
+import { FileDown, MapPin, Ruler, RotateCcw, Save, Trash2, Crosshair, Check, Wind, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 // Botão de ícone que liga o plotar pontos: cada clique no mapa marca um ponto numerado.
@@ -112,6 +112,23 @@ export function ClearButton({ onClick, label }) {
   return (
     <button type="button" className="tool-toggle" onClick={onClick} aria-label={text} title={text}>
       <Trash2 strokeWidth={1.8} aria-hidden="true" />
+    </button>
+  );
+}
+
+// Botão de ícone que abre as rotas salvas: salva a rota atual do mapa, ou abre uma já salva (janela própria). Tecla R.
+export function RoutesButton({ onClick }) {
+  const { t } = useTranslation();
+  return (
+    <button
+      type="button"
+      className="tool-toggle"
+      onClick={onClick}
+      aria-haspopup="dialog"
+      aria-label={t("routes.button")}
+      title={`${t("routes.tooltip")} (R)`}
+    >
+      <Save strokeWidth={1.8} aria-hidden="true" />
     </button>
   );
 }

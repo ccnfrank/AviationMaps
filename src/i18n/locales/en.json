@@ -80,6 +80,24 @@
       "fileSuffix": "route"
     }
   },
+  "routes": {
+    "button": "Saved routes",
+    "tooltip": "Save the current route or open a saved one",
+    "title": "Saved routes",
+    "nameAria": "Route name",
+    "namePlaceholder": "Route name (empty uses the date and time)",
+    "save": "Save current route",
+    "saveError": "Could not save: this app's storage is full or unavailable.",
+    "search": "Search routes by name",
+    "noMatch": "No routes found.",
+    "open": "Open",
+    "delete": "Delete route",
+    "deleteNamed": "Delete route {{name}}",
+    "points_one": "{{count}} point",
+    "points_other": "{{count}} points",
+    "winds_one": "{{count}} wind",
+    "winds_other": "{{count}} winds"
+  },
   "scale": {
     "group": "Map scale",
     "type": "Map type",
@@ -178,7 +196,7 @@
           "Full screen: the button fills the whole window. Esc leaves it.",
           "Close: the X, Esc, or a click outside the window.",
           "PDF: pages appear in sequence, up to 200 pages. When you change the zoom, the pages are redrawn sharply.",
-          "Toolbar, from left to right: protractor, declination, measure, scale, pin (plot points), wind, export route and, last, the reset icon. Reset clears everything on the map: measurements, plotted points, winds and the protractor."
+          "Toolbar, from left to right: protractor, declination, measure, scale, pin (plot points), wind, saved routes (read/save), export route and, last, the reset icon. Reset clears everything on the map: measurements, plotted points, winds and the protractor."
         ]
       },
       {
@@ -221,7 +239,8 @@
           "Move a point: drag its marker to a new place. The route, the bearings and the distances follow it.",
           "Rename a point: double-click its marker, type a name (up to 8 characters) and press Enter. Esc cancels; an empty name goes back to the number.",
           "Correct a track: double-click the degree above a leg, type the new bearing and press Enter. The second point moves along that bearing, keeping the distance, so the legs after it move too. Esc cancels.",
-          "The route total appears in the bottom bar, next to the file name. The trash icon clears all points. The export button, at the end of the bar, saves a CSV file: one row per leg, with bearings, distance, wind, TAS, drift correction, true and magnetic heading and ground speed."
+          "The route total appears in the bottom bar, next to the file name. The trash icon clears all points. The export button, at the end of the bar, saves a CSV file: one row per leg, with bearings, distance, wind, TAS, drift correction, true and magnetic heading and ground speed.",
+          "Saved routes: the read/save icon (or the R key) opens the routes window for this map. Type a name and click Save current route: the points, the winds, the declination with its side and the scale are kept. Opening a saved route replaces the route on the map. Each route belongs to the map it was made on, and is kept on this device. To find a route by name, use the search field: the list filters as you type. To delete a route, use the trash icon next to it."
         ]
       },
       {
@@ -322,6 +341,14 @@
           {
             "keys": [
               [
+                "R"
+              ]
+            ],
+            "text": "Open the saved routes: save the current route or open a saved one"
+          },
+          {
+            "keys": [
+              [
                 "Alt",
                 "+"
               ]
@@ -364,6 +391,13 @@
             ],
             "text": "Measure: end the segment in progress. Protractor: remove the ring or the arrow. Forms and corrections: cancel"
           }
+        ]
+      },
+      {
+        "title": "Dark and light theme",
+        "paragraphs": [
+          "The theme button, in the top right corner of the start screen, switches between dark and light. The choice is kept on this device.",
+          "In the dark theme, the route is blue, the planes and plotted points are amber, and the winds are green. In the light theme, the route and the planes are blue, the plotted points are magenta, and the winds are green, so they stand out on the map."
         ]
       },
       {
