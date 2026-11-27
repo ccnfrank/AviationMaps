@@ -868,6 +868,32 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .search-file__name mark { background: rgba(var(--accent-rgb), .35); color: var(--text); border-radius: 4px; padding: 0 1px; }
 .search-file__size { flex: none; color: var(--muted); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
+/* Favoritos: o marcador de cada mapa (na miniatura ou no fim da linha) e o filtro no cabeçalho do painel.
+   O marcador é irmão do botão do mapa, não filho, por isso a célula e a linha são só agrupadores. */
+.search-live__cell { position: relative; min-width: 0; }
+.search-live__cell > .search-live__tile { width: 100%; }
+.search-file-row { display: flex; align-items: center; gap: 2px; }
+.search-file-row > .search-file { flex: 1 1 0; width: auto; min-width: 0; }
+.search-fav {
+  display: grid; place-items: center; flex: none; padding: 0; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); color: var(--muted); transition: color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
+}
+.search-fav svg { width: 14px; height: 14px; }
+.search-fav:hover { color: var(--text); border-color: var(--line-strong); }
+.search-fav[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
+.search-fav:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.search-fav--tile { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; background: rgba(var(--surface-rgb), .85); }
+.search-fav--row { width: 28px; height: 28px; border: 0; background: none; }
+.search-fav--row:hover { background: var(--accent-soft); }
+.search-live__fav {
+  display: inline-flex; align-items: center; gap: 6px; flex: none; height: 28px; padding: 0 var(--s-3);
+  border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--muted); font-size: var(--fs-xs);
+  transition: color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
+}
+.search-live__fav svg { width: 14px; height: 14px; }
+.search-live__fav:hover { color: var(--text); border-color: var(--line-strong); }
+.search-live__fav[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: var(--canvas); }
+
 /* Botão X (limpar pastas): à esquerda do campo, para o campo ficar no centro com ou sem pasta */
 .dock .dock__clear { grid-column: 1; justify-self: end; }
 @media (max-width: 640px) {

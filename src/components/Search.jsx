@@ -1,11 +1,13 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Folder, LayoutGrid, List, Search as SearchIcon } from "lucide-react";
+import { ArrowLeft, Bookmark, Folder, LayoutGrid, List, Search as SearchIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useFavorites } from "../lib/favorites";
 import { filterFiles } from "../lib/filterFiles";
 import { formatSize } from "../lib/format";
 import { listDir, parentDir } from "../lib/browseDir";
 import { ROOT_NAME } from "../lib/groupFiles";
 import { searchAll, splitHighlight } from "../lib/searchFiles";
+import { mapKeyOf } from "../lib/savedRoutes";
 import Thumb from "./Thumb";
 
 // Quantas miniaturas aparecem de cada vez na grade; o total continua contado.
@@ -32,22 +34,31 @@ function browseAll(folders, limit) {
 // `view` ("grid" ou "list") e `onViewChange` são controlados por quem usa.
 // `docked` é a coluna lateral da pasta carregada: o painel fica sempre aberto, os botões de
 // visualização ficam ao lado do campo, e a grade sem texto mostra as miniaturas de todos os mapas.
+// Cada mapa tem um marcador de favorito (miniatura ou fim da linha). O botão Favoritos do painel
+// mostra só os favoritos, em todas as pastas, e vale enquanto estiver ligado.
 export default function Search({ folders, onPreview, view = "grid", onViewChange, docked = false }) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   // Nível aberto sem texto: { folderIndex, dir }, dir "" é a raiz da pasta, "dia2/sul" uma subpasta.
   const [nav, setNav] = useState(null);
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
+  const { favorites, toggleFavorite } = useFavorites();
   const inputRef = useRef(null);
   // Adiar o valor deixa a digitação fluida enquanto a lista recalcula.
   const deferred = useDeferredValue(query);
+  // Com o filtro, só os favoritos entram. As pastas continuam todas na mesma ordem (sem as vazias
+  // removidas), para o índice de pasta que o nível aberto guarda continuar certo.
+  const scope = useMemo(() => (onlyFavorites
+    ? folders.map((folder) => ({ ...folder, files: folder.files.filter((entry) => favorites.has(mapKeyOf(entry))) }))
+    : folders), [folders, onlyFavorites, favorites]);
   const results = useMemo(() => (deferred.trim()
-    ? searchAll(folders, deferred, MAX_TILES)
-    : browseAll(folders, MAX_TILES)), [folders, deferred]);
+    ? searchAll(scope, deferred, MAX_TILES)
+    : browseAll(scope, MAX_TILES)), [scope, deferred]);
   // Grupos por subpasta, com todos os mapas que casam (a lista não tem limite de miniaturas).
-  const rows = useMemo(() => folders
+  const rows = useMemo(() => scope
     .map((folder, folderIndex) => ({ folderIndex, folder, items: filterFiles(folder.files, deferred, "all") }))
-    .filter((row) => row.items.length > 0), [folders, deferred]);
+    .filter((row) => row.items.length > 0), [scope, deferred]);
   // Aberto ao focar: com pastas carregadas, o painel já mostra a lista; sem pastas, só com texto.
   // Na coluna lateral o painel fica sempre aberto enquanto houver pastas.
   const showing = docked ? folders.length > 0 : open && (query.trim() !== "" || folders.length > 0);
@@ -76,6 +87,28 @@ export default function Search({ folders, onPreview, view = "grid", onViewChange
   const changeView = (next) => {
     setNav(null);
     onViewChange?.(next);
+  };
+
+  const toggleOnlyFavorites = () => {
+    setNav(null);
+    setOnlyFavorites((on) => !on);
+  };
+
+  // O que o painel recebe, igual nos dois lugares onde ele aparece (tela inicial e coluna da visualização).
+  const panelProps = {
+    folders,
+    query: deferred,
+    results,
+    rows,
+    view,
+    onViewChange: changeView,
+    nav,
+    onNavigate: setNav,
+    onChoose: choose,
+    favorites,
+    onToggleFavorite: toggleFavorite,
+    onlyFavorites,
+    onToggleOnlyFavorites: toggleOnlyFavorites,
   };
 
   const onKeyDown = (e) => {
@@ -121,20 +154,7 @@ export default function Search({ folders, onPreview, view = "grid", onViewChange
           {field}
           <ViewToggle view={view} onChange={changeView} />
         </div>
-        {showing && (
-          <SearchPanel
-            docked
-            folders={folders}
-            query={deferred}
-            results={results}
-            rows={rows}
-            view={view}
-            onViewChange={changeView}
-            nav={nav}
-            onNavigate={setNav}
-            onChoose={choose}
-          />
-        )}
+        {showing && <SearchPanel docked {...panelProps} />}
       </div>
     );
   }
@@ -142,20 +162,38 @@ export default function Search({ folders, onPreview, view = "grid", onViewChange
   return (
     <div className="search" role="search">
       {field}
-      {showing && (
-        <SearchPanel
-          folders={folders}
-          query={deferred}
-          results={results}
-          rows={rows}
-          view={view}
-          onViewChange={changeView}
-          nav={nav}
-          onNavigate={setNav}
-          onChoose={choose}
-        />
-      )}
+      {showing && <SearchPanel {...panelProps} />}
     </div>
+  );
+}
+
+// Marca de favorito de um mapa: ícone de marcador (de propósito, sem coração nem estrela). Fica por
+// cima da miniatura ou no fim da linha, fora do botão do mapa, porque um botão não cabe dentro de outro.
+// `pressed` diz se o mapa é favorito; o nome vai no rótulo para o leitor de tela saber qual mapa é.
+function FavoriteButton({ pressed, name, className, onToggle }) {
+  const { t } = useTranslation();
+  return (
+    <button
+      type="button"
+      className={`search-fav ${className}`}
+      aria-pressed={pressed}
+      aria-label={t("search.favoriteOf", { name })}
+      title={pressed ? t("search.unfavorite") : t("search.favorite")}
+      onClick={onToggle}
+    >
+      <Bookmark strokeWidth={1.8} fill={pressed ? "currentColor" : "none"} aria-hidden="true" />
+    </button>
+  );
+}
+
+// Botão do cabeçalho do painel: liga e desliga o filtro de favoritos.
+function FavoritesFilter({ on, onToggle }) {
+  const { t } = useTranslation();
+  return (
+    <button type="button" className="search-live__fav" aria-pressed={on} title={t("search.favoritesOnly")} onClick={onToggle}>
+      <Bookmark strokeWidth={1.8} fill={on ? "currentColor" : "none"} aria-hidden="true" />
+      <span>{t("search.favorites")}</span>
+    </button>
   );
 }
 
@@ -193,10 +231,14 @@ function ViewToggle({ view, onChange }) {
 // Sem texto: pastas e subpastas (linhas na lista, cartões na grade); clicar abre o nível dela,
 // com o botão de voltar, nos dois modos. Com texto: os mapas que casam.
 // Na coluna lateral, sem texto e em grade, mostra as miniaturas de todos os mapas.
-function SearchPanel({ docked = false, folders, query, results, rows, view, onViewChange, nav, onNavigate, onChoose }) {
+function SearchPanel({
+  docked = false, folders, query, results, rows, view, onViewChange, nav, onNavigate, onChoose,
+  favorites, onToggleFavorite, onlyFavorites, onToggleOnlyFavorites,
+}) {
   const { t } = useTranslation();
   const { total, items } = results;
-  const idle = query.trim() === "";
+  // Com o filtro de favoritos, o painel mostra os favoritos (sem pastas nem nível aberto), como uma busca.
+  const idle = query.trim() === "" && !onlyFavorites;
   // Na coluna lateral, a grade sem texto já traz os mapas: não há cartões de pasta nela.
   const mapsGrid = docked && idle && view !== "list";
   const subfolders = rows.filter((row) => row.folder.name !== ROOT_NAME);
@@ -212,7 +254,10 @@ function SearchPanel({ docked = false, folders, query, results, rows, view, onVi
   } else if (idle && !mapsGrid) {
     countText = subfolders.length === 0 ? t("search.noFolders") : t("search.folders", { count: subfolders.length });
   } else if (total === 0) {
-    countText = t("search.noResults");
+    countText = onlyFavorites && !query.trim() ? t("search.noFavorites") : t("search.noResults");
+  } else if (onlyFavorites) {
+    const more = view !== "list" && total > items.length;
+    countText = `${t("search.favCount", { count: total })}${more ? t("search.showing", { count: items.length }) : ""}`;
   } else if (view === "list") {
     countText = t("search.count", { count: total });
   } else {
@@ -225,11 +270,23 @@ function SearchPanel({ docked = false, folders, query, results, rows, view, onVi
     onNavigate(nav.dir ? { folderIndex: nav.folderIndex, dir: parentDir(nav.dir) } : null);
   };
 
+  const favButton = (entry, className) => (
+    <FavoriteButton
+      className={className}
+      pressed={favorites.has(mapKeyOf(entry))}
+      name={entry.name}
+      onToggle={() => onToggleFavorite(mapKeyOf(entry))}
+    />
+  );
+
   const fileRow = (entry, label, key) => (
-    <button key={key} type="button" className="search-file" onClick={() => onChoose({ entry })} title={entry.relPath}>
-      <span className="search-file__name">{label}</span>
-      <span className="search-file__size">{formatSize(entry.size)}</span>
-    </button>
+    <div key={key} className="search-file-row">
+      <button type="button" className="search-file" onClick={() => onChoose({ entry })} title={entry.relPath}>
+        <span className="search-file__name">{label}</span>
+        <span className="search-file__size">{formatSize(entry.size)}</span>
+      </button>
+      {favButton(entry, "search-fav--row")}
+    </div>
   );
 
   const folderRow = (key, name, count, onClick) => (
@@ -251,23 +308,25 @@ function SearchPanel({ docked = false, folders, query, results, rows, view, onVi
   );
 
   const mapTile = (item) => (
-    <button
-      key={`${item.folderIndex}:${item.entry.relPath}`}
-      type="button"
-      className="search-live__tile"
-      onClick={() => onChoose(item)}
-      title={item.entry.relPath}
-    >
-      <span className="search-live__thumb">
-        <Thumb entry={item.entry} />
-      </span>
-      <span className="search-live__name">
-        {splitHighlight(item.entry.name, query).map((part, k) =>
-          part.hit ? <mark key={k}>{part.text}</mark> : <span key={k}>{part.text}</span>,
-        )}
-      </span>
-      <span className="search-live__folder">{item.entry.relPath.includes("/") ? `${item.folder} / ${item.entry.relPath.slice(0, item.entry.relPath.lastIndexOf("/"))}` : item.folder}</span>
-    </button>
+    <div key={`${item.folderIndex}:${item.entry.relPath}`} className="search-live__cell">
+      <button
+        type="button"
+        className="search-live__tile"
+        onClick={() => onChoose(item)}
+        title={item.entry.relPath}
+      >
+        <span className="search-live__thumb">
+          <Thumb entry={item.entry} />
+        </span>
+        <span className="search-live__name">
+          {splitHighlight(item.entry.name, query).map((part, k) =>
+            part.hit ? <mark key={k}>{part.text}</mark> : <span key={k}>{part.text}</span>,
+          )}
+        </span>
+        <span className="search-live__folder">{item.entry.relPath.includes("/") ? `${item.folder} / ${item.entry.relPath.slice(0, item.entry.relPath.lastIndexOf("/"))}` : item.folder}</span>
+      </button>
+      {favButton(item.entry, "search-fav--tile")}
+    </div>
   );
 
   let body;
@@ -341,6 +400,7 @@ function SearchPanel({ docked = false, folders, query, results, rows, view, onVi
           </button>
         )}
         <div className="search-live__count">{countText}</div>
+        <FavoritesFilter on={onlyFavorites} onToggle={onToggleOnlyFavorites} />
         {!docked && <ViewToggle view={view} onChange={onViewChange} />}
       </div>
       {body}

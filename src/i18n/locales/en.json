@@ -210,7 +210,15 @@
     "maps_one": "{{count}} map",
     "maps_other": "{{count}} maps",
     "noFolders": "No subfolders",
-    "back": "Back"
+    "back": "Back",
+    "favorites": "Favorites",
+    "favoritesOnly": "Show only favorites",
+    "favorite": "Favorite",
+    "unfavorite": "Remove from favorites",
+    "favoriteOf": "Favorite {{name}}",
+    "favCount_one": "{{count}} favorite",
+    "favCount_other": "{{count}} favorites",
+    "noFavorites": "No favorites yet"
   },
   "help": {
     "button": "Help",
@@ -234,9 +242,17 @@
         ]
       },
       {
+        "title": "Favorites",
+        "paragraphs": [
+          "Each map has a bookmark icon, on the thumbnail or at the end of its row, to mark it as a favorite. Click it again to remove it. Marking a map does not open it.",
+          "The Favorites button at the top of the search panel shows only favorites, from all folders. The search in the viewer's right column works the same way.",
+          "Favorites stay on this device and apply to the same map (same file name and size) in any folder. Nothing is uploaded."
+        ]
+      },
+      {
         "title": "Map viewer",
         "items": [
-          "Right column: lists the maps in the folder so you can switch maps with one click. Show or hide it with the button next to the navigation, or with L.",
+          "Right column: lists the maps in the folder so you can switch maps with one click. It has its own search field, with the grid, list and favorites buttons. Show or hide it with the button next to the navigation, or with L.",
           "Full screen: the button fills the whole window. Esc leaves it.",
           "Close: the X, Esc, or a click outside the window.",
           "PDF: pages appear in sequence, up to 200 pages. When you change the zoom, the pages are redrawn sharply.",

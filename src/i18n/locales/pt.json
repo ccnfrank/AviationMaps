@@ -210,7 +210,15 @@
     "maps_one": "{{count}} mapa",
     "maps_other": "{{count}} mapas",
     "noFolders": "Nenhuma subpasta",
-    "back": "Voltar"
+    "back": "Voltar",
+    "favorites": "Favoritos",
+    "favoritesOnly": "Mostrar só os favoritos",
+    "favorite": "Favoritar",
+    "unfavorite": "Remover dos favoritos",
+    "favoriteOf": "Favoritar {{name}}",
+    "favCount_one": "{{count}} favorito",
+    "favCount_other": "{{count}} favoritos",
+    "noFavorites": "Nenhum favorito ainda"
   },
   "help": {
     "button": "Ajuda",
@@ -234,9 +242,17 @@
         ]
       },
       {
+        "title": "Favoritos",
+        "paragraphs": [
+          "Cada mapa tem um ícone de marcador, na miniatura ou no fim da linha, para marcá-lo como favorito. Clique nele de novo para tirar. Marcar não abre o mapa.",
+          "O botão Favoritos, no topo do painel de busca, mostra só os favoritos, de todas as pastas. O mesmo vale para a busca da coluna da visualização.",
+          "Os favoritos ficam neste dispositivo e valem para o mesmo mapa (mesmo nome e tamanho de arquivo) em qualquer pasta. Nada é enviado."
+        ]
+      },
+      {
         "title": "Janela de visualização",
         "items": [
-          "Coluna da direita: lista os mapas da pasta para trocar de mapa com um clique. Mostre ou esconda a coluna com o botão ao lado da navegação, ou com L.",
+          "Coluna da direita: lista os mapas da pasta para trocar de mapa com um clique. Tem o próprio campo de busca, com os botões de grade, lista e favoritos. Mostre ou esconda a coluna com o botão ao lado da navegação, ou com L.",
           "Tela cheia: o botão ocupa a janela inteira. Esc sai.",
           "Fechar: o X, Esc ou um clique fora da janela.",
           "PDF: as páginas aparecem em sequência, até 200 páginas. Ao mudar o zoom, as páginas são redesenhadas com nitidez.",
