@@ -14,7 +14,7 @@ import { distanceNm, formatBearing, routeLinks } from "../lib/route";
 import PdfPages from "./PdfPages";
 import PanView from "./PanView";
 import ImageStage from "./ImageStage";
-import { CalibrateButton, CalibrationField, ClearButton, ExportRouteButton, MeasureToggle, PlotToggle, ResetButton, RoutesButton, WindToggle } from "./MeasureTools";
+import { CalibrateButton, CalibrationField, ClearButton, ExportRouteButton, MeasureToggle, MetarButton, OtherMapsButton, PlotToggle, ResetButton, RoutesButton, WindToggle } from "./MeasureTools";
 import RoutesDialog from "./RoutesDialog";
 import { deleteRoute, listRoutes, mapKeyOf, saveRoute } from "../lib/savedRoutes";
 import { legFigures } from "../lib/routeLegs";
@@ -718,8 +718,11 @@ export default function Preview({
           <ScaleTool type={mapType} onType={setMapType} text={scaleText} onText={setScaleText} />
           <PlotToggle enabled={plotOn} onToggle={togglePlot} />
           {plotOn && plots.length > 0 && <ClearButton label={t("points.clear")} onClick={clearPlots} />}
+          {/* METAR e outros mapas: só o ícone por enquanto. As funções vêm depois. */}
+          <MetarButton />
           <WindToggle enabled={windOn} onToggle={toggleWind} />
           {windOn && winds.length > 0 && <ClearButton label={t("wind.clear")} onClick={clearWinds} />}
+          <OtherMapsButton />
           {/* Rotas salvas, exportar e reset ficam no fim da barra, nesta ordem; o reset é o último, à direita. */}
           <RoutesButton onClick={() => setRoutesOpen(true)} />
           <ExportRouteButton onClick={exportRoute} disabled={plots.length < 2} />

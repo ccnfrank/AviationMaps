@@ -11,7 +11,8 @@ import HelpButton from "./components/HelpButton";
 import ThemeButton from "./components/ThemeButton";
 import ViewerEmpty from "./components/ViewerEmpty";
 import {
-  allowFolder, canPickDirectory, isTauri, pickDirectory, pickMapFileNative, readDirectory, readDroppedDirectory,
+  allowFolder, canPickDirectory, isTauri, onOpenedFolder, pickDirectory, pickMapFileNative, readDirectory,
+  readDroppedDirectory, takeOpenedFolder,
 } from "./lib/folderAccess";
 import { forgetLastFolder, readLastFolder, saveLastFolder } from "./lib/lastFolder";
 import { setFullscreen } from "./lib/fullscreen";
@@ -185,26 +186,51 @@ export default function App() {
     setViewerEmpty(false);
   };
 
-  // Ao abrir o app (Tauri), reabre a última pasta carregada. Se ela sumiu ou não pode ser lida,
-  // esquece o caminho e avisa.
+  // App Tauri: uma pasta que o macOS entregou (arrastada para o ícone do app) carrega na hora e tem
+  // prioridade; sem entrega, reabre a última pasta carregada. Com o app aberto, uma pasta entregue
+  // depois também carrega. Toda pasta carregada fica lembrada. Se a última sumiu ou não pode ser
+  // lida, esquece o caminho e avisa.
   useEffect(() => {
-    const last = isTauri() ? readLastFolder() : null;
-    if (!last) return undefined;
+    if (!isTauri()) return undefined;
     let alive = true;
-    (async () => {
+    let stopListening = null;
+    const openNative = async (path, { remembered = false } = {}) => {
       try {
-        await allowFolder(last);
-        const files = await readDirectory(last);
-        if (alive) showFiles(files);
+        await allowFolder(path);
+        const files = await readDirectory(path);
+        if (!alive) return;
+        showFiles(files);
+        saveLastFolder(path);
       } catch (err) {
-        forgetLastFolder();
+        if (remembered) forgetLastFolder();
         if (alive) reportReadError(err);
       }
+    };
+    (async () => {
+      // Escuta antes de pegar a entrega pendente: uma pasta que chegue nesse intervalo não se perde.
+      const stop = await onOpenedFolder(async () => {
+        const path = await takeOpenedFolder();
+        if (path && alive) openNative(path);
+      });
+      if (!alive) {
+        stop();
+        return;
+      }
+      stopListening = stop;
+      const opened = await takeOpenedFolder();
+      if (!alive) return;
+      if (opened) {
+        openNative(opened);
+        return;
+      }
+      const last = readLastFolder();
+      if (last) openNative(last, { remembered: true });
     })();
     return () => {
       alive = false;
+      stopListening?.();
     };
-    // Roda só na abertura: showFiles e reportReadError só trocam estado e mostram aviso.
+    // showFiles e reportReadError só trocam estado e mostram aviso; o efeito roda só na abertura.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -87,6 +87,20 @@ describe("botão de plotar na barra da visualização", () => {
     expect(scale.compareDocumentPosition(plot) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  it("METAR fica logo depois de plotar pontos e antes do vento; outros mapas fica depois do vento, antes de salvar rotas", () => {
+    render(<Preview entry={entry} {...nav} />);
+    const plot = screen.getByRole("button", { name: "Plot points" });
+    const metar = screen.getByRole("button", { name: "METAR" });
+    const wind = screen.getByRole("button", { name: "Wind" });
+    const maps = screen.getByRole("button", { name: "Other maps" });
+    expect(metar).toBeDisabled();
+    expect(maps).toBeDisabled();
+    expect(plot.nextElementSibling).toBe(metar);
+    expect(metar.nextElementSibling).toBe(wind);
+    expect(wind.nextElementSibling).toBe(maps);
+    expect(maps.nextElementSibling).toBe(screen.getByRole("button", { name: "Saved routes" }));
+  });
+
   it("liga exclusivo com a medição", () => {
     render(<Preview entry={entry} {...nav} />);
     const plot = screen.getByRole("button", { name: "Plot points" });

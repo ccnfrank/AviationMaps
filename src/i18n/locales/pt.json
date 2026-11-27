@@ -32,6 +32,14 @@
     "renameTitle": "Duplo clique para renomear o ponto",
     "renameAria": "Nome do ponto"
   },
+  "maps": {
+    "button": "Outros mapas",
+    "tooltip": "Outros mapas: abre uma janela flutuante com outros mapas (em breve)"
+  },
+  "metar": {
+    "button": "METAR",
+    "tooltip": "METAR: em breve"
+  },
   "wind": {
     "toggle": "Vento",
     "title": "Vento: clique no mapa e aponte o transferidor para de onde o vento sopra; clique de novo para fixar. Depois informe a velocidade em nós. Backspace apaga o último",
@@ -179,7 +187,7 @@
           "Clique em Carregar diretório de mapas e escolha uma pasta. Só imagens e PDFs entram na lista; os outros arquivos são ignorados. Subpastas aparecem como grupos.",
           "Também dá para arrastar uma pasta ou um arquivo para a janela. Um mapa solto abre direto na visualização.",
           "Sem pasta: pressione V para abrir a janela vazia e arraste um mapa para ela, ou use o botão Escolher um mapa.",
-          "No app de desktop, a última pasta carregada é reaberta ao iniciar. Tudo é lido neste dispositivo; nada é enviado."
+          "No app de desktop, dá para arrastar uma pasta para o ícone do app no Dock; ela carrega na hora. A última pasta carregada é reaberta ao iniciar. Tudo é lido neste dispositivo; nada é enviado."
         ]
       },
       {

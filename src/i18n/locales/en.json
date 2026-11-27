@@ -32,6 +32,14 @@
     "renameTitle": "Double-click to rename the point",
     "renameAria": "Point name"
   },
+  "maps": {
+    "button": "Other maps",
+    "tooltip": "Other maps: opens a floating window with other maps (coming soon)"
+  },
+  "metar": {
+    "button": "METAR",
+    "tooltip": "METAR: coming soon"
+  },
   "wind": {
     "toggle": "Wind",
     "title": "Wind: click on the map, point the protractor to where the wind comes from and click again to set it. Then type the speed in knots. Backspace removes the last one",
@@ -179,7 +187,7 @@
           "Click Load maps directory and choose a folder. Only images and PDFs are listed; other files are ignored. Subfolders appear as groups.",
           "You can also drag a folder or a file into the window. A loose map opens straight in the viewer.",
           "No folder: press V to open the empty viewer and drag a map into it, or use the Choose a map button.",
-          "In the desktop app, the last folder you loaded is reopened at startup. Everything is read on this device; nothing is uploaded."
+          "In the desktop app, you can drag a folder onto the app icon in the Dock to load it right away. The last folder you loaded is reopened at startup. Everything is read on this device; nothing is uploaded."
         ]
       },
       {

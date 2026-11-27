@@ -4,6 +4,7 @@
 // - Chromium: File System Access API (diálogo nativo de pasta).
 // - Os demais: <input webkitdirectory> (ver App.jsx) e arrastar a pasta para a janela.
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
 import { readDir, readFile } from "@tauri-apps/plugin-fs";
 import { MAP_EXTENSIONS, getPreviewKind } from "./previewKind";
@@ -42,6 +43,18 @@ export async function pickMapFileNative() {
 // Ver allow_folder em src-tauri/src/lib.rs.
 export async function allowFolder(path) {
   await invoke("allow_folder", { path });
+}
+
+// Só no app Tauri: a pasta que o macOS entregou ao app (arrastada para o ícone no Dock, ou "Abrir
+// com"), ou null. Cada entrega vem uma vez, para quem pedir primeiro. Ver lib.rs (OpenedFolder).
+export async function takeOpenedFolder() {
+  return invoke("take_opened_folder");
+}
+
+// Só no app Tauri: chama `handler` quando uma pasta é entregue com o app já aberto.
+// Devolve uma promessa com a função que para de escutar.
+export function onOpenedFolder(handler) {
+  return listen("folder-opened", handler);
 }
 
 // Lê a pasta inteira e devolve Files com `webkitRelativePath` no mesmo formato do
