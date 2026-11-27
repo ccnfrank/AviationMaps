@@ -16,6 +16,7 @@ import PanView from "./PanView";
 import ImageStage from "./ImageStage";
 import { CalibrateButton, CalibrationField, ClearButton, ExportRouteButton, MeasureToggle, MetarButton, OtherMapsButton, PlotToggle, ResetButton, RoutesButton, WindToggle } from "./MeasureTools";
 import RoutesDialog from "./RoutesDialog";
+import WeatherDialog from "./WeatherDialog";
 import { deleteRoute, listRoutes, mapKeyOf, saveRoute } from "../lib/savedRoutes";
 import { legFigures } from "../lib/routeLegs";
 import { routeCsv } from "../lib/routeExport";
@@ -81,6 +82,12 @@ export default function Preview({
   const mapKey = mapKeyOf(entry);
   const [savedRoutes, setSavedRoutes] = useState(() => listRoutes(mapKey));
   const [routesOpen, setRoutesOpen] = useState(false);
+  // METAR e TAF: janela de consulta por código ICAO, aberta pelo botão METAR da barra.
+  const [weatherOpen, setWeatherOpen] = useState(false);
+  // Estações do METAR no mapa: { id, surface, x, y, station }. O `station` é a cópia dos dados do METAR no momento de plotar.
+  // `metarPlacing` é a estação esperando o próximo clique no mapa (ou null).
+  const [metars, setMetars] = useState([]);
+  const [metarPlacing, setMetarPlacing] = useState(null);
 
   // Carrega a imagem (decodifica os formatos que o navegador não mostra).
   useEffect(() => {
@@ -108,10 +115,10 @@ export default function Preview({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entry, kind]);
 
-  // Setas do teclado trocam de arquivo, exceto quando o foco está num campo ou numa janela de rotas aberta.
+  // Setas do teclado trocam de arquivo, exceto quando o foco está num campo ou numa janela (rotas ou METAR) aberta.
   useEffect(() => {
     const onKey = (e) => {
-      if (routesOpen || e.target.closest?.("input, textarea")) return;
+      if (routesOpen || e.target.closest?.("input, textarea, .modal--weather")) return;
       if (e.key === "ArrowLeft" && hasPrev) onPrev();
       else if (e.key === "ArrowRight" && hasNext) onNext();
     };
@@ -137,7 +144,7 @@ export default function Preview({
   useEffect(() => {
     if (!measurable) return undefined;
     const onKey = (e) => {
-      if (e.target.closest?.("input, textarea, [contenteditable]")) return;
+      if (e.target.closest?.("input, textarea, [contenteditable], .modal--weather")) return;
       if (e.metaKey || e.ctrlKey) return; // Cmd/Ctrl + é do navegador (zoom da página)
       if (e.altKey) {
         const dir = CODE_DIRECTION[e.code];
@@ -158,7 +165,7 @@ export default function Preview({
     if (!measurable) return undefined;
     const onKey = (e) => {
       if (e.key.toLowerCase() !== "r" || e.metaKey || e.ctrlKey || e.altKey) return;
-      if (routesOpen || e.target.closest?.("input, textarea, [contenteditable]")) return;
+      if (routesOpen || e.target.closest?.("input, textarea, [contenteditable], .modal--weather")) return;
       setRoutesOpen(true);
     };
     window.addEventListener("keydown", onKey);
@@ -371,7 +378,7 @@ export default function Preview({
     setLines([]);
     setDraft(null);
   };
-  // Reset: limpa tudo no mapa (medições, calibração pendente, transferidor, pontos plotados e ventos).
+  // Reset: limpa tudo no mapa (medições, calibração pendente, transferidor, pontos plotados, ventos e estações do METAR).
   // Os modos ligados (medir, plotar, vento...) e a escala ficam como estão.
   const resetAll = () => {
     setLines([]);
@@ -383,8 +390,35 @@ export default function Preview({
     setWindPending(null);
     setWindAim(null);
     setWindEditId(null);
+    setMetars([]);
+    setMetarPlacing(null);
   };
-  const hasAnything = lines.length > 0 || draft != null || protractor != null || plots.length > 0 || winds.length > 0 || windPending != null;
+  const hasAnything = lines.length > 0 || draft != null || protractor != null || plots.length > 0 || winds.length > 0 || windPending != null || metars.length > 0;
+
+  // METAR no mapa: a janela entrega a estação e fecha; o próximo clique na superfície a põe. Esc cancela.
+  const startMetarPlacing = (station) => {
+    setMetarPlacing(station);
+    setWeatherOpen(false);
+  };
+  const placeMetar = (surface, p) => {
+    if (!metarPlacing) return;
+    setMetars((list) => [...list, { id: `${Date.now()}-${list.length}`, surface, x: p.x, y: p.y, station: metarPlacing }]);
+    setMetarPlacing(null);
+  };
+  // Option + clique na estação apaga só ela.
+  const deleteMetar = (id) => setMetars((list) => list.filter((m) => m.id !== id));
+  // Esc cancela a colocação na captura, sem chegar à janela da visualização (que também fecha com Esc).
+  useEffect(() => {
+    if (!metarPlacing) return undefined;
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      e.stopPropagation();
+      setMetarPlacing(null);
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [metarPlacing]);
 
   const toggleMeasure = () => {
     const next = !measureOn;
@@ -521,7 +555,7 @@ export default function Preview({
   useEffect(() => {
     if (!windOn) return undefined;
     const onKey = (e) => {
-      if (e.target.closest?.("input, textarea")) return;
+      if (e.target.closest?.("input, textarea, .modal--weather")) return;
       if ((e.key === "Backspace" || e.key === "Delete") && (windPending || winds.length)) {
         e.preventDefault();
         if (windPending) setWindPending(null);
@@ -536,7 +570,7 @@ export default function Preview({
   useEffect(() => {
     if (!plotOn) return undefined;
     const onKey = (e) => {
-      if (e.target.closest?.("input, textarea")) return;
+      if (e.target.closest?.("input, textarea, .modal--weather")) return;
       if ((e.key === "Backspace" || e.key === "Delete") && plots.length) {
         e.preventDefault();
         setPlots((list) => list.slice(0, -1));
@@ -550,7 +584,7 @@ export default function Preview({
   useEffect(() => {
     if (!protractorOn) return undefined;
     const onKey = (e) => {
-      if (e.target.closest?.("input, textarea")) return;
+      if (e.target.closest?.("input, textarea, .modal--weather")) return;
       if (e.key === "Escape" && protractor) {
         e.preventDefault();
         e.stopPropagation();
@@ -591,7 +625,7 @@ export default function Preview({
   useEffect(() => {
     if (!measureOn) return undefined;
     const onKey = (e) => {
-      if (e.target.closest?.("input, textarea")) return;
+      if (e.target.closest?.("input, textarea, .modal--weather")) return;
       if (e.key === "Escape" && draft) {
         e.preventDefault();
         e.stopPropagation();
@@ -616,7 +650,11 @@ export default function Preview({
 
   // Linhas exibidas: as concluídas e, durante a calibração, a linha que aguarda o tamanho real.
   const measureProps = {
-    enabled: (measureOn || protractorOn || plotOn || windOn) && !error,
+    enabled: (measureOn || protractorOn || plotOn || windOn || metarPlacing != null) && !error,
+    metarPlacing: metarPlacing != null,
+    metars,
+    onMetarPlace: placeMetar,
+    onDeleteMetar: deleteMetar,
     lines: calibLine ? [...lines, calibLine] : lines,
     draft,
     protractor: protractorProps,
@@ -695,6 +733,9 @@ export default function Preview({
     <div className="preview">
       <div className="preview__stage">
         {body}
+        {metarPlacing && (
+          <p className="metar-hint" role="status">{t("metar.placeHint", { icao: metarPlacing.icao ?? "" })}</p>
+        )}
       </div>
       {measurable && (
         // Todas as ferramentas da visualização numa linha só: transferidor, medir, escala e pontos.
@@ -718,8 +759,8 @@ export default function Preview({
           <ScaleTool type={mapType} onType={setMapType} text={scaleText} onText={setScaleText} />
           <PlotToggle enabled={plotOn} onToggle={togglePlot} />
           {plotOn && plots.length > 0 && <ClearButton label={t("points.clear")} onClick={clearPlots} />}
-          {/* METAR e outros mapas: só o ícone por enquanto. As funções vêm depois. */}
-          <MetarButton />
+          {/* METAR abre a consulta de METAR e TAF. Outros mapas: só o ícone por enquanto, a função vem depois. */}
+          <MetarButton onClick={() => setWeatherOpen(true)} />
           <WindToggle enabled={windOn} onToggle={toggleWind} />
           {windOn && winds.length > 0 && <ClearButton label={t("wind.clear")} onClick={clearWinds} />}
           <OtherMapsButton />
@@ -739,6 +780,7 @@ export default function Preview({
           onClose={() => setRoutesOpen(false)}
         />
       )}
+      {weatherOpen && <WeatherDialog onClose={() => setWeatherOpen(false)} onPlace={startMetarPlacing} />}
       <nav className="preview__nav" aria-label={t("preview.switchFile")}>
         <button type="button" onClick={onPrev} disabled={!hasPrev} aria-label={t("preview.previous")}><ChevronLeft strokeWidth={2} /></button>
         <div className="preview__meta">

@@ -4,6 +4,7 @@ import { segmentsOf } from "../lib/measure";
 import { parseBearing } from "../lib/route";
 import { WIND_ARROW_PX } from "../lib/wind";
 import Protractor from "./Protractor";
+import { MetarCallouts, MetarStations } from "./MetarStations";
 import { NoseLabels, RoutePlanes, WindArrows, WindForm, WindLabels } from "./WindLayer";
 
 // Camada de medição sobre uma superfície (imagem inteira ou uma página de PDF).
@@ -15,14 +16,18 @@ import { NoseLabels, RoutePlanes, WindArrows, WindForm, WindLabels } from "./Win
 // Com `windOn`, cada clique abre a entrada de vento no ponto (`onWind`); `windPending` é o ponto
 // aguardando a direção e a velocidade, e `winds` são as setas já marcadas ({ id, surface, x, y, dir, speed }).
 // Option + clique num ponto plotado ou num vento apaga o item (`onDeletePlot`, `onDeleteWind`, recebem o id).
+// Com `metarPlacing`, o próximo clique põe a estação do METAR no ponto (`onMetarPlace`, recebe o ponto);
+// `metars` são as estações já postas ({ id, surface, x, y, station }) e Option + clique apaga uma (`onDeleteMetar`).
 export default function MeasureLayer({
   surface, viewW, viewH, enabled, lines, draft, protractor, onPoint, onMove, onFinish, format,
   plotting = false, plots = [], onPlot, route = [],
   windOn = false, winds = [], windPending = null, onWind, onWindSubmit, onWindCancel, windUnit = "kt",
   windEdit = null, onRenamePlot, onMovePlot, onDeletePlot, onDeleteWind, windAim = null,
+  metarPlacing = false, metars = [], onMetarPlace, onDeleteMetar,
 }) {
   const svgRef = useRef(null);
   const mine = lines.filter((l) => l.surface === surface);
+  const myMetars = metars.filter((m) => m.surface === surface);
   // Numeração global, na ordem em que os pontos foram plotados; a camada mostra só os desta superfície.
   const myPlots = plots.map((p, i) => ({ ...p, n: i + 1 })).filter((p) => p.surface === surface);
   // Vento: só as setas desta superfície. O comprimento é medido na tela, para a seta não crescer com o zoom.
@@ -64,6 +69,10 @@ export default function MeasureLayer({
     if (!enabled || e.button !== 0) return;
     // Sem isto, o clique também começaria o arraste que rola a área.
     e.stopPropagation();
+    if (metarPlacing) {
+      onMetarPlace?.(toView(e));
+      return;
+    }
     if (windOn) {
       // Clicar numa seta não cria ponto: o duplo clique é que abre a correção.
       if (e.target.closest?.(".wind-arrow")) return;
@@ -142,6 +151,7 @@ export default function MeasureLayer({
         ))}
         {liveSegment && <Path points={[live.points[live.points.length - 1], live.cursor]} live />}
         <WindArrows winds={myWinds} length={windLength} onDelete={onDeleteWind} />
+        <MetarStations stations={myMetars} screenScale={screenScale} onDelete={onDeleteMetar} />
         <RoutePlanes links={route} screenScale={screenScale} />
       </svg>
       <div className="measure-layer__labels" aria-hidden="true">
@@ -158,6 +168,7 @@ export default function MeasureLayer({
           unit={windUnit}
         />
         <NoseLabels links={route} viewW={viewW} viewH={viewH} screenScale={screenScale} />
+        <MetarCallouts stations={myMetars} viewW={viewW} viewH={viewH} />
         {pending && (
           <span className="wind-pending" style={{ left: `${(pending.x / viewW) * 100}%`, top: `${(pending.y / viewH) * 100}%` }} />
         )}

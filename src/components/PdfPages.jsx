@@ -182,6 +182,10 @@ function PdfPage({ doc, index, name, cssWidth, size, brightness, measure }) {
           plotting={measure.plotting}
           plots={measure.plots}
           onPlot={(p) => measure.onPlot(`pdf:${index}`, p)}
+          metarPlacing={measure.metarPlacing}
+          metars={measure.metars}
+          onMetarPlace={(p) => measure.onMetarPlace(`pdf:${index}`, p)}
+          onDeleteMetar={measure.onDeleteMetar}
           route={measure.routeOf(`pdf:${index}`)}
           windOn={measure.windOn}
           winds={measure.winds}

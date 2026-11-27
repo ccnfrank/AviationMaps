@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CloudSun, FileDown, MapPin, Ruler, RotateCcw, Save, Trash2, Crosshair, Check, Wind, X } from "lucide-react";
+import { CloudSun, FileDown, MapPin, PlaneTakeoff, Ruler, RotateCcw, Save, Trash2, Crosshair, Check, Wind, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 // Botão de ícone que liga o plotar pontos: cada clique no mapa marca um ponto numerado.
@@ -45,35 +45,20 @@ function PendingButton({ label, title, children }) {
   );
 }
 
-// Avião preenchido: a silhueta do lucide `plane`, que já aponta para nordeste.
-const PLANE_PATH = "M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z";
-// Mapinha do lucide `map` (dobrado), em traço.
-const MAP_PATHS = [
-  "M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z",
-  "M15 5.764v15",
-  "M9 3.236v15",
-];
-// Um mapinha, com um avião preenchido voando por cima, à direita.
-function MapPlaneIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <g transform="translate(8 15) scale(0.7) translate(-12 -12)" fill="none" stroke="currentColor" strokeWidth={1.8 / 0.7} strokeLinecap="round" strokeLinejoin="round">
-        {MAP_PATHS.map((d) => <path key={d} d={d} />)}
-      </g>
-      <g transform="translate(18 6.5) scale(0.52) translate(-12 -12)">
-        <path d={PLANE_PATH} fill="currentColor" stroke="currentColor" strokeWidth={0.8 / 0.52} strokeLinejoin="round" />
-      </g>
-    </svg>
-  );
-}
-
-// Botão de ícone do METAR, só o ícone por enquanto: a função vem depois.
-export function MetarButton() {
+// Botão de ícone do METAR e da TAF: abre a janela em que se digita o código ICAO do aeródromo.
+export function MetarButton({ onClick }) {
   const { t } = useTranslation();
   return (
-    <PendingButton label={t("metar.button")} title={t("metar.tooltip")}>
+    <button
+      type="button"
+      className="tool-toggle"
+      onClick={onClick}
+      aria-haspopup="dialog"
+      aria-label={t("metar.button")}
+      title={t("metar.tooltip")}
+    >
       <CloudSun strokeWidth={1.8} aria-hidden="true" />
-    </PendingButton>
+    </button>
   );
 }
 
@@ -82,7 +67,8 @@ export function OtherMapsButton() {
   const { t } = useTranslation();
   return (
     <PendingButton label={t("maps.button")} title={t("maps.tooltip")}>
-      <MapPlaneIcon />
+      {/* O mesmo ícone do botão Carregar mapas (strokeWidth 2 também), só o ícone. */}
+      <PlaneTakeoff strokeWidth={2} aria-hidden="true" />
     </PendingButton>
   );
 }

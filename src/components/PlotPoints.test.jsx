@@ -93,12 +93,21 @@ describe("botão de plotar na barra da visualização", () => {
     const metar = screen.getByRole("button", { name: "METAR" });
     const wind = screen.getByRole("button", { name: "Wind" });
     const maps = screen.getByRole("button", { name: "Other maps" });
-    expect(metar).toBeDisabled();
+    expect(metar).toBeEnabled();
+    expect(metar).toHaveAttribute("aria-haspopup", "dialog");
     expect(maps).toBeDisabled();
     expect(plot.nextElementSibling).toBe(metar);
     expect(metar.nextElementSibling).toBe(wind);
     expect(wind.nextElementSibling).toBe(maps);
     expect(maps.nextElementSibling).toBe(screen.getByRole("button", { name: "Saved routes" }));
+  });
+
+  it("o botão METAR abre a janela de METAR e TAF, e Esc fecha", () => {
+    render(<Preview entry={entry} {...nav} />);
+    fireEvent.click(screen.getByRole("button", { name: "METAR" }));
+    expect(screen.getByRole("dialog", { name: "METAR and TAF" })).toBeInTheDocument();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog", { name: "METAR and TAF" })).not.toBeInTheDocument();
   });
 
   it("liga exclusivo com a medição", () => {

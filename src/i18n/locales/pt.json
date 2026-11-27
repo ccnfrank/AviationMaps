@@ -38,7 +38,43 @@
   },
   "metar": {
     "button": "METAR",
-    "tooltip": "METAR: em breve"
+    "tooltip": "METAR e TAF: consulta pelo código ICAO do aeródromo",
+    "placeHint": "Clique no mapa para colocar o METAR de {{icao}}. Esc cancela."
+  },
+  "weather": {
+    "title": "METAR e TAF",
+    "icaoAria": "Código ICAO do aeródromo",
+    "icaoPlaceholder": "ICAO, ex.: SBSP",
+    "search": "Buscar",
+    "loading": "Consultando METAR e TAF…",
+    "invalid": "Digite o código ICAO com 4 letras ou números, ex.: SBSP.",
+    "desktopOnly": "A consulta funciona no app de desktop.",
+    "failed": "Não foi possível consultar agora. Verifique a conexão e tente de novo.",
+    "noMetar": "Sem METAR recente para {{icao}}.",
+    "noTaf": "Sem TAF para {{icao}}.",
+    "metarTitle": "METAR (observação atual)",
+    "tafTitle": "TAF (previsão)",
+    "rawMetar": "Texto original do METAR",
+    "rawTaf": "Texto original da TAF",
+    "observed": "Observado",
+    "issued": "Emitida",
+    "valid": "Validade",
+    "period": "Período",
+    "forecast": "Previsão por período",
+    "base": "Básica",
+    "wind": "Vento",
+    "visibility": "Visibilidade",
+    "clouds": "Nuvens",
+    "noClouds": "sem nuvens",
+    "weather": "Tempo",
+    "temperature": "Temperatura / orvalho",
+    "altimeter": "Altímetro",
+    "flightCategory": "Categoria de voo",
+    "calm": "calmo",
+    "variable": "variável",
+    "gust": "rajada {{speed}} kt",
+    "plot": "Plotar no mapa",
+    "plotTitle": "Coloca a estação deste METAR no mapa: clique no ponto do aeródromo"
   },
   "wind": {
     "toggle": "Vento",
@@ -204,7 +240,16 @@
           "Tela cheia: o botão ocupa a janela inteira. Esc sai.",
           "Fechar: o X, Esc ou um clique fora da janela.",
           "PDF: as páginas aparecem em sequência, até 200 páginas. Ao mudar o zoom, as páginas são redesenhadas com nitidez.",
-          "Barra de ferramentas, da esquerda para a direita: transferidor, declinação, medir, escala, pino (plotar pontos), vento, rotas salvas (ler/salvar), exportar rota e, por último, o ícone de reset. O reset limpa tudo no mapa: medições, pontos plotados, ventos e o transferidor."
+          "Barra de ferramentas, da esquerda para a direita: transferidor, declinação, medir, escala, pino (plotar pontos), vento, METAR (consulta de METAR e TAF), rotas salvas (ler/salvar), exportar rota e, por último, o ícone de reset. O reset limpa tudo no mapa: medições, pontos plotados, ventos, estações do METAR e o transferidor."
+        ]
+      },
+      {
+        "title": "METAR e TAF",
+        "paragraphs": [
+          "Clique no ícone METAR da barra para abrir a consulta. Digite o código ICAO do aeródromo (4 letras, ex.: SBSP) e pressione Enter ou Buscar.",
+          "A janela mostra a observação atual (METAR) e a previsão (TAF), com o texto original e os principais dados decodificados. Os horários estão em UTC, como na aviação.",
+          "A consulta usa a API pública do aviationweather.gov, sem chave. Só o código ICAO digitado vai para a internet. Funciona apenas no app de desktop.",
+          "Plotar no mapa: depois de consultar, use o botão Plotar no mapa e clique no ponto do aeródromo. A estação mostra a categoria de voo pela cor (verde VFR, azul MVFR, vermelho IFR, magenta LIFR), a cobertura de nuvens pelo círculo preenchido e o vento pela haste, que aponta de onde ele sopra. Ao lado fica o texto original do METAR. Option + clique apaga uma estação; Esc cancela a colocação; o reset limpa todas."
         ]
       },
       {
@@ -415,7 +460,7 @@
           "Duplo clique: num grau da rota, corrige o rumo; no marcador de um ponto, renomeia o ponto; numa seta de vento ou no rótulo dela, corrige o vento. Botão direito encerra a medição.",
           "Arrastar: num marcador de ponto, move o ponto. Clique e arraste no mapa vazio: move a imagem quando ela está com zoom.",
           "Roda do mouse: aumenta ou diminui o zoom no ponto onde está o ponteiro. Option (Alt) + roda: clareia ou escurece a imagem, até ficar preta. X centraliza a imagem de novo.",
-          "Option (Alt) + clique num ponto plotado, numa seta de vento ou no rótulo dele: apaga só esse item."
+          "Option (Alt) + clique num ponto plotado, numa seta de vento, no rótulo dele ou numa estação do METAR: apaga só esse item."
         ]
       },
       {

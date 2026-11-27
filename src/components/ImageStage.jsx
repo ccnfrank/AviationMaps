@@ -70,6 +70,10 @@ export default function ImageStage({ src, alt, zoom, brightness = 100, measure, 
           plotting={measure.plotting}
           plots={measure.plots}
           onPlot={(p) => measure.onPlot("img", p)}
+          metarPlacing={measure.metarPlacing}
+          metars={measure.metars}
+          onMetarPlace={(p) => measure.onMetarPlace("img", p)}
+          onDeleteMetar={measure.onDeleteMetar}
           route={measure.routeOf("img")}
           windOn={measure.windOn}
           winds={measure.winds}

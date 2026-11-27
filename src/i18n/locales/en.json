@@ -38,7 +38,43 @@
   },
   "metar": {
     "button": "METAR",
-    "tooltip": "METAR: coming soon"
+    "tooltip": "METAR and TAF: look up an airport by its ICAO code",
+    "placeHint": "Click the map to place the METAR for {{icao}}. Esc cancels."
+  },
+  "weather": {
+    "title": "METAR and TAF",
+    "icaoAria": "Airport ICAO code",
+    "icaoPlaceholder": "ICAO, e.g. SBSP",
+    "search": "Search",
+    "loading": "Fetching METAR and TAF…",
+    "invalid": "Type the ICAO code with 4 letters or numbers, e.g. SBSP.",
+    "desktopOnly": "The lookup works in the desktop app.",
+    "failed": "Could not fetch right now. Check the connection and try again.",
+    "noMetar": "No recent METAR for {{icao}}.",
+    "noTaf": "No TAF for {{icao}}.",
+    "metarTitle": "METAR (current observation)",
+    "tafTitle": "TAF (forecast)",
+    "rawMetar": "METAR original text",
+    "rawTaf": "TAF original text",
+    "observed": "Observed",
+    "issued": "Issued",
+    "valid": "Valid",
+    "period": "Period",
+    "forecast": "Forecast by period",
+    "base": "Base",
+    "wind": "Wind",
+    "visibility": "Visibility",
+    "clouds": "Clouds",
+    "noClouds": "no clouds",
+    "weather": "Weather",
+    "temperature": "Temperature / dew point",
+    "altimeter": "Altimeter",
+    "flightCategory": "Flight category",
+    "calm": "calm",
+    "variable": "variable",
+    "gust": "gusts {{speed}} kt",
+    "plot": "Plot on map",
+    "plotTitle": "Place this METAR station on the map: click the airport's point"
   },
   "wind": {
     "toggle": "Wind",
@@ -204,7 +240,16 @@
           "Full screen: the button fills the whole window. Esc leaves it.",
           "Close: the X, Esc, or a click outside the window.",
           "PDF: pages appear in sequence, up to 200 pages. When you change the zoom, the pages are redrawn sharply.",
-          "Toolbar, from left to right: protractor, declination, measure, scale, pin (plot points), wind, saved routes (read/save), export route and, last, the reset icon. Reset clears everything on the map: measurements, plotted points, winds and the protractor."
+          "Toolbar, from left to right: protractor, declination, measure, scale, pin (plot points), wind, METAR (METAR and TAF lookup), saved routes (read/save), export route and, last, the reset icon. Reset clears everything on the map: measurements, plotted points, winds, METAR stations and the protractor."
+        ]
+      },
+      {
+        "title": "METAR and TAF",
+        "paragraphs": [
+          "Click the METAR icon in the toolbar to open the lookup. Type the airport's ICAO code (4 characters, e.g. SBSP) and press Enter or Search.",
+          "The window shows the current observation (METAR) and the forecast (TAF), with the original text and the main values decoded. Times are in UTC, as in aviation.",
+          "The lookup uses the public aviationweather.gov API, with no key. Only the ICAO code you type is sent over the internet. It works only in the desktop app.",
+          "Plot on map: after a lookup, use the Plot on map button and click the airport's point. The station shows the flight category by colour (green VFR, blue MVFR, red IFR, magenta LIFR), the cloud cover as a filled circle, and the wind by a staff pointing to where it blows from. The original METAR text sits beside it. Option + click removes one station; Esc cancels placing; reset clears them all."
         ]
       },
       {
@@ -415,7 +460,7 @@
           "Double-click: on a route degree, corrects the track; on a point marker, renames the point; on a wind arrow or its label, corrects the wind. Right-click ends a measurement.",
           "Drag: on a point marker, moves the point. Click and drag on the empty map: moves the image when it is zoomed.",
           "Mouse wheel: zooms in or out at the pointer's position. Option (Alt) + wheel: brightens or darkens the image, down to black. X re-centers the image.",
-          "Option (Alt) + click on a plotted point, on a wind arrow or on its label: deletes only that item."
+          "Option (Alt) + click on a plotted point, on a wind arrow, on its label or on a METAR station: deletes only that item."
         ]
       },
       {

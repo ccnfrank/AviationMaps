@@ -60,6 +60,12 @@
   --route-halo: drop-shadow(0 1px 2px rgba(0, 0, 0, .55));
   --plot-ink: #f5b540;          /* pontos plotados: marcador e campo do nome */
   --wind-ink: #4ade80;          /* ventos: setas, rótulo e ponto de espera */
+  /* METAR no mapa: cor de cada categoria de voo (VFR, MVFR, IFR, LIFR) e a das estações sem categoria */
+  --metar-vfr: #4ade80;
+  --metar-mvfr: #60a5fa;
+  --metar-ifr: #f87171;
+  --metar-lifr: #e879f9;
+  --metar-none: #d4d4d8;
   --logo-filter: brightness(0) invert(1);
   --logo-opacity: .5;
   --dock-accent: #e4e4e7;
@@ -151,6 +157,11 @@
   --route-plane: #1d4ed8;
   --plot-ink: #a21caf;
   --wind-ink: #15803d;
+  --metar-vfr: #15803d;
+  --metar-mvfr: #1d4ed8;
+  --metar-ifr: #b91c1c;
+  --metar-lifr: #a21caf;
+  --metar-none: #3f3f46;
   --route-plane-edge: #ffffff;
   --route-halo: drop-shadow(0 0 1px #ffffff) drop-shadow(0 0 1px #ffffff) drop-shadow(0 1px 1.5px rgba(0, 0, 0, .35));
   --logo-filter: grayscale(1) brightness(.25);
@@ -289,6 +300,79 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 }
 .help__plus, .help__or { margin: 0 var(--s-1); color: var(--muted); font-size: var(--fs-xs); }
 .help__or { margin-left: var(--s-2); }
+
+/* METAR e TAF: digita o código ICAO e lê a observação e a previsão; o texto original fica em bloco mono */
+.modal--weather { width: min(640px, 100%); height: min(70vh, 640px); }
+.weather__head {
+  flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--s-3);
+  padding: var(--s-4) var(--s-5); border-bottom: 1px solid var(--line);
+}
+.weather__title { margin: 0; font-size: var(--fs-md); }
+.weather__form { flex: none; display: flex; gap: var(--s-2); padding: var(--s-4) var(--s-5) 0; }
+.weather__input {
+  width: 160px; height: 34px; padding: 0 var(--s-3); border: 1px solid var(--line); border-radius: var(--r-sm);
+  background: var(--field); color: var(--text); font: inherit; font-size: var(--fs-sm);
+  text-transform: uppercase; letter-spacing: .08em; transition: box-shadow var(--dur-fast);
+}
+.weather__input::placeholder { color: var(--muted); text-transform: none; letter-spacing: 0; }
+.weather__input:focus-visible { outline: none; box-shadow: inset 0 0 0 1px var(--accent); }
+.weather__input:disabled { opacity: .5; }
+.weather__btn {
+  flex: none; height: 34px; padding: 0 var(--s-3); border: 1px solid var(--line-strong); border-radius: var(--r-sm);
+  background: transparent; color: var(--text); font: inherit; font-size: var(--fs-sm); font-weight: 600;
+  transition: color var(--dur-fast), border-color var(--dur-fast);
+}
+.weather__btn:hover { border-color: var(--accent); color: var(--accent); }
+.weather__btn:disabled { opacity: .4; cursor: default; border-color: var(--line-strong); color: var(--text); }
+.weather__body { flex: 1; min-height: 0; overflow-y: auto; padding: var(--s-4) var(--s-5) var(--s-5); }
+.weather__status { margin: 0 0 var(--s-3); color: var(--muted); font-size: var(--fs-sm); line-height: 1.5; }
+.weather__status--error { color: var(--danger); }
+.weather__station { margin: 0 0 var(--s-4); color: var(--muted); font-size: var(--fs-sm); }
+.weather__station strong { color: var(--text); letter-spacing: .08em; }
+.weather__section + .weather__section { margin-top: var(--s-5); }
+.weather__heading { margin: 0 0 var(--s-2); font-size: var(--fs-sm); font-weight: 600; color: var(--text); }
+.weather__subheading { margin: var(--s-4) 0 var(--s-2); font-size: var(--fs-xs); font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+/* Um bloco de dados: uma grade só, então os valores ficam alinhados na mesma coluna */
+.weather__facts {
+  margin: 0 0 var(--s-3); display: grid; grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--s-1) var(--s-4); font-size: var(--fs-sm);
+}
+.weather__facts dt { color: var(--muted); }
+.weather__facts dd { margin: 0; color: var(--text); overflow-wrap: anywhere; }
+.weather__raw {
+  margin: 0 0 var(--s-3); padding: var(--s-3); border: 1px solid var(--line); border-radius: var(--r-sm);
+  background: var(--field); color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--fs-xs); line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; user-select: text;
+}
+.weather__periods { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
+.weather__period { padding: var(--s-2) var(--s-3); border: 1px solid var(--line); border-radius: var(--r-sm); }
+.weather__period-head { margin-bottom: var(--s-1); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--fs-sm); font-weight: 600; color: var(--text); }
+
+/* METAR no mapa: símbolo de estação (círculo com a cobertura, haste e plumas do vento) e o texto original ao lado.
+   A cor vem da categoria de voo: a classe metar-cat--* põe --metar-cat, e o símbolo e o rótulo usam essa cor. */
+.metar-station { --metar-cat: var(--metar-none); color: var(--metar-cat); pointer-events: auto; cursor: pointer; filter: var(--route-halo); }
+.metar-cat--vfr { --metar-cat: var(--metar-vfr); }
+.metar-cat--mvfr { --metar-cat: var(--metar-mvfr); }
+.metar-cat--ifr { --metar-cat: var(--metar-ifr); }
+.metar-cat--lifr { --metar-cat: var(--metar-lifr); }
+.metar-station__hit { fill: transparent; stroke: none; }
+.metar-station__ring { fill: none; stroke: currentColor; stroke-width: 1.6px; vector-effect: non-scaling-stroke; }
+.metar-station__sky { fill: currentColor; stroke: none; }
+.metar-station__staff,
+.metar-station__feather { fill: none; stroke: currentColor; stroke-width: 1.6px; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.metar-station__flag { fill: currentColor; stroke: none; }
+.metar-callout {
+  position: absolute; transform: translate(16px, 6px); padding: 3px 6px; border: 1.5px solid var(--metar-cat);
+  border-radius: 6px; background: var(--surface); color: var(--text); box-shadow: var(--shadow-1);
+  font: 500 10px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; pointer-events: none;
+}
+/* Aviso enquanto o METAR espera o clique no mapa */
+.metar-hint {
+  position: absolute; top: var(--s-3); left: 50%; transform: translateX(-50%); z-index: 4; margin: 0;
+  padding: var(--s-2) var(--s-3); border: 1px solid var(--line); border-radius: 999px; background: var(--surface);
+  color: var(--text); box-shadow: var(--shadow-1); font-size: var(--fs-sm); white-space: nowrap; pointer-events: none;
+}
+.weather__plot { margin-top: var(--s-1); }
 
 /* Rotas salvas (ler/salvar): salvar a rota atual com um nome, e abrir ou apagar as rotas deste mapa */
 .modal--routes { width: min(560px, 100%); height: min(60vh, 560px); }
