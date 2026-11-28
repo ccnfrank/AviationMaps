@@ -35,7 +35,7 @@ const CODE_DIRECTION = { Equal: 1, NumpadAdd: 1, Minus: -1, NumpadSubtract: -1 }
 
 // Janela de visualização de um arquivo. Quem usa deve dar uma `key` por arquivo, assim o estado
 // (zoom, brilho, medições) começa limpo a cada troca. `entry` é { name, size, file }.
-// `fullscreen` e `onToggleFullscreen` vêm de quem abre a janela (App), que muda o tamanho do modal.
+// `fullscreen` e `onToggleFullscreen` vêm de quem abre a janela (App), que põe a janela em tela cheia.
 // `libraryOpen` e `onToggleLibrary` controlam o painel de mapas ao lado; o botão só aparece com `onToggleLibrary`.
 export default function Preview({
   entry, hasPrev, hasNext, onPrev, onNext, onClose, fullscreen = false, onToggleFullscreen,

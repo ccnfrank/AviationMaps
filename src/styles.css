@@ -273,10 +273,9 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 }
 
 /* ---------- Pré-visualização ---------- */
-.modal--preview { width: min(1100px, 100%); height: min(88vh, 820px); max-height: 88vh; }
-/* Tela cheia: a visualização toma a janela inteira, sem borda nem margem. Seletor duplo para vencer
-   a regra do celular, mais abaixo. */
-.modal.modal--full { position: fixed; inset: 0; width: auto; height: auto; max-height: none; border: 0; border-radius: 0; box-shadow: none; }
+/* A janela de visualização tem o mesmo tamanho da janela inicial: ocupa a janela do app inteira, sem
+   borda nem margem, em qualquer tamanho de tela. Seletor duplo para vencer a regra do celular, mais abaixo. */
+.modal.modal--preview, .modal.modal--full { position: fixed; inset: 0; width: auto; height: auto; max-height: none; border: 0; border-radius: 0; box-shadow: none; }
 
 /* Ajuda (?): documentação do app dentro de uma janela, com a lista rolando e o X fixo no topo */
 .modal--help { width: min(720px, 100%); }
@@ -990,10 +989,10 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .search-live__thumb--folder > svg { width: 44px; height: 44px; }
 
 /* ---------- Visualização com coluna lateral: a janela do mapa e, ao lado, busca, alternância e miniaturas ----------
-   Só com pasta carregada e fora da tela cheia. A janela cresce pela largura da coluna, para o mapa não encolher. */
+   Só com pasta carregada e fora da tela cheia. A janela ocupa o app inteiro; a coluna toma a largura dela
+   e o mapa fica com o espaço que sobra. */
 .modal--library {
   --viewer-lib-w: clamp(260px, 24vw, 320px); --lib-now: var(--viewer-lib-w);
-  width: min(calc(1100px + var(--lib-now)), 100%); transition: width var(--dur-base) var(--ease-out);
 }
 .modal--library.is-collapsed { --lib-now: 0px; }
 .viewer-split { flex: 1; min-height: 0; display: flex; }
@@ -1039,7 +1038,6 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 
 /* No celular não há lado: a coluna desce para baixo da imagem, com rolagem própria */
 @media (max-width: 640px) {
-  .modal--library { width: 100%; }
   .viewer-split { flex-direction: column; }
   .viewer-split > .preview { flex: 1 1 58%; min-height: 0; }
   .viewer-library {
