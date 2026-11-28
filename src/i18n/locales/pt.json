@@ -299,7 +299,7 @@
       {
         "title": "Janela de visualização",
         "items": [
-          "Coluna da direita: lista os mapas da pasta para trocar de mapa com um clique. Tem o próprio campo de busca, com os botões de grade, lista e favoritos. Mostre ou esconda a coluna com o botão ao lado da navegação, ou com L.",
+          "Coluna da direita: lista os mapas da pasta para trocar de mapa com um clique. Passe o mouse sobre um mapa da lista para vê-lo na janela, sem abrir; clique nele para abri-lo de vez. Tem o próprio campo de busca, com os botões de grade, lista e favoritos. Mostre ou esconda a coluna com o botão ao lado da navegação, ou com L.",
           "Tela cheia: o botão ocupa a janela inteira. Esc sai.",
           "Fechar: o X, Esc ou um clique fora da janela.",
           "PDF: as páginas aparecem em sequência, até 200 páginas. Ao mudar o zoom, as páginas são redesenhadas com nitidez.",

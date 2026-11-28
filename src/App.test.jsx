@@ -230,6 +230,32 @@ test("clicar numa miniatura da coluna troca o mapa aberto", () => {
   expect(screen.queryByRole("dialog", { name: "Preview of mapa-01.png" })).toBeNull();
 });
 
+const cellOf = (name) => Array.from(viewerColumn().querySelectorAll(".search-live__cell")).find((c) => c.textContent.includes(name));
+
+test("passar o mouse sobre um mapa da coluna mostra a pré-visualização; sair devolve o mapa aberto", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  fireEvent.mouseEnter(cellOf("mapa-02"));
+  expect(document.querySelector(".hover-preview .preview__name")).toHaveTextContent("mapa-02.pdf");
+  // O mapa aberto continua o mesmo, só escondido atrás da pré-visualização.
+  expect(screen.getByRole("dialog", { name: "Preview of mapa-01.png" })).toBeInTheDocument();
+  expect(document.querySelector(".viewer-main")).toHaveClass("is-under");
+  fireEvent.mouseLeave(viewerColumn().querySelector(".search-live"));
+  expect(document.querySelector(".hover-preview")).toBeNull();
+  expect(document.querySelector(".viewer-main")).not.toHaveClass("is-under");
+  expect(screen.getByRole("dialog", { name: "Preview of mapa-01.png" })).toBeInTheDocument();
+});
+
+test("clicar no mapa da coluna abre de vez e encerra a pré-visualização", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  const cell = cellOf("mapa-02");
+  fireEvent.mouseEnter(cell);
+  fireEvent.click(cell.querySelector(".search-live__tile"));
+  expect(screen.getByRole("dialog", { name: "Preview of mapa-02.pdf" })).toBeInTheDocument();
+  expect(document.querySelector(".hover-preview")).toBeNull();
+});
+
 test("Esc na busca da coluna limpa o texto e mantém a visualização aberta", () => {
   const { container } = render(<App />);
   openFirstMap(container, "mapa-01");

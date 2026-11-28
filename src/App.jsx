@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import Modal from "./components/Modal";
 import PixelButton from "./components/PixelButton";
 import Preview from "./components/Preview";
+import HoverPreview from "./components/HoverPreview";
 import Search from "./components/Search";
 import LanguageSwitch from "./components/LanguageSwitch";
 import HelpButton from "./components/HelpButton";
@@ -16,6 +17,7 @@ import {
 } from "./lib/folderAccess";
 import { forgetLastFolder, readLastFolder, saveLastFolder } from "./lib/lastFolder";
 import { setFullscreen } from "./lib/fullscreen";
+import { mapKeyOf } from "./lib/savedRoutes";
 import { ROOT_NAME, groupFiles } from "./lib/groupFiles";
 import { firstMapFile, getPreviewKind } from "./lib/previewKind";
 import { readTheme, setTheme } from "./lib/theme";
@@ -38,6 +40,8 @@ export default function App() {
   };
   const [folders, setFolders] = useState(null); // null: nenhuma pasta carregada ainda
   const [previewEntry, setPreviewEntry] = useState(null);
+  // Mapa sob o mouse na coluna da visualização: aparece na janela enquanto o mouse passa; o clique abre de vez.
+  const [hoverEntry, setHoverEntry] = useState(null);
   const [viewerEmpty, setViewerEmpty] = useState(false); // janela aberta sem mapa, esperando um arquivo
   const viewerOpen = previewEntry !== null || viewerEmpty;
   const [previewSeq, setPreviewSeq] = useState(0);
@@ -62,6 +66,7 @@ export default function App() {
   };
 
   const openPreview = (entry) => {
+    setHoverEntry(null);
     setViewerEmpty(false);
     setPreviewSeq((n) => n + 1);
     setPreviewEntry(entry);
@@ -85,6 +90,7 @@ export default function App() {
   };
   const closePreview = () => {
     if (viewFull) setViewFull(false);
+    setHoverEntry(null);
     setPreviewEntry(null);
     setViewerEmpty(false);
   };
@@ -129,7 +135,14 @@ export default function App() {
   // Começa aberta; L, ou o botão da barra da visualização, abre e fecha. L não age enquanto se digita.
   const showLibrary = hasFolders && !viewFull;
   const [libraryOpen, setLibraryOpen] = useState(true);
-  const toggleLibrary = () => setLibraryOpen((open) => !open);
+  const toggleLibrary = () => {
+    setHoverEntry(null);
+    setLibraryOpen((open) => !open);
+  };
+  // Com a coluna aberta e o mouse num mapa diferente do aberto, a janela mostra esse mapa no lugar do aberto.
+  const hoverShown = showLibrary && libraryOpen && hoverEntry && !(previewEntry && mapKeyOf(previewEntry) === mapKeyOf(hoverEntry))
+    ? hoverEntry
+    : null;
   useEffect(() => {
     if (!viewerOpen || !showLibrary) return undefined;
     const onKey = (e) => {
@@ -333,31 +346,35 @@ export default function App() {
           onClose={closePreview}
         >
           <div className="viewer-split">
-            {previewEntry ? (
-              <Preview
-                key={previewSeq}
-                entry={previewEntry}
-                hasPrev={false}
-                hasNext={false}
-                onPrev={() => {}}
-                onNext={() => {}}
-                onClose={closePreview}
-                fullscreen={viewFull}
-                onToggleFullscreen={() => setViewFull(!viewFull)}
-                libraryOpen={libraryOpen}
-                onToggleLibrary={showLibrary ? toggleLibrary : undefined}
-              />
-            ) : (
-              <ViewerEmpty
-                onClose={closePreview}
-                onFiles={openFiles}
-                onChoose={isTauri() ? onChooseNative : undefined}
-              />
-            )}
+            {/* O mapa aberto fica montado mesmo com a pré-visualização na frente (zoom e medições não se perdem). */}
+            <div className={`viewer-main${hoverShown ? " is-under" : ""}`}>
+              {previewEntry ? (
+                <Preview
+                  key={previewSeq}
+                  entry={previewEntry}
+                  hasPrev={false}
+                  hasNext={false}
+                  onPrev={() => {}}
+                  onNext={() => {}}
+                  onClose={closePreview}
+                  fullscreen={viewFull}
+                  onToggleFullscreen={() => setViewFull(!viewFull)}
+                  libraryOpen={libraryOpen}
+                  onToggleLibrary={showLibrary ? toggleLibrary : undefined}
+                />
+              ) : (
+                <ViewerEmpty
+                  onClose={closePreview}
+                  onFiles={openFiles}
+                  onChoose={isTauri() ? onChooseNative : undefined}
+                />
+              )}
+              {hoverShown && <HoverPreview key={mapKeyOf(hoverShown)} entry={hoverShown} />}
+            </div>
             {showLibrary && (
               <aside className="viewer-library">
                 <div className="viewer-library__inner">
-                  <Search docked folders={folders} onPreview={openPreview} view={libraryView} onViewChange={setLibraryView} />
+                  <Search docked folders={folders} onPreview={openPreview} view={libraryView} onViewChange={setLibraryView} onHover={setHoverEntry} />
                 </div>
               </aside>
             )}

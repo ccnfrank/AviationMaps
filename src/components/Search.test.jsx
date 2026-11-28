@@ -104,3 +104,14 @@ test("a coluna da visualização também marca favoritos", () => {
   fireEvent.click(screen.getByRole("button", { name: "Favorite cena01.png" }));
   expect(screen.getByRole("button", { name: "Favorite cena01.png" })).toHaveAttribute("aria-pressed", "true");
 });
+
+test("na coluna da visualização, o mouse sobre um mapa avisa qual é; sair da lista avisa com null", () => {
+  const onHover = vi.fn();
+  render(<Search docked folders={folders} onPreview={vi.fn()} view="grid" onViewChange={vi.fn()} onHover={onHover} />);
+  const panel = screen.getByRole("region", { name: "Search results" });
+  const cell = Array.from(panel.querySelectorAll(".search-live__cell")).find((c) => c.textContent.includes("cena01"));
+  fireEvent.mouseEnter(cell);
+  expect(onHover).toHaveBeenLastCalledWith(expect.objectContaining({ name: "cena01.png" }));
+  fireEvent.mouseLeave(panel);
+  expect(onHover).toHaveBeenLastCalledWith(null);
+});

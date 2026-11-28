@@ -36,7 +36,8 @@ function browseAll(folders, limit) {
 // visualização ficam ao lado do campo, e a grade sem texto mostra as miniaturas de todos os mapas.
 // Cada mapa tem um marcador de favorito (miniatura ou fim da linha). O botão Favoritos do painel
 // mostra só os favoritos, em todas as pastas, e vale enquanto estiver ligado.
-export default function Search({ folders, onPreview, view = "grid", onViewChange, docked = false }) {
+// `onHover` (só a coluna da visualização) recebe o mapa sob o mouse, e null ao sair da lista.
+export default function Search({ folders, onPreview, view = "grid", onViewChange, docked = false, onHover }) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -109,6 +110,7 @@ export default function Search({ folders, onPreview, view = "grid", onViewChange
     onToggleFavorite: toggleFavorite,
     onlyFavorites,
     onToggleOnlyFavorites: toggleOnlyFavorites,
+    onHover,
   };
 
   const onKeyDown = (e) => {
@@ -233,7 +235,7 @@ function ViewToggle({ view, onChange }) {
 // Na coluna lateral, sem texto e em grade, mostra as miniaturas de todos os mapas.
 function SearchPanel({
   docked = false, folders, query, results, rows, view, onViewChange, nav, onNavigate, onChoose,
-  favorites, onToggleFavorite, onlyFavorites, onToggleOnlyFavorites,
+  favorites, onToggleFavorite, onlyFavorites, onToggleOnlyFavorites, onHover,
 }) {
   const { t } = useTranslation();
   const { total, items } = results;
@@ -280,7 +282,7 @@ function SearchPanel({
   );
 
   const fileRow = (entry, label, key) => (
-    <div key={key} className="search-file-row">
+    <div key={key} className="search-file-row" onMouseEnter={onHover ? () => onHover(entry) : undefined}>
       <button type="button" className="search-file" onClick={() => onChoose({ entry })} title={entry.relPath}>
         <span className="search-file__name">{label}</span>
         <span className="search-file__size">{formatSize(entry.size)}</span>
@@ -308,7 +310,11 @@ function SearchPanel({
   );
 
   const mapTile = (item) => (
-    <div key={`${item.folderIndex}:${item.entry.relPath}`} className="search-live__cell">
+    <div
+      key={`${item.folderIndex}:${item.entry.relPath}`}
+      className="search-live__cell"
+      onMouseEnter={onHover ? () => onHover(item.entry) : undefined}
+    >
       <button
         type="button"
         className="search-live__tile"
@@ -391,6 +397,7 @@ function SearchPanel({
       role="region"
       aria-label={t("search.region")}
       onMouseDown={docked ? undefined : (e) => e.preventDefault()}
+      onMouseLeave={onHover ? () => onHover(null) : undefined}
     >
       <div className="search-live__head">
         {level && (
