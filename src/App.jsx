@@ -172,10 +172,14 @@ export default function App() {
     setSplit((on) => !on);
   };
   // Com a coluna aberta e o mouse num mapa diferente do aberto, a janela mostra esse mapa no lugar do aberto.
-  // Com o split, o mouse não faz pré-visualização: o mapa da direita só muda ao clicar.
-  const hoverShown = !splitShown && showLibrary && libraryOpen && hoverEntry && !(previewEntry && mapKeyOf(previewEntry) === mapKeyOf(hoverEntry))
+  // `open` é o mapa de um painel: não se pré-visualiza o que ele já mostra.
+  const hoverFor = (open) => (hoverEntry && showLibrary && libraryOpen && !(open && mapKeyOf(open) === mapKeyOf(hoverEntry))
     ? hoverEntry
-    : null;
+    : null);
+  // Sem o split, a pré-visualização cobre o mapa aberto. Com o split, ela cobre só o painel da direita,
+  // e o da esquerda continua o mesmo: o mapa da direita só muda ao clicar.
+  const hoverShown = splitShown ? null : hoverFor(previewEntry);
+  const rightHover = splitShown ? hoverFor(rightEntry) : null;
   useEffect(() => {
     if (!viewerOpen || !showLibrary) return undefined;
     const onKey = (e) => {
@@ -413,7 +417,7 @@ export default function App() {
             {splitShown && <SplitDivider ratio={splitRatio} onRatio={setSplitRatio} />}
             {splitShown && (
               <div
-                className={`viewer-main viewer-main--split viewer-main--right${activePane === "right" ? " is-active" : ""}`}
+                className={`viewer-main viewer-main--split viewer-main--right${activePane === "right" ? " is-active" : ""}${rightHover ? " is-under" : ""}`}
                 onMouseDownCapture={() => setActivePane("right")}
               >
                 {rightEntry ? (
@@ -433,12 +437,13 @@ export default function App() {
                     <p>{t("split.empty")}</p>
                   </div>
                 )}
+                {rightHover && <HoverPreview key={mapKeyOf(rightHover)} entry={rightHover} />}
               </div>
             )}
             {showLibrary && (
               <aside className="viewer-library">
                 <div className="viewer-library__inner">
-                  <Search docked folders={folders} onPreview={openPreview} view={libraryView} onViewChange={setLibraryView} onHover={splitShown ? undefined : setHoverEntry} />
+                  <Search docked folders={folders} onPreview={openPreview} view={libraryView} onViewChange={setLibraryView} onHover={setHoverEntry} />
                 </div>
               </aside>
             )}

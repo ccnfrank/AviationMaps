@@ -286,12 +286,42 @@ test("desligar o split tira o painel da direita e mantém o mapa da esquerda", (
   expect(screen.getByRole("dialog", { name: "Preview of mapa-01.png" })).toBeInTheDocument();
 });
 
-test("com o split ligado, passar o mouse na lista não faz pré-visualização", () => {
+test("com o split ligado, passar o mouse sobre um mapa da lista mostra a pré-visualização na janela da direita", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  fireEvent.click(splitButton());
+  fireEvent.click(cellOf("mapa-02").querySelector(".search-live__tile"));
+  fireEvent.mouseEnter(cellOf("mapa-01"));
+  expect(rightPane().querySelector(".hover-preview .preview__name")).toHaveTextContent("mapa-01.png");
+  expect(rightPane()).toHaveClass("is-under");
+  // A janela da esquerda não muda: nenhuma pré-visualização nela.
+  expect(document.querySelector(".viewer-main--split:not(.viewer-main--right) .hover-preview")).toBeNull();
+  // Sair da lista devolve a janela da direita ao mapa escolhido.
+  fireEvent.mouseLeave(viewerColumn().querySelector(".search-live"));
+  expect(document.querySelector(".hover-preview")).toBeNull();
+  expect(rightPane()).not.toHaveClass("is-under");
+  expect(rightPane().querySelector(".preview__name")).toHaveTextContent("mapa-02.pdf");
+});
+
+test("com o split ligado, o mapa que a direita já mostra não é pré-visualizado de novo", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  fireEvent.click(splitButton());
+  fireEvent.click(cellOf("mapa-02").querySelector(".search-live__tile"));
+  fireEvent.mouseEnter(cellOf("mapa-02"));
+  expect(document.querySelector(".hover-preview")).toBeNull();
+});
+
+test("com o split ligado e a direita vazia, a pré-visualização aparece nela; clicar no mapa o abre ali", () => {
   const { container } = render(<App />);
   openFirstMap(container, "mapa-01");
   fireEvent.click(splitButton());
   fireEvent.mouseEnter(cellOf("mapa-02"));
+  expect(rightPane().querySelector(".hover-preview .preview__name")).toHaveTextContent("mapa-02.pdf");
+  fireEvent.click(cellOf("mapa-02").querySelector(".search-live__tile"));
   expect(document.querySelector(".hover-preview")).toBeNull();
+  expect(rightPane().querySelector(".preview__name")).toHaveTextContent("mapa-02.pdf");
+  expect(screen.getByRole("dialog", { name: "Preview of mapa-01.png" })).toBeInTheDocument();
 });
 
 test("Esc na busca da coluna limpa o texto e mantém a visualização aberta", () => {
