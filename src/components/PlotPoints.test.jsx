@@ -87,19 +87,22 @@ describe("botão de plotar na barra da visualização", () => {
     expect(scale.compareDocumentPosition(plot) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("METAR fica logo depois de plotar pontos e antes do vento; outros mapas fica depois do vento, antes de salvar rotas", () => {
+  it("METAR fica logo depois de plotar pontos e antes do vento; outros mapas fica depois do vento, com NOTAM e ROTAER logo depois, antes de salvar rotas", () => {
     render(<Preview entry={entry} {...nav} />);
     const plot = screen.getByRole("button", { name: "Plot points" });
     const metar = screen.getByRole("button", { name: "METAR" });
     const wind = screen.getByRole("button", { name: "Wind" });
     const maps = screen.getByRole("button", { name: "Other maps" });
+    const notam = screen.getByRole("button", { name: "NOTAM and ROTAER" });
     expect(metar).toBeEnabled();
     expect(metar).toHaveAttribute("aria-haspopup", "dialog");
     expect(maps).toBeDisabled();
+    expect(notam).toBeEnabled();
     expect(plot.nextElementSibling).toBe(metar);
     expect(metar.nextElementSibling).toBe(wind);
     expect(wind.nextElementSibling).toBe(maps);
-    expect(maps.nextElementSibling).toBe(screen.getByRole("button", { name: "Saved routes" }));
+    expect(maps.nextElementSibling).toBe(notam);
+    expect(notam.nextElementSibling).toBe(screen.getByRole("button", { name: "Saved routes" }));
   });
 
   it("o botão METAR abre a janela de METAR e TAF, e Esc fecha", () => {

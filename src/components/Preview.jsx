@@ -14,7 +14,8 @@ import { distanceNm, formatBearing, routeLinks } from "../lib/route";
 import PdfPages from "./PdfPages";
 import PanView from "./PanView";
 import ImageStage from "./ImageStage";
-import { CalibrateButton, CalibrationField, ClearButton, ExportRouteButton, MeasureToggle, MetarButton, OtherMapsButton, PlotToggle, ResetButton, RoutesButton, WindToggle } from "./MeasureTools";
+import { CalibrateButton, CalibrationField, ClearButton, ExportRouteButton, MeasureToggle, MetarButton, NotamButton, OtherMapsButton, PlotToggle, ResetButton, RoutesButton, WindToggle } from "./MeasureTools";
+import NotamDialog from "./NotamDialog";
 import RoutesDialog from "./RoutesDialog";
 import WeatherDialog from "./WeatherDialog";
 import { deleteRoute, listRoutes, mapKeyOf, saveRoute } from "../lib/savedRoutes";
@@ -84,6 +85,8 @@ export default function Preview({
   const [routesOpen, setRoutesOpen] = useState(false);
   // METAR e TAF: janela de consulta por código ICAO, aberta pelo botão METAR da barra.
   const [weatherOpen, setWeatherOpen] = useState(false);
+  // NOTAM e ROTAER: janela de consulta por código ICAO, aberta pelo botão à direita de Outros mapas.
+  const [notamOpen, setNotamOpen] = useState(false);
   // Estações do METAR no mapa: { id, surface, x, y, station }. O `station` é a cópia dos dados do METAR no momento de plotar.
   // `metarPlacing` é a estação esperando o próximo clique no mapa (ou null).
   const [metars, setMetars] = useState([]);
@@ -115,10 +118,10 @@ export default function Preview({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entry, kind]);
 
-  // Setas do teclado trocam de arquivo, exceto quando o foco está num campo ou numa janela (rotas ou METAR) aberta.
+  // Setas do teclado trocam de arquivo, exceto quando o foco está num campo ou numa janela (rotas, METAR ou NOTAM) aberta.
   useEffect(() => {
     const onKey = (e) => {
-      if (routesOpen || e.target.closest?.("input, textarea, .modal--weather")) return;
+      if (routesOpen || e.target.closest?.("input, textarea, .modal--weather, .modal--notam")) return;
       if (e.key === "ArrowLeft" && hasPrev) onPrev();
       else if (e.key === "ArrowRight" && hasNext) onNext();
     };
@@ -144,7 +147,7 @@ export default function Preview({
   useEffect(() => {
     if (!measurable) return undefined;
     const onKey = (e) => {
-      if (e.target.closest?.("input, textarea, [contenteditable], .modal--weather")) return;
+      if (e.target.closest?.("input, textarea, [contenteditable], .modal--weather, .modal--notam")) return;
       if (e.metaKey || e.ctrlKey) return; // Cmd/Ctrl + é do navegador (zoom da página)
       if (e.altKey) {
         const dir = CODE_DIRECTION[e.code];
@@ -165,7 +168,7 @@ export default function Preview({
     if (!measurable) return undefined;
     const onKey = (e) => {
       if (e.key.toLowerCase() !== "r" || e.metaKey || e.ctrlKey || e.altKey) return;
-      if (routesOpen || e.target.closest?.("input, textarea, [contenteditable], .modal--weather")) return;
+      if (routesOpen || e.target.closest?.("input, textarea, [contenteditable], .modal--weather, .modal--notam")) return;
       setRoutesOpen(true);
     };
     window.addEventListener("keydown", onKey);
@@ -764,6 +767,8 @@ export default function Preview({
           <WindToggle enabled={windOn} onToggle={toggleWind} />
           {windOn && winds.length > 0 && <ClearButton label={t("wind.clear")} onClick={clearWinds} />}
           <OtherMapsButton />
+          {/* NOTAM e ROTAER: à direita de Outros mapas. Abre a consulta por código ICAO. */}
+          <NotamButton onClick={() => setNotamOpen(true)} />
           {/* Rotas salvas, exportar e reset ficam no fim da barra, nesta ordem; o reset é o último, à direita. */}
           <RoutesButton onClick={() => setRoutesOpen(true)} />
           <ExportRouteButton onClick={exportRoute} disabled={plots.length < 2} />
@@ -781,6 +786,7 @@ export default function Preview({
         />
       )}
       {weatherOpen && <WeatherDialog onClose={() => setWeatherOpen(false)} onPlace={startMetarPlacing} />}
+      {notamOpen && <NotamDialog onClose={() => setNotamOpen(false)} />}
       <nav className="preview__nav" aria-label={t("preview.switchFile")}>
         <button type="button" onClick={onPrev} disabled={!hasPrev} aria-label={t("preview.previous")}><ChevronLeft strokeWidth={2} /></button>
         <div className="preview__meta">

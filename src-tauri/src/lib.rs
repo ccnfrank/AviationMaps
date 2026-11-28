@@ -65,12 +65,77 @@ async fn fetch_taf(icao: String) -> Result<String, String> {
     fetch_report("taf", &icao).await
 }
 
+// NOTAM e ROTAER da AISWEB (DECEA), a fonte oficial no Brasil. A API pede a ApiKey e a ApiPass, que cada
+// pessoa pede ao DECEA: elas vêm da janela e não ficam no código. A busca sai daqui, como o METAR (CORS).
+// O host é o aisweb.decea.mil.br: o www.aisweb.aer.mil.br, usado por clientes antigos, não respondeu.
+const AISWEB_API: &str = "https://aisweb.decea.mil.br/api/";
+
+// Erro que a página reconhece: a AISWEB recusou a ApiKey ou a ApiPass.
+const INVALID_CREDENTIALS: &str = "INVALID_CREDENTIALS";
+
+// Credencial só com letras, números e hífen, para nada mudar a URL. Vazia ou longa demais, recusada.
+fn valid_credential(text: &str) -> bool {
+    !text.is_empty() && text.len() <= 64 && text.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
+}
+
+// Só as duas áreas que o app usa: NOTAM e ROTAER.
+fn valid_aisweb_area(area: &str) -> bool {
+    matches!(area, "notam" | "rotaer")
+}
+
+// Corpo da resposta em XML. Vazio quando não há dado (HTTP 204). A AISWEB responde 200 mesmo com credencial
+// errada, então o aviso é procurado no texto, em trechos sem acento para não depender da codificação.
+async fn aisweb_query(area: &str, icao: &str, api_key: &str, api_pass: &str) -> Result<String, String> {
+    if !valid_aisweb_area(area) {
+        return Err("área inválida".into());
+    }
+    if !valid_icao(icao) {
+        return Err("código ICAO inválido".into());
+    }
+    if !valid_credential(api_key) || !valid_credential(api_pass) {
+        return Err(INVALID_CREDENTIALS.into());
+    }
+    let url = format!(
+        "{}?apiKey={}&apiPass={}&area={}&IcaoCode={}",
+        AISWEB_API,
+        api_key,
+        api_pass,
+        area,
+        icao.to_ascii_uppercase()
+    );
+    let client = reqwest::Client::builder()
+        .user_agent("MapReader/1.0 (app desktop)")
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .map_err(|e| e.without_url().to_string())?;
+    // O erro do reqwest traz a URL, e a URL leva a ApiKey e a ApiPass: o erro sai sem a URL.
+    let response = client.get(url).send().await.map_err(|e| e.without_url().to_string())?;
+    if response.status() == reqwest::StatusCode::NO_CONTENT {
+        return Ok(String::new());
+    }
+    let body = response
+        .error_for_status()
+        .map_err(|e| e.without_url().to_string())?
+        .text()
+        .await
+        .map_err(|e| e.without_url().to_string())?;
+    if body.contains("Informe uma chave") || body.contains("Erro nos parametros") {
+        return Err(INVALID_CREDENTIALS.into());
+    }
+    Ok(body)
+}
+
+#[tauri::command]
+async fn fetch_aisweb(area: String, icao: String, api_key: String, api_pass: String) -> Result<String, String> {
+    aisweb_query(&area, &icao, &api_key, &api_pass).await
+}
+
 pub fn run() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .manage(OpenedFolder::default())
-        .invoke_handler(tauri::generate_handler![allow_folder, take_opened_folder, fetch_metar, fetch_taf])
+        .invoke_handler(tauri::generate_handler![allow_folder, take_opened_folder, fetch_metar, fetch_taf, fetch_aisweb])
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -123,6 +188,37 @@ mod tests {
         assert!(!valid_icao("SBSPX"));
         assert!(!valid_icao("SB/P"));
         assert!(!valid_icao("SB?P"));
+    }
+
+    #[test]
+    fn credencial_so_aceita_letras_numeros_e_hifen() {
+        assert!(valid_credential("1234567890"));
+        assert!(valid_credential("abcd-ef12"));
+        assert!(!valid_credential(""));
+        assert!(!valid_credential("abc&apiPass=x"));
+        assert!(!valid_credential("abc def"));
+        assert!(!valid_credential(&"a".repeat(65)));
+    }
+
+    #[test]
+    fn area_so_aceita_notam_e_rotaer() {
+        assert!(valid_aisweb_area("notam"));
+        assert!(valid_aisweb_area("rotaer"));
+        assert!(!valid_aisweb_area("met"));
+        assert!(!valid_aisweb_area("notam&apiKey=x"));
+    }
+
+    // Consulta a AISWEB de verdade, com as credenciais de quem roda (nunca no código).
+    // Rodar com: AISWEB_API_KEY=... AISWEB_API_PASS=... cargo test -- --ignored
+    #[test]
+    #[ignore]
+    fn consulta_notam_e_rotaer_da_aisweb_ao_vivo() {
+        let key = std::env::var("AISWEB_API_KEY").expect("defina AISWEB_API_KEY");
+        let pass = std::env::var("AISWEB_API_PASS").expect("defina AISWEB_API_PASS");
+        let rotaer = tauri::async_runtime::block_on(aisweb_query("rotaer", "SBSP", &key, &pass)).unwrap();
+        assert!(rotaer.contains("AeroCode"));
+        let notam = tauri::async_runtime::block_on(aisweb_query("notam", "SBSP", &key, &pass)).unwrap();
+        assert!(notam.contains("notam"));
     }
 
     // Consulta a internet de verdade. Rodar com: cargo test -- --ignored

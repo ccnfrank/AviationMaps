@@ -171,6 +171,21 @@ test("transferidor e medir ficam na barra da visualização", () => {
   expect(within(bar).getByRole("button", { name: "Measure" })).toBeInTheDocument();
 });
 
+test("NOTAM e ROTAER fica logo à direita de Outros mapas, antes das rotas salvas", () => {
+  render(<Preview entry={entry("capa.png")} {...nav} />);
+  const maps = screen.getByRole("button", { name: "Other maps" });
+  const notam = screen.getByRole("button", { name: "NOTAM and ROTAER" });
+  const routes = screen.getByRole("button", { name: "Saved routes" });
+  expect(maps.compareDocumentPosition(notam) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(notam.compareDocumentPosition(routes) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+});
+
+test("o botão NOTAM e ROTAER abre a janela de consulta", () => {
+  render(<Preview entry={entry("capa.png")} {...nav} />);
+  fireEvent.click(screen.getByRole("button", { name: "NOTAM and ROTAER" }));
+  expect(screen.getByRole("dialog", { name: "NOTAM and ROTAER" })).toBeInTheDocument();
+});
+
 test("medir é só um botão de ícone: ligar não abre painel, e calibrar aparece só em imagem", () => {
   render(<Preview entry={entry("capa.png")} {...nav} />);
   const measure = screen.getByRole("button", { name: "Measure" });

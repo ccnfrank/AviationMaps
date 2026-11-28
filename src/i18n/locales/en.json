@@ -76,6 +76,53 @@
     "plot": "Plot on map",
     "plotTitle": "Place this METAR station on the map: click the airport's point"
   },
+  "notam": {
+    "button": "NOTAM and ROTAER",
+    "tooltip": "NOTAM and ROTAER: aerodrome data and NOTAMs by ICAO code (AISWEB/DECEA)",
+    "title": "NOTAM and ROTAER",
+    "icaoAria": "Aerodrome ICAO code",
+    "icaoPlaceholder": "ICAO, e.g. SBSP",
+    "search": "Search",
+    "change": "Change credentials",
+    "loading": "Fetching NOTAM and ROTAER…",
+    "invalid": "Type the ICAO code with 4 letters or numbers, e.g. SBSP.",
+    "desktopOnly": "The lookup works in the desktop app.",
+    "failed": "Could not fetch right now. Check the connection and try again.",
+    "rotaerTitle": "ROTAER (aerodrome data)",
+    "noRotaer": "No ROTAER data for {{icao}}.",
+    "notamTitle": "NOTAM",
+    "noNotam": "No NOTAM for {{icao}}.",
+    "validity": "Validity",
+    "permanent": "permanent",
+    "location": "Location",
+    "limits": "Limits",
+    "runways": "Runways",
+    "remarks": "Remarks",
+    "length": "length",
+    "width": "width",
+    "thresholds": "thresholds",
+    "credentials": {
+      "title": "AISWEB credentials",
+      "hint": "AISWEB (DECEA) gives the ApiKey and the ApiPass to anyone who asks DECEA's SAC. They are saved only on this computer.",
+      "apiKey": "ApiKey",
+      "apiPass": "ApiPass",
+      "save": "Save",
+      "refused": "AISWEB refused these credentials. Check the ApiKey and ApiPass and save again.",
+      "invalid": "Use only letters, numbers and hyphens in both fields."
+    },
+    "facts": {
+      "city": "City / state",
+      "status": "Status",
+      "type": "Type",
+      "category": "Category",
+      "altitude": "Altitude",
+      "coordinates": "Coordinates",
+      "utc": "UTC",
+      "hours": "Working hours",
+      "organization": "Organization",
+      "fir": "FIR"
+    }
+  },
   "wind": {
     "toggle": "Wind",
     "title": "Wind: click on the map, point the protractor to where the wind comes from and click again to set it. Then type the speed in knots. Backspace removes the last one",
@@ -256,7 +303,7 @@
           "Full screen: the button fills the whole window. Esc leaves it.",
           "Close: the X, Esc, or a click outside the window.",
           "PDF: pages appear in sequence, up to 200 pages. When you change the zoom, the pages are redrawn sharply.",
-          "Toolbar, from left to right: protractor, declination, measure, scale, pin (plot points), wind, METAR (METAR and TAF lookup), saved routes (read/save), export route and, last, the reset icon. Reset clears everything on the map: measurements, plotted points, winds, METAR stations and the protractor."
+          "Toolbar, from left to right: protractor, declination, measure, scale, pin (plot points), wind, METAR (METAR and TAF lookup), other maps (coming soon), NOTAM and ROTAER (lookup by ICAO code), saved routes (read/save), export route and, last, the reset icon. Reset clears everything on the map: measurements, plotted points, winds, METAR stations and the protractor."
         ]
       },
       {
@@ -266,6 +313,16 @@
           "The window shows the current observation (METAR) and the forecast (TAF), with the original text and the main values decoded. Times are in UTC, as in aviation.",
           "The lookup uses the public aviationweather.gov API, with no key. Only the ICAO code you type is sent over the internet. It works only in the desktop app.",
           "Plot on map: after a lookup, use the Plot on map button and click the airport's point. The station shows the flight category by colour (green VFR, blue MVFR, red IFR, magenta LIFR), the cloud cover as a filled circle, and the wind by a staff pointing to where it blows from. The original METAR text sits beside it. Option + click removes one station; Esc cancels placing; reset clears them all."
+        ]
+      },
+      {
+        "title": "NOTAM and ROTAER",
+        "paragraphs": [
+          "Click the NOTAM and ROTAER icon in the toolbar, to the right of Other maps, and type the airport's ICAO code (4 characters, e.g. SBSP). Enter or Search runs the lookup.",
+          "The first time, the window asks for the AISWEB (DECEA) ApiKey and ApiPass. DECEA's SAC issues them on request. They are saved only on this computer; Change credentials replaces them. If AISWEB refuses the credentials, the window goes back to the form with a notice.",
+          "ROTAER: the aerodrome record, with name, city and state, status, type, altitude, coordinates, UTC, FIR and organization. Then come the runways (length, width and surface) and the ROTAER remarks and complements.",
+          "NOTAM: each notice with its number, Q-code, location, validity in UTC (or permanent), limits and text. If the list is long, scroll the window to see them all.",
+          "The lookup goes to AISWEB over the internet: only the ICAO code and your credentials leave the app. It works only in the desktop app."
         ]
       },
       {

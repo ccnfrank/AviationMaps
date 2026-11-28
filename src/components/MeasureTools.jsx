@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CloudSun, FileDown, MapPin, PlaneTakeoff, Ruler, RotateCcw, Save, Trash2, Crosshair, Check, Wind, X } from "lucide-react";
+import { CloudSun, FileDown, Megaphone, MapPin, PlaneTakeoff, Ruler, RotateCcw, Save, Trash2, Crosshair, Check, Wind, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 // Botão de ícone que liga o plotar pontos: cada clique no mapa marca um ponto numerado.
@@ -70,6 +70,23 @@ export function OtherMapsButton() {
       {/* O mesmo ícone do botão Carregar mapas (strokeWidth 2 também), só o ícone. */}
       <PlaneTakeoff strokeWidth={2} aria-hidden="true" />
     </PendingButton>
+  );
+}
+
+// Botão de ícone do NOTAM e do ROTAER: abre a janela em que se digita o código ICAO do aeródromo.
+export function NotamButton({ onClick }) {
+  const { t } = useTranslation();
+  return (
+    <button
+      type="button"
+      className="tool-toggle"
+      onClick={onClick}
+      aria-haspopup="dialog"
+      aria-label={t("notam.button")}
+      title={t("notam.tooltip")}
+    >
+      <Megaphone strokeWidth={1.8} aria-hidden="true" />
+    </button>
   );
 }
 

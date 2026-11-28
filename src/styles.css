@@ -374,6 +374,66 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 }
 .weather__plot { margin-top: var(--s-1); }
 
+/* NOTAM e ROTAER: código ICAO, ficha do aeródromo (ROTAER) e os NOTAM; as credenciais da AISWEB pedem na primeira vez */
+.modal--notam { width: min(640px, 100%); height: min(70vh, 640px); }
+.notam__head {
+  flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--s-3);
+  padding: var(--s-4) var(--s-5); border-bottom: 1px solid var(--line);
+}
+.notam__title { margin: 0; font-size: var(--fs-md); }
+.notam__form { flex: none; display: flex; gap: var(--s-2); padding: var(--s-4) var(--s-5) 0; }
+.notam__input {
+  width: 160px; height: 34px; padding: 0 var(--s-3); border: 1px solid var(--line); border-radius: var(--r-sm);
+  background: var(--field); color: var(--text); font: inherit; font-size: var(--fs-sm);
+  text-transform: uppercase; letter-spacing: .08em; transition: box-shadow var(--dur-fast);
+}
+.notam__input::placeholder { color: var(--muted); text-transform: none; letter-spacing: 0; }
+.notam__input:focus-visible { outline: none; box-shadow: inset 0 0 0 1px var(--accent); }
+.notam__btn {
+  flex: none; height: 34px; padding: 0 var(--s-3); border: 1px solid var(--line-strong); border-radius: var(--r-sm);
+  background: transparent; color: var(--text); font: inherit; font-size: var(--fs-sm); font-weight: 600;
+  transition: color var(--dur-fast), border-color var(--dur-fast);
+}
+.notam__btn:hover { border-color: var(--accent); color: var(--accent); }
+.notam__btn:disabled { opacity: .4; cursor: default; border-color: var(--line-strong); color: var(--text); }
+.notam__link {
+  flex: none; align-self: flex-start; margin: var(--s-2) var(--s-5) 0; padding: 0; border: 0; background: none;
+  color: var(--muted); font: inherit; font-size: var(--fs-xs); text-decoration: underline; cursor: pointer;
+}
+.notam__link:hover { color: var(--accent); }
+.notam__creds {
+  flex: 1; min-height: 0; overflow-y: auto; display: grid; align-content: start; gap: var(--s-3);
+  padding: var(--s-4) var(--s-5) var(--s-5);
+}
+.notam__creds .notam__input { width: 100%; text-transform: none; letter-spacing: 0; }
+.notam__field { display: grid; gap: var(--s-1); color: var(--muted); font-size: var(--fs-sm); }
+.notam__creds-actions { display: flex; justify-content: flex-end; gap: var(--s-2); }
+.notam__body { flex: 1; min-height: 0; overflow-y: auto; padding: var(--s-4) var(--s-5) var(--s-5); }
+.notam__status { margin: 0 0 var(--s-3); color: var(--muted); font-size: var(--fs-sm); line-height: 1.5; }
+.notam__status--error { color: var(--danger); }
+.notam__station { margin: 0 0 var(--s-4); color: var(--muted); font-size: var(--fs-sm); }
+.notam__station strong { color: var(--text); letter-spacing: .08em; }
+.notam__section + .notam__section { margin-top: var(--s-5); }
+.notam__heading { margin: 0 0 var(--s-2); font-size: var(--fs-sm); font-weight: 600; color: var(--text); }
+.notam__subheading { margin: var(--s-4) 0 var(--s-2); font-size: var(--fs-xs); font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.notam__facts {
+  margin: 0 0 var(--s-3); display: grid; grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--s-1) var(--s-4); font-size: var(--fs-sm);
+}
+.notam__fact { display: contents; }
+.notam__facts dt { color: var(--muted); }
+.notam__facts dd { margin: 0; color: var(--text); overflow-wrap: anywhere; }
+.notam__list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
+.notam__item { padding: var(--s-2) var(--s-3); border: 1px solid var(--line); border-radius: var(--r-sm); font-size: var(--fs-sm); color: var(--text); }
+.notam__item-head { display: flex; align-items: baseline; gap: var(--s-2); margin-bottom: var(--s-1); }
+.notam__number { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--fs-sm); font-weight: 600; color: var(--text); }
+.notam__meta { color: var(--muted); font-size: var(--fs-xs); }
+.notam__note { line-height: 1.5; overflow-wrap: anywhere; }
+.notam__text {
+  margin: var(--s-1) 0 0; padding: 0; color: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--fs-xs); line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; user-select: text;
+}
+
 /* Rotas salvas (ler/salvar): salvar a rota atual com um nome, e abrir ou apagar as rotas deste mapa */
 .modal--routes { width: min(560px, 100%); height: min(60vh, 560px); }
 .routes__head {

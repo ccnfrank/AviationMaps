@@ -76,6 +76,53 @@
     "plot": "Plotar no mapa",
     "plotTitle": "Coloca a estação deste METAR no mapa: clique no ponto do aeródromo"
   },
+  "notam": {
+    "button": "NOTAM e ROTAER",
+    "tooltip": "NOTAM e ROTAER: dados do aeródromo e NOTAM pelo código ICAO (AISWEB/DECEA)",
+    "title": "NOTAM e ROTAER",
+    "icaoAria": "Código ICAO do aeródromo",
+    "icaoPlaceholder": "ICAO, ex.: SBSP",
+    "search": "Buscar",
+    "change": "Trocar credenciais",
+    "loading": "Consultando NOTAM e ROTAER…",
+    "invalid": "Digite o código ICAO com 4 letras ou números, ex.: SBSP.",
+    "desktopOnly": "A consulta funciona no app de desktop.",
+    "failed": "Não foi possível consultar agora. Verifique a conexão e tente de novo.",
+    "rotaerTitle": "ROTAER (dados do aeródromo)",
+    "noRotaer": "Sem dados no ROTAER para {{icao}}.",
+    "notamTitle": "NOTAM",
+    "noNotam": "Sem NOTAM para {{icao}}.",
+    "validity": "Validade",
+    "permanent": "permanente",
+    "location": "Local",
+    "limits": "Limites",
+    "runways": "Pistas",
+    "remarks": "Observações",
+    "length": "comp.",
+    "width": "larg.",
+    "thresholds": "cabeceiras",
+    "credentials": {
+      "title": "Credenciais da AISWEB",
+      "hint": "A AISWEB (DECEA) entrega a ApiKey e a ApiPass a quem pede ao SAC do DECEA. Elas ficam guardadas só neste computador.",
+      "apiKey": "ApiKey",
+      "apiPass": "ApiPass",
+      "save": "Salvar",
+      "refused": "A AISWEB recusou estas credenciais. Confira a ApiKey e a ApiPass e salve de novo.",
+      "invalid": "Use só letras, números e hífen nos dois campos."
+    },
+    "facts": {
+      "city": "Cidade / UF",
+      "status": "Situação",
+      "type": "Tipo",
+      "category": "Categoria",
+      "altitude": "Altitude",
+      "coordinates": "Coordenadas",
+      "utc": "UTC",
+      "hours": "Funcionamento",
+      "organization": "Organização",
+      "fir": "FIR"
+    }
+  },
   "wind": {
     "toggle": "Vento",
     "title": "Vento: clique no mapa e aponte o transferidor para de onde o vento sopra; clique de novo para fixar. Depois informe a velocidade em nós. Backspace apaga o último",
@@ -256,7 +303,7 @@
           "Tela cheia: o botão ocupa a janela inteira. Esc sai.",
           "Fechar: o X, Esc ou um clique fora da janela.",
           "PDF: as páginas aparecem em sequência, até 200 páginas. Ao mudar o zoom, as páginas são redesenhadas com nitidez.",
-          "Barra de ferramentas, da esquerda para a direita: transferidor, declinação, medir, escala, pino (plotar pontos), vento, METAR (consulta de METAR e TAF), rotas salvas (ler/salvar), exportar rota e, por último, o ícone de reset. O reset limpa tudo no mapa: medições, pontos plotados, ventos, estações do METAR e o transferidor."
+          "Barra de ferramentas, da esquerda para a direita: transferidor, declinação, medir, escala, pino (plotar pontos), vento, METAR (consulta de METAR e TAF), outros mapas (em breve), NOTAM e ROTAER (consulta pelo código ICAO), rotas salvas (ler/salvar), exportar rota e, por último, o ícone de reset. O reset limpa tudo no mapa: medições, pontos plotados, ventos, estações do METAR e o transferidor."
         ]
       },
       {
@@ -266,6 +313,16 @@
           "A janela mostra a observação atual (METAR) e a previsão (TAF), com o texto original e os principais dados decodificados. Os horários estão em UTC, como na aviação.",
           "A consulta usa a API pública do aviationweather.gov, sem chave. Só o código ICAO digitado vai para a internet. Funciona apenas no app de desktop.",
           "Plotar no mapa: depois de consultar, use o botão Plotar no mapa e clique no ponto do aeródromo. A estação mostra a categoria de voo pela cor (verde VFR, azul MVFR, vermelho IFR, magenta LIFR), a cobertura de nuvens pelo círculo preenchido e o vento pela haste, que aponta de onde ele sopra. Ao lado fica o texto original do METAR. Option + clique apaga uma estação; Esc cancela a colocação; o reset limpa todas."
+        ]
+      },
+      {
+        "title": "NOTAM e ROTAER",
+        "paragraphs": [
+          "Clique no ícone NOTAM e ROTAER da barra, à direita de Outros mapas, e digite o código ICAO do aeródromo (4 letras, ex.: SBSP). Enter ou Buscar consulta.",
+          "Na primeira vez, a janela pede a ApiKey e a ApiPass da AISWEB (DECEA). Elas são entregues pelo SAC do DECEA, a pedido. Ficam guardadas só neste computador; Trocar credenciais muda-as. Se a AISWEB recusar as credenciais, a janela volta ao formulário com um aviso.",
+          "ROTAER: a ficha do aeródromo, com nome, cidade e UF, situação, tipo, altitude, coordenadas, UTC, FIR e organização. Depois vêm as pistas (comprimento, largura e superfície) e as observações e complementos do ROTAER.",
+          "NOTAM: cada aviso com número, Q-code, local, validade em UTC (ou permanente), limites e o texto. Se a lista for longa, role a janela para ver todos.",
+          "A consulta vai à AISWEB pela internet: só o código ICAO e as credenciais saem do app. Funciona apenas no app de desktop."
         ]
       },
       {
