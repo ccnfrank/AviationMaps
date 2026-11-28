@@ -115,3 +115,49 @@ test("na coluna da visualização, o mouse sobre um mapa avisa qual é; sair da 
   fireEvent.mouseLeave(panel);
   expect(onHover).toHaveBeenLastCalledWith(null);
 });
+
+test("marcar uma pasta como favorita não a abre e fica guardada", () => {
+  render(<Search folders={folders} onPreview={vi.fn()} />);
+  fireEvent.focus(screen.getByRole("searchbox"));
+  fireEvent.click(screen.getByRole("button", { name: "Favorite footage" }));
+  expect(screen.getByRole("button", { name: "Favorite footage" })).toHaveAttribute("aria-pressed", "true");
+  expect(JSON.parse(localStorage.getItem("mapareader.favoriteFolders"))).toEqual(["footage"]);
+  expect(localStorage.getItem("mapareader.favorites")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
+});
+
+test("na lista, a pasta também ganha o marcador de favorito", () => {
+  render(<Search folders={folders} onPreview={vi.fn()} view="list" onViewChange={vi.fn()} />);
+  fireEvent.focus(screen.getByRole("searchbox"));
+  fireEvent.click(screen.getByRole("button", { name: "Favorite fx" }));
+  expect(screen.getByRole("button", { name: "Favorite fx" })).toHaveAttribute("aria-pressed", "true");
+});
+
+test("o filtro Favoritos mostra as pastas favoritas, e clicar numa abre a pasta", () => {
+  render(<Search folders={folders} onPreview={vi.fn()} />);
+  const input = screen.getByRole("searchbox");
+  fireEvent.focus(input);
+  fireEvent.click(screen.getByRole("button", { name: "Favorite fx" }));
+  fireEvent.click(screen.getByRole("button", { name: "Favorites" }));
+  const panel = screen.getByRole("region", { name: "Search results" });
+  expect(within(panel).getByText("1 favorite folder")).toBeInTheDocument();
+  expect(within(panel).queryByText("footage")).toBeNull();
+  fireEvent.click(within(panel).getByText("fx"));
+  expect(screen.getByRole("button", { name: "Favorites" })).toHaveAttribute("aria-pressed", "false");
+  expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
+  // Dentro da pasta, a subpasta também marca como favorita, com o caminho a partir da pasta carregada.
+  fireEvent.click(screen.getByRole("button", { name: "Favorite dia2" }));
+  expect(JSON.parse(localStorage.getItem("mapareader.favoriteFolders"))).toEqual(["fx", "fx/dia2"]);
+});
+
+test("o contador do filtro soma as pastas e os mapas favoritos", () => {
+  render(<Search folders={folders} onPreview={vi.fn()} />);
+  const input = screen.getByRole("searchbox");
+  fireEvent.focus(input);
+  fireEvent.click(screen.getByRole("button", { name: "Favorite fx" }));
+  fireEvent.change(input, { target: { value: "cena01" } });
+  fireEvent.click(screen.getByRole("button", { name: "Favorite cena01.png" }));
+  fireEvent.change(input, { target: { value: "" } });
+  fireEvent.click(screen.getByRole("button", { name: "Favorites" }));
+  expect(screen.getByText("1 favorite folder · 1 favorite")).toBeInTheDocument();
+});

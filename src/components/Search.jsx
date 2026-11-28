@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useFavorites } from "../lib/favorites";
 import { filterFiles } from "../lib/filterFiles";
 import { formatSize } from "../lib/format";
-import { listDir, parentDir } from "../lib/browseDir";
+import { folderKeyOf, listAllDirs, listDir, parentDir } from "../lib/browseDir";
 import { ROOT_NAME } from "../lib/groupFiles";
 import { searchAll, splitHighlight } from "../lib/searchFiles";
 import { mapKeyOf } from "../lib/savedRoutes";
@@ -34,8 +34,9 @@ function browseAll(folders, limit) {
 // `view` ("grid" ou "list") e `onViewChange` são controlados por quem usa.
 // `docked` é a coluna lateral da pasta carregada: o painel fica sempre aberto, os botões de
 // visualização ficam ao lado do campo, e a grade sem texto mostra as miniaturas de todos os mapas.
-// Cada mapa tem um marcador de favorito (miniatura ou fim da linha). O botão Favoritos do painel
-// mostra só os favoritos, em todas as pastas, e vale enquanto estiver ligado.
+// Cada mapa tem um marcador de favorito (miniatura ou fim da linha), e cada pasta também (cartão ou
+// linha). O botão Favoritos do painel mostra só os favoritos, em todas as pastas (pastas favoritas
+// antes dos mapas), e vale enquanto estiver ligado.
 // `onHover` (só a coluna da visualização) recebe o mapa sob o mouse, e null ao sair da lista.
 export default function Search({ folders, onPreview, view = "grid", onViewChange, docked = false, onHover }) {
   const { t } = useTranslation();
@@ -44,7 +45,7 @@ export default function Search({ folders, onPreview, view = "grid", onViewChange
   // Nível aberto sem texto: { folderIndex, dir }, dir "" é a raiz da pasta, "dia2/sul" uma subpasta.
   const [nav, setNav] = useState(null);
   const [onlyFavorites, setOnlyFavorites] = useState(false);
-  const { favorites, toggleFavorite } = useFavorites();
+  const { favorites, toggleFavorite, favoriteFolders, toggleFavoriteFolder } = useFavorites();
   const inputRef = useRef(null);
   // Adiar o valor deixa a digitação fluida enquanto a lista recalcula.
   const deferred = useDeferredValue(query);
@@ -53,6 +54,10 @@ export default function Search({ folders, onPreview, view = "grid", onViewChange
   const scope = useMemo(() => (onlyFavorites
     ? folders.map((folder) => ({ ...folder, files: folder.files.filter((entry) => favorites.has(mapKeyOf(entry))) }))
     : folders), [folders, onlyFavorites, favorites]);
+  // Pastas favoritas que estão carregadas. Uma pasta favorita de uma pasta que saiu da tela fica guardada,
+  // mas não aparece até ser carregada de novo.
+  const favDirs = useMemo(() => listAllDirs(folders).filter((dir) => favoriteFolders.has(dir.key)),
+    [folders, favoriteFolders]);
   const results = useMemo(() => (deferred.trim()
     ? searchAll(scope, deferred, MAX_TILES)
     : browseAll(scope, MAX_TILES)), [scope, deferred]);
@@ -95,6 +100,12 @@ export default function Search({ folders, onPreview, view = "grid", onViewChange
     setOnlyFavorites((on) => !on);
   };
 
+  // Abre uma pasta a partir dos favoritos: sai do filtro e mostra o nível da pasta.
+  const openFolder = (target) => {
+    setOnlyFavorites(false);
+    setNav(target);
+  };
+
   // O que o painel recebe, igual nos dois lugares onde ele aparece (tela inicial e coluna da visualização).
   const panelProps = {
     folders,
@@ -108,6 +119,10 @@ export default function Search({ folders, onPreview, view = "grid", onViewChange
     onChoose: choose,
     favorites,
     onToggleFavorite: toggleFavorite,
+    favDirs,
+    favoriteFolders,
+    onToggleFavoriteFolder: toggleFavoriteFolder,
+    onOpenFolder: openFolder,
     onlyFavorites,
     onToggleOnlyFavorites: toggleOnlyFavorites,
     onHover,
@@ -235,12 +250,22 @@ function ViewToggle({ view, onChange }) {
 // Na coluna lateral, sem texto e em grade, mostra as miniaturas de todos os mapas.
 function SearchPanel({
   docked = false, folders, query, results, rows, view, onViewChange, nav, onNavigate, onChoose,
-  favorites, onToggleFavorite, onlyFavorites, onToggleOnlyFavorites, onHover,
+  favorites, onToggleFavorite, favDirs, favoriteFolders, onToggleFavoriteFolder, onOpenFolder,
+  onlyFavorites, onToggleOnlyFavorites, onHover,
 }) {
   const { t } = useTranslation();
   const { total, items } = results;
-  // Com o filtro de favoritos, o painel mostra os favoritos (sem pastas nem nível aberto), como uma busca.
+  // Com o filtro de favoritos, o painel mostra os favoritos (sem nível aberto), como uma busca.
   const idle = query.trim() === "" && !onlyFavorites;
+  // Com o filtro e sem texto, as pastas favoritas entram antes dos mapas favoritos.
+  const favFolders = onlyFavorites && !query.trim()
+    ? favDirs.map((dir) => ({
+      key: dir.key,
+      name: dir.label,
+      count: dir.count,
+      open: () => onOpenFolder({ folderIndex: dir.folderIndex, dir: dir.dir }),
+    }))
+    : [];
   // Na coluna lateral, a grade sem texto já traz os mapas: não há cartões de pasta nela.
   const mapsGrid = docked && idle && view !== "list";
   const subfolders = rows.filter((row) => row.folder.name !== ROOT_NAME);
@@ -255,11 +280,14 @@ function SearchPanel({
     countText = t("search.maps", { count: levelTotal });
   } else if (idle && !mapsGrid) {
     countText = subfolders.length === 0 ? t("search.noFolders") : t("search.folders", { count: subfolders.length });
-  } else if (total === 0) {
+  } else if (total === 0 && favFolders.length === 0) {
     countText = onlyFavorites && !query.trim() ? t("search.noFavorites") : t("search.noResults");
   } else if (onlyFavorites) {
     const more = view !== "list" && total > items.length;
-    countText = `${t("search.favCount", { count: total })}${more ? t("search.showing", { count: items.length }) : ""}`;
+    const parts = [];
+    if (favFolders.length) parts.push(t("search.favFolderCount", { count: favFolders.length }));
+    if (total) parts.push(`${t("search.favCount", { count: total })}${more ? t("search.showing", { count: items.length }) : ""}`);
+    countText = parts.join(" · ");
   } else if (view === "list") {
     countText = t("search.count", { count: total });
   } else {
@@ -291,22 +319,39 @@ function SearchPanel({
     </div>
   );
 
-  const folderRow = (key, name, count, onClick) => (
-    <button key={key} type="button" className="search-folder" onClick={onClick}>
-      <Folder className="search-folder__icon" strokeWidth={1.8} aria-hidden="true" />
-      <span className="search-folder__name">{name}</span>
-      <span className="search-folder__count">{t("search.maps", { count })}</span>
-    </button>
+  // Marcador de favorito de uma pasta, fora do botão da pasta, como o dos mapas.
+  const folderFav = (dir, className) => (
+    <FavoriteButton
+      className={className}
+      pressed={favoriteFolders.has(dir.key)}
+      name={dir.name}
+      onToggle={() => onToggleFavoriteFolder(dir.key)}
+    />
   );
 
-  const folderTile = (key, name, count, onClick) => (
-    <button key={key} type="button" className="search-live__tile search-live__tile--folder" onClick={onClick} title={name}>
-      <span className="search-live__thumb search-live__thumb--folder">
-        <Folder strokeWidth={1.4} aria-hidden="true" />
-      </span>
-      <span className="search-live__name">{name}</span>
-      <span className="search-live__folder">{t("search.maps", { count })}</span>
-    </button>
+  // Linha e cartão de pasta. `dir` tem a chave de favorito (`key`), o nome, a contagem de mapas e `open`.
+  const folderRow = (dir) => (
+    <div key={dir.key} className="search-folder-row">
+      <button type="button" className="search-folder" onClick={dir.open}>
+        <Folder className="search-folder__icon" strokeWidth={1.8} aria-hidden="true" />
+        <span className="search-folder__name">{dir.name}</span>
+        <span className="search-folder__count">{t("search.maps", { count: dir.count })}</span>
+      </button>
+      {folderFav(dir, "search-fav--row")}
+    </div>
+  );
+
+  const folderTile = (dir) => (
+    <div key={dir.key} className="search-live__cell">
+      <button type="button" className="search-live__tile search-live__tile--folder" onClick={dir.open} title={dir.name}>
+        <span className="search-live__thumb search-live__thumb--folder">
+          <Folder strokeWidth={1.4} aria-hidden="true" />
+        </span>
+        <span className="search-live__name">{dir.name}</span>
+        <span className="search-live__folder">{t("search.maps", { count: dir.count })}</span>
+      </button>
+      {folderFav(dir, "search-fav--tile")}
+    </div>
   );
 
   const mapTile = (item) => (
@@ -339,35 +384,44 @@ function SearchPanel({
   if (level) {
     const folderIndex = nav.folderIndex;
     const openSub = (sub) => () => onNavigate({ folderIndex, dir: sub.path });
+    const subDirs = level.subdirs.map((sub) => ({
+      key: folderKeyOf(folder.name, sub.path),
+      name: sub.name,
+      count: sub.count,
+      open: openSub(sub),
+    }));
     body = view === "list" ? (
       <div className="search-live__list">
         <div className="search-group__title">
           <Folder className="search-group__icon" strokeWidth={1.8} aria-hidden="true" />
           <span className="search-group__name">{levelTitle}</span>
         </div>
-        {level.subdirs.map((sub) => folderRow(sub.path, sub.name, sub.count, openSub(sub)))}
+        {subDirs.map(folderRow)}
         {level.maps.map((entry) => fileRow(entry, entry.name, entry.relPath))}
       </div>
     ) : (
       <div className="search-live__grid">
-        {level.subdirs.map((sub) => folderTile(sub.path, sub.name, sub.count, openSub(sub)))}
+        {subDirs.map(folderTile)}
         {level.maps.map((entry) => mapTile({ folderIndex, folder: folder.name, entry }))}
       </div>
     );
   } else if (idle && !mapsGrid) {
     const openRoot = (row) => () => onNavigate({ folderIndex: row.folderIndex, dir: "" });
+    const rootDirs = subfolders.map((row) => ({
+      key: folderKeyOf(row.folder.name),
+      name: row.folder.name,
+      count: row.items.length,
+      open: openRoot(row),
+    }));
     body = view === "list" ? (
-      <div className="search-live__list">
-        {subfolders.map((row) => folderRow(row.folderIndex, row.folder.name, row.items.length, openRoot(row)))}
-      </div>
+      <div className="search-live__list">{rootDirs.map(folderRow)}</div>
     ) : (
-      <div className="search-live__grid">
-        {subfolders.map((row) => folderTile(row.folderIndex, row.folder.name, row.items.length, openRoot(row)))}
-      </div>
+      <div className="search-live__grid">{rootDirs.map(folderTile)}</div>
     );
   } else if (view === "list") {
     body = (
       <div className="search-live__list">
+        {favFolders.map(folderRow)}
         {rows.map((row) => (
           <section key={row.folderIndex} className="search-group" aria-label={row.folder.name}>
             <div className="search-group__title">
@@ -387,7 +441,7 @@ function SearchPanel({
       </div>
     );
   } else {
-    body = <div className="search-live__grid">{items.map(mapTile)}</div>;
+    body = <div className="search-live__grid">{favFolders.map(folderTile)}{items.map(mapTile)}</div>;
   }
 
   return (

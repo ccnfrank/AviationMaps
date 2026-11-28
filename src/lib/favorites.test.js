@@ -31,3 +31,15 @@ test("armazenamento com JSON inválido começa vazio", () => {
   const { result } = renderHook(() => useFavorites());
   expect(result.current.favorites.size).toBe(0);
 });
+
+test("uma pasta favorita fica numa lista própria, separada dos mapas", () => {
+  const first = renderHook(() => useFavorites());
+  const second = renderHook(() => useFavorites());
+  act(() => first.result.current.toggleFavoriteFolder("dia2/sul"));
+  expect(first.result.current.favoriteFolders.has("dia2/sul")).toBe(true);
+  expect(second.result.current.favoriteFolders.has("dia2/sul")).toBe(true);
+  expect(first.result.current.favorites.size).toBe(0);
+  expect(JSON.parse(localStorage.getItem("mapareader.favoriteFolders"))).toEqual(["dia2/sul"]);
+  act(() => first.result.current.toggleFavoriteFolder("dia2/sul"));
+  expect(second.result.current.favoriteFolders.size).toBe(0);
+});

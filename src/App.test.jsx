@@ -267,6 +267,8 @@ test("Split maps divide a visualização: o mapa da esquerda fica, e o da direit
   expect(rightPane()).toHaveTextContent("Choose a map from the list beside it to see it here");
   fireEvent.click(cellOf("mapa-02").querySelector(".search-live__tile"));
   expect(rightPane().querySelector(".preview__name")).toHaveTextContent("mapa-02.pdf");
+  // A linha entre os painéis começa no meio (50).
+  expect(screen.getByRole("separator", { name: "Resize the panes" })).toHaveAttribute("aria-valuenow", "50");
   // Escolher um mapa na lista torna o painel da direita o ativo: é nele que a barra de ferramentas aparece.
   expect(rightPane()).toHaveClass("is-active");
   expect(document.querySelector(".viewer-main--split:not(.viewer-main--right)")).not.toHaveClass("is-active");

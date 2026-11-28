@@ -35,7 +35,8 @@
   "split": {
     "button": "Split maps",
     "tooltip": "Split maps: divide a visualização em duas. O mapa da direita é o que você escolher na lista ao lado",
-    "empty": "Escolha um mapa na lista ao lado para vê-lo aqui"
+    "empty": "Escolha um mapa na lista ao lado para vê-lo aqui",
+    "resize": "Redimensionar os painéis"
   },
   "metar": {
     "button": "METAR",
@@ -266,6 +267,8 @@
     "favoriteOf": "Favoritar {{name}}",
     "favCount_one": "{{count}} favorito",
     "favCount_other": "{{count}} favoritos",
+    "favFolderCount_one": "{{count}} pasta favorita",
+    "favFolderCount_other": "{{count}} pastas favoritas",
     "noFavorites": "Nenhum favorito ainda"
   },
   "help": {
@@ -292,16 +295,16 @@
       {
         "title": "Favoritos",
         "paragraphs": [
-          "Cada mapa tem um ícone de marcador, na miniatura ou no fim da linha, para marcá-lo como favorito. Clique nele de novo para tirar. Marcar não abre o mapa.",
-          "O botão Favoritos, no topo do painel de busca, mostra só os favoritos, de todas as pastas. O mesmo vale para a busca da coluna da visualização.",
-          "Os favoritos ficam neste dispositivo e valem para o mesmo mapa (mesmo nome e tamanho de arquivo) em qualquer pasta. Nada é enviado."
+          "Cada mapa tem um ícone de marcador, na miniatura ou no fim da linha, para marcá-lo como favorito. Cada pasta também tem o seu, no cartão ou na linha da pasta. Clique no marcador de novo para tirar. Marcar não abre o mapa nem a pasta.",
+          "O botão Favoritos, no topo do painel de busca, mostra só os favoritos, de todas as pastas: as pastas favoritas aparecem primeiro, e clicar numa delas abre a pasta. O mesmo vale para a busca da coluna da visualização.",
+          "Os favoritos ficam neste dispositivo. Um mapa favorito vale para o mesmo mapa (mesmo nome e tamanho de arquivo) em qualquer pasta; uma pasta favorita vale para a pasta de mesmo caminho dentro da pasta carregada. Nada é enviado."
         ]
       },
       {
         "title": "Janela de visualização",
         "items": [
           "Coluna da direita: lista os mapas da pasta para trocar de mapa com um clique. Passe o mouse sobre um mapa da lista para vê-lo na janela, sem abrir; clique nele para abri-lo de vez. Tem o próprio campo de busca, com os botões de grade, lista e favoritos. Mostre ou esconda a coluna com o botão ao lado da navegação, ou com L.",
-          "Split maps: com a coluna aberta, o ícone Split maps divide a visualização em dois painéis. O da esquerda continua com o mapa atual; o da direita mostra o mapa que você clicar na lista. Há uma só barra de ferramentas, a do painel ativo (com contorno): é ele que recebe as teclas e as ferramentas. Clique num painel para torná-lo o ativo. Com o split ligado, passar o mouse na lista não faz pré-visualização. Para voltar a uma visualização só, desligue o ícone ou feche o painel da direita com o X.",
+          "Split maps: com a coluna aberta, o ícone Split maps divide a visualização em dois painéis. O da esquerda continua com o mapa atual; o da direita mostra o mapa que você clicar na lista. Há uma só barra de ferramentas, a do painel ativo (com contorno): é ele que recebe as teclas e as ferramentas. Clique num painel para torná-lo o ativo. Com o split ligado, passar o mouse na lista não faz pré-visualização. Arraste a linha entre os dois painéis para dar mais espaço a um deles (duplo clique volta ao meio). Para voltar a uma visualização só, desligue o ícone ou feche o painel da direita com o X.",
           "Tela cheia: o botão ocupa a janela inteira. Esc sai.",
           "Fechar: o X, Esc ou um clique fora da janela.",
           "PDF: as páginas aparecem em sequência, até 200 páginas. Ao mudar o zoom, as páginas são redesenhadas com nitidez.",

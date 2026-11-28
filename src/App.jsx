@@ -6,6 +6,7 @@ import Modal from "./components/Modal";
 import PixelButton from "./components/PixelButton";
 import Preview from "./components/Preview";
 import HoverPreview from "./components/HoverPreview";
+import SplitDivider from "./components/SplitDivider";
 import Search from "./components/Search";
 import LanguageSwitch from "./components/LanguageSwitch";
 import HelpButton from "./components/HelpButton";
@@ -48,6 +49,8 @@ export default function App() {
   const [rightEntry, setRightEntry] = useState(null);
   const [rightSeq, setRightSeq] = useState(0);
   const [activePane, setActivePane] = useState("left");
+  // Fração da área dos dois painéis que cabe ao da esquerda (0.5: os dois iguais). A linha entre eles muda o valor.
+  const [splitRatio, setSplitRatio] = useState(0.5);
   const [viewerEmpty, setViewerEmpty] = useState(false); // janela aberta sem mapa, esperando um arquivo
   const viewerOpen = previewEntry !== null || viewerEmpty;
   const [previewSeq, setPreviewSeq] = useState(0);
@@ -162,7 +165,10 @@ export default function App() {
     setHoverEntry(null);
     setRightEntry(null);
     setActivePane("left");
-    if (!split) setLibraryOpen(true);
+    if (!split) {
+      setLibraryOpen(true);
+      setSplitRatio(0.5);
+    }
     setSplit((on) => !on);
   };
   // Com a coluna aberta e o mouse num mapa diferente do aberto, a janela mostra esse mapa no lugar do aberto.
@@ -372,7 +378,7 @@ export default function App() {
           className={viewFull ? "modal--preview modal--full" : showLibrary ? `modal--preview modal--library${libraryOpen ? "" : " is-collapsed"}` : "modal--preview"}
           onClose={closePreview}
         >
-          <div className="viewer-split">
+          <div className="viewer-split" style={{ "--split": splitRatio }}>
             {/* O mapa aberto fica montado mesmo com a pré-visualização na frente (zoom e medições não se perdem). */}
             <div
               className={`viewer-main${hoverShown ? " is-under" : ""}${splitShown ? " viewer-main--split" : ""}${splitShown && activePane === "left" ? " is-active" : ""}`}
@@ -404,6 +410,7 @@ export default function App() {
               )}
               {hoverShown && <HoverPreview key={mapKeyOf(hoverShown)} entry={hoverShown} />}
             </div>
+            {splitShown && <SplitDivider ratio={splitRatio} onRatio={setSplitRatio} />}
             {splitShown && (
               <div
                 className={`viewer-main viewer-main--split viewer-main--right${activePane === "right" ? " is-active" : ""}`}

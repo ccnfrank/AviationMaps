@@ -35,7 +35,8 @@
   "split": {
     "button": "Split maps",
     "tooltip": "Split maps: splits the viewer in two. The right map is the one you choose from the list beside it",
-    "empty": "Choose a map from the list beside it to see it here"
+    "empty": "Choose a map from the list beside it to see it here",
+    "resize": "Resize the panes"
   },
   "metar": {
     "button": "METAR",
@@ -266,6 +267,8 @@
     "favoriteOf": "Favorite {{name}}",
     "favCount_one": "{{count}} favorite",
     "favCount_other": "{{count}} favorites",
+    "favFolderCount_one": "{{count}} favorite folder",
+    "favFolderCount_other": "{{count}} favorite folders",
     "noFavorites": "No favorites yet"
   },
   "help": {
@@ -292,16 +295,16 @@
       {
         "title": "Favorites",
         "paragraphs": [
-          "Each map has a bookmark icon, on the thumbnail or at the end of its row, to mark it as a favorite. Click it again to remove it. Marking a map does not open it.",
-          "The Favorites button at the top of the search panel shows only favorites, from all folders. The search in the viewer's right column works the same way.",
-          "Favorites stay on this device and apply to the same map (same file name and size) in any folder. Nothing is uploaded."
+          "Each map has a bookmark icon, on the thumbnail or at the end of its row, to mark it as a favorite. Each folder has one too, on its card or on its row. Click the bookmark again to remove it. Marking a map or a folder does not open it.",
+          "The Favorites button at the top of the search panel shows only favorites, from all folders: favorite folders come first, and clicking one opens it. The search in the viewer's right column works the same way.",
+          "Favorites stay on this device. A favorite map applies to the same map (same file name and size) in any folder; a favorite folder applies to the folder with the same path inside the loaded folder. Nothing is uploaded."
         ]
       },
       {
         "title": "Map viewer",
         "items": [
           "Right column: lists the maps in the folder so you can switch maps with one click. Hover over a map in the list to see it in the window, without opening it; click it to open it for good. It has its own search field, with the grid, list and favorites buttons. Show or hide it with the button next to the navigation, or with L.",
-          "Split maps: with the right column open, the Split maps icon divides the viewer into two panes. The left one keeps the current map; the right one shows the map you click in the list. There is only one toolbar, the one of the active pane (outlined): that pane receives the keys and the tools. Click a pane to make it the active one. With the split on, hovering over the list does not preview. To go back to a single view, turn the icon off or close the right pane with the X.",
+          "Split maps: with the right column open, the Split maps icon divides the viewer into two panes. The left one keeps the current map; the right one shows the map you click in the list. There is only one toolbar, the one of the active pane (outlined): that pane receives the keys and the tools. Click a pane to make it the active one. With the split on, hovering over the list does not preview. Drag the line between the two panes to give one of them more room (double-click goes back to the middle). To go back to a single view, turn the icon off or close the right pane with the X.",
           "Full screen: the button fills the whole window. Esc leaves it.",
           "Close: the X, Esc, or a click outside the window.",
           "PDF: pages appear in sequence, up to 200 pages. When you change the zoom, the pages are redrawn sharply.",
