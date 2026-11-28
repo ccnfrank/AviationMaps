@@ -232,26 +232,19 @@ test("clicar numa miniatura da coluna troca o mapa aberto", () => {
 
 const cellOf = (name) => Array.from(viewerColumn().querySelectorAll(".search-live__cell")).find((c) => c.textContent.includes(name));
 
-test("passar o mouse sobre um mapa da coluna mostra a pré-visualização; sair devolve o mapa aberto", () => {
+test("sem o split, passar o mouse sobre um mapa da coluna não pré-visualiza: a janela segue com o mapa aberto", () => {
   const { container } = render(<App />);
   openFirstMap(container, "mapa-01");
   fireEvent.mouseEnter(cellOf("mapa-02"));
-  expect(document.querySelector(".hover-preview .preview__name")).toHaveTextContent("mapa-02.pdf");
-  // O mapa aberto continua o mesmo, só escondido atrás da pré-visualização.
-  expect(screen.getByRole("dialog", { name: "Preview of mapa-01.png" })).toBeInTheDocument();
-  expect(document.querySelector(".viewer-main")).toHaveClass("is-under");
-  fireEvent.mouseLeave(viewerColumn().querySelector(".search-live"));
   expect(document.querySelector(".hover-preview")).toBeNull();
   expect(document.querySelector(".viewer-main")).not.toHaveClass("is-under");
   expect(screen.getByRole("dialog", { name: "Preview of mapa-01.png" })).toBeInTheDocument();
 });
 
-test("clicar no mapa da coluna abre de vez e encerra a pré-visualização", () => {
+test("clicar no mapa da coluna abre o mapa na janela", () => {
   const { container } = render(<App />);
   openFirstMap(container, "mapa-01");
-  const cell = cellOf("mapa-02");
-  fireEvent.mouseEnter(cell);
-  fireEvent.click(cell.querySelector(".search-live__tile"));
+  fireEvent.click(cellOf("mapa-02").querySelector(".search-live__tile"));
   expect(screen.getByRole("dialog", { name: "Preview of mapa-02.pdf" })).toBeInTheDocument();
   expect(document.querySelector(".hover-preview")).toBeNull();
 });
@@ -322,6 +315,33 @@ test("com o split ligado e a direita vazia, a pré-visualização aparece nela; 
   expect(document.querySelector(".hover-preview")).toBeNull();
   expect(rightPane().querySelector(".preview__name")).toHaveTextContent("mapa-02.pdf");
   expect(screen.getByRole("dialog", { name: "Preview of mapa-01.png" })).toBeInTheDocument();
+});
+
+test("a tecla S liga e desliga o split, com a visualização aberta", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  fireEvent.keyDown(document.body, { key: "s" });
+  expect(splitButton()).toHaveAttribute("aria-pressed", "true");
+  expect(rightPane()).toBeInTheDocument();
+  fireEvent.keyDown(document.body, { key: "S" });
+  expect(splitButton()).toHaveAttribute("aria-pressed", "false");
+  expect(rightPane()).toBeNull();
+});
+
+test("S não liga o split enquanto se digita na coluna, nem com Ctrl, Cmd ou Alt", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  fireEvent.keyDown(viewerColumn().querySelector("input"), { key: "s" });
+  fireEvent.keyDown(document.body, { key: "s", metaKey: true });
+  fireEvent.keyDown(document.body, { key: "s", ctrlKey: true });
+  fireEvent.keyDown(document.body, { key: "s", altKey: true });
+  expect(splitButton()).toHaveAttribute("aria-pressed", "false");
+});
+
+test("S sem a visualização aberta não faz nada", () => {
+  render(<App />);
+  fireEvent.keyDown(document.body, { key: "s" });
+  expect(rightPane()).toBeNull();
 });
 
 test("Esc na busca da coluna limpa o texto e mantém a visualização aberta", () => {

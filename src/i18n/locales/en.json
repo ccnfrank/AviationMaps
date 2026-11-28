@@ -303,8 +303,8 @@
       {
         "title": "Map viewer",
         "items": [
-          "Right column: lists the maps in the folder so you can switch maps with one click. Hover over a map in the list to see it in the window, without opening it; click it to open it for good. It has its own search field, with the grid, list and favorites buttons. Show or hide it with the button next to the navigation, or with L.",
-          "Split maps: with the right column open, the Split maps icon divides the viewer into two panes. The left one keeps the current map; the right one shows the map you click in the list. There is only one toolbar, the one of the active pane (outlined): that pane receives the keys and the tools. Click a pane to make it the active one. With the split on, hovering over the list does not preview. Drag the line between the two panes to give one of them more room (double-click goes back to the middle). To go back to a single view, turn the icon off or close the right pane with the X.",
+          "Right column: lists the maps in the folder so you can switch maps with one click. Click a map in the list to open it in the window. It has its own search field, with the grid, list and favorites buttons. Show or hide it with the button next to the navigation, or with L.",
+          "Split maps: with the right column open, the Split maps icon divides the viewer into two panes. The left one keeps the current map; the right one shows the map you click in the list. There is only one toolbar, the one of the active pane (outlined): that pane receives the keys and the tools. Click a pane to make it the active one. With the split on, hovering over a map in the list previews it in the right pane, without changing the map there; click it to open it there. Drag the line between the two panes to give one of them more room (double-click goes back to the middle). To go back to a single view, turn the icon off (or press S) or close the right pane with the X.",
           "Full screen: the button fills the whole window. Esc leaves it.",
           "Close: the X, Esc, or a click outside the window.",
           "PDF: pages appear in sequence, up to 200 pages. When you change the zoom, the pages are redrawn sharply.",
@@ -476,6 +476,14 @@
               ]
             ],
             "text": "Open the saved routes: save the current route or open a saved one"
+          },
+          {
+            "keys": [
+              [
+                "S"
+              ]
+            ],
+            "text": "Turn the split maps on or off (two panes). Turning it on needs an open map and the folder column"
           },
           {
             "keys": [

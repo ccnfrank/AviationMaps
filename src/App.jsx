@@ -171,15 +171,24 @@ export default function App() {
     }
     setSplit((on) => !on);
   };
-  // Com a coluna aberta e o mouse num mapa diferente do aberto, a janela mostra esse mapa no lugar do aberto.
-  // `open` é o mapa de um painel: não se pré-visualiza o que ele já mostra.
-  const hoverFor = (open) => (hoverEntry && showLibrary && libraryOpen && !(open && mapKeyOf(open) === mapKeyOf(hoverEntry))
+  // Só com o split ligado: o mouse sobre um mapa da lista mostra esse mapa na janela da direita, sem trocar
+  // o mapa dela. Não se pré-visualiza o que a direita já mostra. Sem o split, a lista não pré-visualiza.
+  const rightHover = splitShown && libraryOpen && hoverEntry && !(rightEntry && mapKeyOf(rightEntry) === mapKeyOf(hoverEntry))
     ? hoverEntry
-    : null);
-  // Sem o split, a pré-visualização cobre o mapa aberto. Com o split, ela cobre só o painel da direita,
-  // e o da esquerda continua o mesmo: o mapa da direita só muda ao clicar.
-  const hoverShown = splitShown ? null : hoverFor(previewEntry);
-  const rightHover = splitShown ? hoverFor(rightEntry) : null;
+    : null;
+  // Tecla S: liga e desliga o split maps. Desligar vale sempre; ligar exige um mapa aberto à esquerda.
+  // Não age enquanto se digita, nem com Ctrl, Cmd ou Alt.
+  useEffect(() => {
+    if (!viewerOpen || !showLibrary) return undefined;
+    const onKey = (e) => {
+      if (e.key.toLowerCase() !== "s" || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.target.closest?.("input, textarea, [contenteditable]")) return;
+      if (!split && !previewEntry) return;
+      toggleSplit();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [viewerOpen, showLibrary, split, previewEntry]);
   useEffect(() => {
     if (!viewerOpen || !showLibrary) return undefined;
     const onKey = (e) => {
@@ -385,7 +394,7 @@ export default function App() {
           <div className="viewer-split" style={{ "--split": splitRatio }}>
             {/* O mapa aberto fica montado mesmo com a pré-visualização na frente (zoom e medições não se perdem). */}
             <div
-              className={`viewer-main${hoverShown ? " is-under" : ""}${splitShown ? " viewer-main--split" : ""}${splitShown && activePane === "left" ? " is-active" : ""}`}
+              className={`viewer-main${splitShown ? " viewer-main--split" : ""}${splitShown && activePane === "left" ? " is-active" : ""}`}
               onMouseDownCapture={() => setActivePane("left")}
             >
               {previewEntry ? (
@@ -412,7 +421,6 @@ export default function App() {
                   onChoose={isTauri() ? onChooseNative : undefined}
                 />
               )}
-              {hoverShown && <HoverPreview key={mapKeyOf(hoverShown)} entry={hoverShown} />}
             </div>
             {splitShown && <SplitDivider ratio={splitRatio} onRatio={setSplitRatio} />}
             {splitShown && (
@@ -443,7 +451,7 @@ export default function App() {
             {showLibrary && (
               <aside className="viewer-library">
                 <div className="viewer-library__inner">
-                  <Search docked folders={folders} onPreview={openPreview} view={libraryView} onViewChange={setLibraryView} onHover={setHoverEntry} />
+                  <Search docked folders={folders} onPreview={openPreview} view={libraryView} onViewChange={setLibraryView} onHover={splitShown ? setHoverEntry : undefined} />
                 </div>
               </aside>
             )}

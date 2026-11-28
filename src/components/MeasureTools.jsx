@@ -65,7 +65,7 @@ export function SplitButton({ enabled, onToggle }) {
       onClick={onToggle}
       disabled={!onToggle}
       aria-label={t("split.button")}
-      title={t("split.tooltip")}
+      title={`${t("split.tooltip")} (S)`}
     >
       <SplitSquareHorizontal strokeWidth={1.8} aria-hidden="true" />
     </button>
