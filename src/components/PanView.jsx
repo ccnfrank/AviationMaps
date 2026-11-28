@@ -18,7 +18,7 @@ const scrollPixels = (e) => (e.deltaMode === 1 ? e.deltaY * LINE_PX : e.deltaY);
 // Com `onZoom` e `onBrightness`, a roda do mouse muda o zoom no ponto onde está o ponteiro,
 // e Option (Alt) + roda muda o brilho. A tecla X centraliza o conteúdo de novo.
 const PanView = forwardRef(function PanView(
-  { children, grabbable = false, className = "", zoom, onZoom, brightness, onBrightness },
+  { children, grabbable = false, className = "", zoom, onZoom, brightness, onBrightness, active = true },
   ref,
 ) {
   const view = useRef(null);
@@ -32,7 +32,7 @@ const PanView = forwardRef(function PanView(
   useImperativeHandle(ref, () => view.current, []);
 
   useEffect(() => {
-    live.current = { zoom, onZoom, brightness, onBrightness };
+    live.current = { zoom, onZoom, brightness, onBrightness, active };
   });
 
   // Roda do mouse. Precisa ser nativo e não passivo: o React marca o `onWheel` como passivo,
@@ -82,9 +82,10 @@ const PanView = forwardRef(function PanView(
     el.scrollTop += r.top + a.fy * r.height - a.y;
   }, [zoom]);
 
-  // X: centraliza o conteúdo na área, sem mudar o zoom. Sem campo em foco.
+  // X: centraliza o conteúdo na área, sem mudar o zoom. Sem campo em foco, e só no painel ativo.
   useEffect(() => {
     const onKey = (e) => {
+      if (!live.current.active) return;
       if (e.key.toLowerCase() !== "x" || e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.target.closest?.("input, textarea, [contenteditable]")) return;
       const el = view.current;

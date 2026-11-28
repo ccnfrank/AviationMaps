@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Maximize, Minimize, PanelRight, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { formatSize } from "../lib/format";
@@ -14,7 +14,7 @@ import { distanceNm, formatBearing, routeLinks } from "../lib/route";
 import PdfPages from "./PdfPages";
 import PanView from "./PanView";
 import ImageStage from "./ImageStage";
-import { CalibrateButton, CalibrationField, ClearButton, ExportRouteButton, MeasureToggle, MetarButton, NotamButton, OtherMapsButton, PlotToggle, ResetButton, RoutesButton, WindToggle } from "./MeasureTools";
+import { CalibrateButton, CalibrationField, ClearButton, ExportRouteButton, MeasureToggle, MetarButton, NotamButton, PlotToggle, ResetButton, RoutesButton, SplitButton, WindToggle } from "./MeasureTools";
 import NotamDialog from "./NotamDialog";
 import RoutesDialog from "./RoutesDialog";
 import WeatherDialog from "./WeatherDialog";
@@ -37,11 +37,15 @@ const CODE_DIRECTION = { Equal: 1, NumpadAdd: 1, Minus: -1, NumpadSubtract: -1 }
 // (zoom, brilho, medições) começa limpo a cada troca. `entry` é { name, size, file }.
 // `fullscreen` e `onToggleFullscreen` vêm de quem abre a janela (App), que põe a janela em tela cheia.
 // `libraryOpen` e `onToggleLibrary` controlam o painel de mapas ao lado; o botão só aparece com `onToggleLibrary`.
+// `splitOn` e `onToggleSplit` ligam o split maps (dois painéis). `active` diz se este é o painel que recebe as teclas.
 export default function Preview({
   entry, hasPrev, hasNext, onPrev, onNext, onClose, fullscreen = false, onToggleFullscreen,
-  libraryOpen = false, onToggleLibrary,
+  libraryOpen = false, onToggleLibrary, splitOn = false, onToggleSplit, active = true, hideSplit = false,
 }) {
   const { t, i18n } = useTranslation();
+  // Os atalhos são ouvintes da janela inteira: com dois painéis, só o ativo responde (ler sempre o valor atual).
+  const live = useRef(active);
+  live.current = active;
   const language = i18n.resolvedLanguage ?? i18n.language;
   const kind = getPreviewKind(entry.name);
   const [url, setUrl] = useState(null);             // só imagem: URL de exibição
@@ -85,7 +89,7 @@ export default function Preview({
   const [routesOpen, setRoutesOpen] = useState(false);
   // METAR e TAF: janela de consulta por código ICAO, aberta pelo botão METAR da barra.
   const [weatherOpen, setWeatherOpen] = useState(false);
-  // NOTAM e ROTAER: janela de consulta por código ICAO, aberta pelo botão à direita de Outros mapas.
+  // NOTAM e ROTAER: janela de consulta por código ICAO, aberta pelo botão à direita de Split maps.
   const [notamOpen, setNotamOpen] = useState(false);
   // Estações do METAR no mapa: { id, surface, x, y, station }. O `station` é a cópia dos dados do METAR no momento de plotar.
   // `metarPlacing` é a estação esperando o próximo clique no mapa (ou null).
@@ -121,6 +125,7 @@ export default function Preview({
   // Setas do teclado trocam de arquivo, exceto quando o foco está num campo ou numa janela (rotas, METAR ou NOTAM) aberta.
   useEffect(() => {
     const onKey = (e) => {
+      if (!live.current) return; // só o painel ativo reage às teclas
       if (routesOpen || e.target.closest?.("input, textarea, .modal--weather, .modal--notam")) return;
       if (e.key === "ArrowLeft" && hasPrev) onPrev();
       else if (e.key === "ArrowRight" && hasNext) onNext();
@@ -147,6 +152,7 @@ export default function Preview({
   useEffect(() => {
     if (!measurable) return undefined;
     const onKey = (e) => {
+      if (!live.current) return; // só o painel ativo reage às teclas
       if (e.target.closest?.("input, textarea, [contenteditable], .modal--weather, .modal--notam")) return;
       if (e.metaKey || e.ctrlKey) return; // Cmd/Ctrl + é do navegador (zoom da página)
       if (e.altKey) {
@@ -167,6 +173,7 @@ export default function Preview({
   useEffect(() => {
     if (!measurable) return undefined;
     const onKey = (e) => {
+      if (!live.current) return; // só o painel ativo reage às teclas
       if (e.key.toLowerCase() !== "r" || e.metaKey || e.ctrlKey || e.altKey) return;
       if (routesOpen || e.target.closest?.("input, textarea, [contenteditable], .modal--weather, .modal--notam")) return;
       setRoutesOpen(true);
@@ -414,6 +421,7 @@ export default function Preview({
   useEffect(() => {
     if (!metarPlacing) return undefined;
     const onKey = (e) => {
+      if (!live.current) return; // só o painel ativo reage às teclas
       if (e.key !== "Escape") return;
       e.preventDefault();
       e.stopPropagation();
@@ -558,6 +566,7 @@ export default function Preview({
   useEffect(() => {
     if (!windOn) return undefined;
     const onKey = (e) => {
+      if (!live.current) return; // só o painel ativo reage às teclas
       if (e.target.closest?.("input, textarea, .modal--weather")) return;
       if ((e.key === "Backspace" || e.key === "Delete") && (windPending || winds.length)) {
         e.preventDefault();
@@ -573,6 +582,7 @@ export default function Preview({
   useEffect(() => {
     if (!plotOn) return undefined;
     const onKey = (e) => {
+      if (!live.current) return; // só o painel ativo reage às teclas
       if (e.target.closest?.("input, textarea, .modal--weather")) return;
       if ((e.key === "Backspace" || e.key === "Delete") && plots.length) {
         e.preventDefault();
@@ -587,6 +597,7 @@ export default function Preview({
   useEffect(() => {
     if (!protractorOn) return undefined;
     const onKey = (e) => {
+      if (!live.current) return; // só o painel ativo reage às teclas
       if (e.target.closest?.("input, textarea, .modal--weather")) return;
       if (e.key === "Escape" && protractor) {
         e.preventDefault();
@@ -628,6 +639,7 @@ export default function Preview({
   useEffect(() => {
     if (!measureOn) return undefined;
     const onKey = (e) => {
+      if (!live.current) return; // só o painel ativo reage às teclas
       if (e.target.closest?.("input, textarea, .modal--weather")) return;
       if (e.key === "Escape" && draft) {
         e.preventDefault();
@@ -719,6 +731,7 @@ export default function Preview({
         onZoom={setZoom}
         brightness={brightness}
         onBrightness={setBrightness}
+        active={active}
       >
         <ImageStage
           src={url}
@@ -762,12 +775,12 @@ export default function Preview({
           <ScaleTool type={mapType} onType={setMapType} text={scaleText} onText={setScaleText} />
           <PlotToggle enabled={plotOn} onToggle={togglePlot} />
           {plotOn && plots.length > 0 && <ClearButton label={t("points.clear")} onClick={clearPlots} />}
-          {/* METAR abre a consulta de METAR e TAF. Outros mapas: só o ícone por enquanto, a função vem depois. */}
+          {/* METAR abre a consulta de METAR e TAF. Split maps divide a visualização em dois painéis. */}
           <MetarButton onClick={() => setWeatherOpen(true)} />
           <WindToggle enabled={windOn} onToggle={toggleWind} />
           {windOn && winds.length > 0 && <ClearButton label={t("wind.clear")} onClick={clearWinds} />}
-          <OtherMapsButton />
-          {/* NOTAM e ROTAER: à direita de Outros mapas. Abre a consulta por código ICAO. */}
+          {!hideSplit && <SplitButton enabled={splitOn} onToggle={onToggleSplit} />}
+          {/* NOTAM e ROTAER: à direita de Split maps. Abre a consulta por código ICAO. */}
           <NotamButton onClick={() => setNotamOpen(true)} />
           {/* Rotas salvas, exportar e reset ficam no fim da barra, nesta ordem; o reset é o último, à direita. */}
           <RoutesButton onClick={() => setRoutesOpen(true)} />

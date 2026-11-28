@@ -256,6 +256,42 @@ test("clicar no mapa da coluna abre de vez e encerra a pré-visualização", () 
   expect(document.querySelector(".hover-preview")).toBeNull();
 });
 
+const splitButton = () => screen.getByRole("button", { name: "Split maps" });
+const rightPane = () => document.querySelector(".viewer-main--right");
+
+test("Split maps divide a visualização: o mapa da esquerda fica, e o da direita é o escolhido na lista", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  fireEvent.click(splitButton());
+  expect(splitButton()).toHaveAttribute("aria-pressed", "true");
+  expect(rightPane()).toHaveTextContent("Choose a map from the list beside it to see it here");
+  fireEvent.click(cellOf("mapa-02").querySelector(".search-live__tile"));
+  expect(rightPane().querySelector(".preview__name")).toHaveTextContent("mapa-02.pdf");
+  // Escolher um mapa na lista torna o painel da direita o ativo: é nele que a barra de ferramentas aparece.
+  expect(rightPane()).toHaveClass("is-active");
+  expect(document.querySelector(".viewer-main--split:not(.viewer-main--right)")).not.toHaveClass("is-active");
+  expect(screen.getByRole("dialog", { name: "Preview of mapa-01.png" })).toBeInTheDocument();
+});
+
+test("desligar o split tira o painel da direita e mantém o mapa da esquerda", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  fireEvent.click(splitButton());
+  fireEvent.click(cellOf("mapa-02").querySelector(".search-live__tile"));
+  fireEvent.click(splitButton());
+  expect(splitButton()).toHaveAttribute("aria-pressed", "false");
+  expect(rightPane()).toBeNull();
+  expect(screen.getByRole("dialog", { name: "Preview of mapa-01.png" })).toBeInTheDocument();
+});
+
+test("com o split ligado, passar o mouse na lista não faz pré-visualização", () => {
+  const { container } = render(<App />);
+  openFirstMap(container, "mapa-01");
+  fireEvent.click(splitButton());
+  fireEvent.mouseEnter(cellOf("mapa-02"));
+  expect(document.querySelector(".hover-preview")).toBeNull();
+});
+
 test("Esc na busca da coluna limpa o texto e mantém a visualização aberta", () => {
   const { container } = render(<App />);
   openFirstMap(container, "mapa-01");

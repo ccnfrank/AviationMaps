@@ -32,9 +32,10 @@
     "renameTitle": "Double-click to rename the point",
     "renameAria": "Point name"
   },
-  "maps": {
-    "button": "Other maps",
-    "tooltip": "Other maps: opens a floating window with other maps (coming soon)"
+  "split": {
+    "button": "Split maps",
+    "tooltip": "Split maps: splits the viewer in two. The right map is the one you choose from the list beside it",
+    "empty": "Choose a map from the list beside it to see it here"
   },
   "metar": {
     "button": "METAR",
@@ -300,10 +301,11 @@
         "title": "Map viewer",
         "items": [
           "Right column: lists the maps in the folder so you can switch maps with one click. Hover over a map in the list to see it in the window, without opening it; click it to open it for good. It has its own search field, with the grid, list and favorites buttons. Show or hide it with the button next to the navigation, or with L.",
+          "Split maps: with the right column open, the Split maps icon divides the viewer into two panes. The left one keeps the current map; the right one shows the map you click in the list. There is only one toolbar, the one of the active pane (outlined): that pane receives the keys and the tools. Click a pane to make it the active one. With the split on, hovering over the list does not preview. To go back to a single view, turn the icon off or close the right pane with the X.",
           "Full screen: the button fills the whole window. Esc leaves it.",
           "Close: the X, Esc, or a click outside the window.",
           "PDF: pages appear in sequence, up to 200 pages. When you change the zoom, the pages are redrawn sharply.",
-          "Toolbar, from left to right: protractor, declination, measure, scale, pin (plot points), wind, METAR (METAR and TAF lookup), other maps (coming soon), NOTAM and ROTAER (lookup by ICAO code), saved routes (read/save), export route and, last, the reset icon. Reset clears everything on the map: measurements, plotted points, winds, METAR stations and the protractor."
+          "Toolbar, from left to right: protractor, declination, measure, scale, pin (plot points), wind, METAR (METAR and TAF lookup), split maps (splits the viewer in two), NOTAM and ROTAER (lookup by ICAO code), saved routes (read/save), export route and, last, the reset icon. Reset clears everything on the map: measurements, plotted points, winds, METAR stations and the protractor."
         ]
       },
       {
@@ -318,7 +320,7 @@
       {
         "title": "NOTAM and ROTAER",
         "paragraphs": [
-          "Click the NOTAM and ROTAER icon in the toolbar, to the right of Other maps, and type the airport's ICAO code (4 characters, e.g. SBSP). Enter or Search runs the lookup.",
+          "Click the NOTAM and ROTAER icon in the toolbar, to the right of Split maps, and type the airport's ICAO code (4 characters, e.g. SBSP). Enter or Search runs the lookup.",
           "The first time, the window asks for the AISWEB (DECEA) ApiKey and ApiPass. DECEA's SAC issues them on request. They are saved only on this computer; Change credentials replaces them. If AISWEB refuses the credentials, the window goes back to the form with a notice.",
           "ROTAER: the aerodrome record, with name, city and state, status, type, altitude, coordinates, UTC, FIR and organization. Then come the runways (length, width and surface) and the ROTAER remarks and complements.",
           "NOTAM: each notice with its number, Q-code, location, validity in UTC (or permanent), limits and text. If the list is long, scroll the window to see them all.",

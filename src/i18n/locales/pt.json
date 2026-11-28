@@ -32,9 +32,10 @@
     "renameTitle": "Duplo clique para renomear o ponto",
     "renameAria": "Nome do ponto"
   },
-  "maps": {
-    "button": "Outros mapas",
-    "tooltip": "Outros mapas: abre uma janela flutuante com outros mapas (em breve)"
+  "split": {
+    "button": "Split maps",
+    "tooltip": "Split maps: divide a visualização em duas. O mapa da direita é o que você escolher na lista ao lado",
+    "empty": "Escolha um mapa na lista ao lado para vê-lo aqui"
   },
   "metar": {
     "button": "METAR",
@@ -300,10 +301,11 @@
         "title": "Janela de visualização",
         "items": [
           "Coluna da direita: lista os mapas da pasta para trocar de mapa com um clique. Passe o mouse sobre um mapa da lista para vê-lo na janela, sem abrir; clique nele para abri-lo de vez. Tem o próprio campo de busca, com os botões de grade, lista e favoritos. Mostre ou esconda a coluna com o botão ao lado da navegação, ou com L.",
+          "Split maps: com a coluna aberta, o ícone Split maps divide a visualização em dois painéis. O da esquerda continua com o mapa atual; o da direita mostra o mapa que você clicar na lista. Há uma só barra de ferramentas, a do painel ativo (com contorno): é ele que recebe as teclas e as ferramentas. Clique num painel para torná-lo o ativo. Com o split ligado, passar o mouse na lista não faz pré-visualização. Para voltar a uma visualização só, desligue o ícone ou feche o painel da direita com o X.",
           "Tela cheia: o botão ocupa a janela inteira. Esc sai.",
           "Fechar: o X, Esc ou um clique fora da janela.",
           "PDF: as páginas aparecem em sequência, até 200 páginas. Ao mudar o zoom, as páginas são redesenhadas com nitidez.",
-          "Barra de ferramentas, da esquerda para a direita: transferidor, declinação, medir, escala, pino (plotar pontos), vento, METAR (consulta de METAR e TAF), outros mapas (em breve), NOTAM e ROTAER (consulta pelo código ICAO), rotas salvas (ler/salvar), exportar rota e, por último, o ícone de reset. O reset limpa tudo no mapa: medições, pontos plotados, ventos, estações do METAR e o transferidor."
+          "Barra de ferramentas, da esquerda para a direita: transferidor, declinação, medir, escala, pino (plotar pontos), vento, METAR (consulta de METAR e TAF), split maps (divide a visualização em dois painéis), NOTAM e ROTAER (consulta pelo código ICAO), rotas salvas (ler/salvar), exportar rota e, por último, o ícone de reset. O reset limpa tudo no mapa: medições, pontos plotados, ventos, estações do METAR e o transferidor."
         ]
       },
       {
@@ -318,7 +320,7 @@
       {
         "title": "NOTAM e ROTAER",
         "paragraphs": [
-          "Clique no ícone NOTAM e ROTAER da barra, à direita de Outros mapas, e digite o código ICAO do aeródromo (4 letras, ex.: SBSP). Enter ou Buscar consulta.",
+          "Clique no ícone NOTAM e ROTAER da barra, à direita de Split maps, e digite o código ICAO do aeródromo (4 letras, ex.: SBSP). Enter ou Buscar consulta.",
           "Na primeira vez, a janela pede a ApiKey e a ApiPass da AISWEB (DECEA). Elas são entregues pelo SAC do DECEA, a pedido. Ficam guardadas só neste computador; Trocar credenciais muda-as. Se a AISWEB recusar as credenciais, a janela volta ao formulário com um aviso.",
           "ROTAER: a ficha do aeródromo, com nome, cidade e UF, situação, tipo, altitude, coordenadas, UTC, FIR e organização. Depois vêm as pistas (comprimento, largura e superfície) e as observações e complementos do ROTAER.",
           "NOTAM: cada aviso com número, Q-code, local, validade em UTC (ou permanente), limites e o texto. Se a lista for longa, role a janela para ver todos.",

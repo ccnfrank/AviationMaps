@@ -41,10 +41,10 @@ test("nome e tamanho aparecem na barra de navegação, sem botão de renomear", 
 afterEach(() => vi.restoreAllMocks());
 
 // O jsdom não calcula layout: dá tamanho à área e à imagem, para o zoom virar largura em pixels.
-async function renderImage() {
+async function renderImage(props = {}) {
   vi.spyOn(Element.prototype, "clientWidth", "get").mockReturnValue(800);
   vi.spyOn(Element.prototype, "clientHeight", "get").mockReturnValue(600);
-  render(<Preview entry={entry("capa.png")} {...nav} />);
+  render(<Preview entry={entry("capa.png")} {...nav} {...props} />);
   const img = await screen.findByRole("img", { name: "capa.png" });
   Object.defineProperty(img, "naturalWidth", { value: 800 });
   Object.defineProperty(img, "naturalHeight", { value: 600 });
@@ -171,9 +171,28 @@ test("transferidor e medir ficam na barra da visualização", () => {
   expect(within(bar).getByRole("button", { name: "Measure" })).toBeInTheDocument();
 });
 
-test("NOTAM e ROTAER fica logo à direita de Outros mapas, antes das rotas salvas", () => {
+test("Split maps liga e desliga o split; sem a coluna para escolher, o botão fica desabilitado", () => {
+  const onToggleSplit = vi.fn();
+  const { unmount } = render(<Preview entry={entry("capa.png")} {...nav} />);
+  expect(screen.getByRole("button", { name: "Split maps" })).toBeDisabled();
+  unmount();
+
+  render(<Preview entry={entry("capa.png")} {...nav} splitOn onToggleSplit={onToggleSplit} />);
+  const split = screen.getByRole("button", { name: "Split maps" });
+  expect(split).toHaveAttribute("aria-pressed", "true");
+  fireEvent.click(split);
+  expect(onToggleSplit).toHaveBeenCalledTimes(1);
+});
+
+test("só o painel ativo responde às teclas: o inativo não muda o zoom", async () => {
+  await renderImage({ active: false });
+  fireEvent.keyDown(document, { key: "+" });
+  expect(stageWidth()).toBe("800px");
+});
+
+test("NOTAM e ROTAER fica logo à direita de Split maps, antes das rotas salvas", () => {
   render(<Preview entry={entry("capa.png")} {...nav} />);
-  const maps = screen.getByRole("button", { name: "Other maps" });
+  const maps = screen.getByRole("button", { name: "Split maps" });
   const notam = screen.getByRole("button", { name: "NOTAM and ROTAER" });
   const routes = screen.getByRole("button", { name: "Saved routes" });
   expect(maps.compareDocumentPosition(notam) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

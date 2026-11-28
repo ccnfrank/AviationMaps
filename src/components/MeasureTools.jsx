@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CloudSun, FileDown, Megaphone, MapPin, PlaneTakeoff, Ruler, RotateCcw, Save, Trash2, Crosshair, Check, Wind, X } from "lucide-react";
+import { CloudSun, FileDown, Megaphone, MapPin, Ruler, RotateCcw, Save, SplitSquareHorizontal, Trash2, Crosshair, Check, Wind, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 // Botão de ícone que liga o plotar pontos: cada clique no mapa marca um ponto numerado.
@@ -36,15 +36,6 @@ export function WindToggle({ enabled, onToggle }) {
   );
 }
 
-// Botão de ícone de função que ainda não existe: só o ícone, desabilitado até a função chegar.
-function PendingButton({ label, title, children }) {
-  return (
-    <button type="button" className="tool-toggle" disabled aria-label={label} title={title}>
-      {children}
-    </button>
-  );
-}
-
 // Botão de ícone do METAR e da TAF: abre a janela em que se digita o código ICAO do aeródromo.
 export function MetarButton({ onClick }) {
   const { t } = useTranslation();
@@ -62,14 +53,22 @@ export function MetarButton({ onClick }) {
   );
 }
 
-// Outros mapas: só o ícone por enquanto. Vai abrir uma janela flutuante com outros mapas, feita depois.
-export function OtherMapsButton() {
+// Split maps: liga e desliga a divisão da visualização em dois painéis. Sem `onToggle` (a visualização não
+// tem a coluna da pasta, de onde se escolhe o mapa da direita), o botão fica desabilitado.
+export function SplitButton({ enabled, onToggle }) {
   const { t } = useTranslation();
   return (
-    <PendingButton label={t("maps.button")} title={t("maps.tooltip")}>
-      {/* O mesmo ícone do botão Carregar mapas (strokeWidth 2 também), só o ícone. */}
-      <PlaneTakeoff strokeWidth={2} aria-hidden="true" />
-    </PendingButton>
+    <button
+      type="button"
+      className="tool-toggle"
+      aria-pressed={enabled}
+      onClick={onToggle}
+      disabled={!onToggle}
+      aria-label={t("split.button")}
+      title={t("split.tooltip")}
+    >
+      <SplitSquareHorizontal strokeWidth={1.8} aria-hidden="true" />
+    </button>
   );
 }
 

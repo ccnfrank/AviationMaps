@@ -42,6 +42,12 @@ export default function App() {
   const [previewEntry, setPreviewEntry] = useState(null);
   // Mapa sob o mouse na coluna da visualização: aparece na janela enquanto o mouse passa; o clique abre de vez.
   const [hoverEntry, setHoverEntry] = useState(null);
+  // Split maps: a visualização vira dois painéis. O da esquerda é o mapa aberto; o da direita, o escolhido na lista.
+  // `activePane` diz qual painel recebe as teclas e as ferramentas (o último clicado).
+  const [split, setSplit] = useState(false);
+  const [rightEntry, setRightEntry] = useState(null);
+  const [rightSeq, setRightSeq] = useState(0);
+  const [activePane, setActivePane] = useState("left");
   const [viewerEmpty, setViewerEmpty] = useState(false); // janela aberta sem mapa, esperando um arquivo
   const viewerOpen = previewEntry !== null || viewerEmpty;
   const [previewSeq, setPreviewSeq] = useState(0);
@@ -67,6 +73,13 @@ export default function App() {
 
   const openPreview = (entry) => {
     setHoverEntry(null);
+    // Com o split ligado, o mapa escolhido na lista vai para o painel da direita; o da esquerda fica.
+    if (split && showLibrary && previewEntry) {
+      setRightSeq((n) => n + 1);
+      setRightEntry(entry);
+      setActivePane("right");
+      return;
+    }
     setViewerEmpty(false);
     setPreviewSeq((n) => n + 1);
     setPreviewEntry(entry);
@@ -91,6 +104,9 @@ export default function App() {
   const closePreview = () => {
     if (viewFull) setViewFull(false);
     setHoverEntry(null);
+    setSplit(false);
+    setRightEntry(null);
+    setActivePane("left");
     setPreviewEntry(null);
     setViewerEmpty(false);
   };
@@ -134,13 +150,24 @@ export default function App() {
   // A coluna ao lado do mapa (gaveta) aparece com pasta carregada, fora da tela cheia (que ocupa a janela toda).
   // Começa aberta; L, ou o botão da barra da visualização, abre e fecha. L não age enquanto se digita.
   const showLibrary = hasFolders && !viewFull;
+  // Os dois painéis precisam da coluna (é de lá que vem o mapa da direita), então somem na tela cheia.
+  const splitShown = split && showLibrary;
   const [libraryOpen, setLibraryOpen] = useState(true);
   const toggleLibrary = () => {
     setHoverEntry(null);
     setLibraryOpen((open) => !open);
   };
+  // Split maps: liga e desliga os dois painéis. Ao ligar, a coluna abre, para haver de onde escolher o mapa.
+  const toggleSplit = () => {
+    setHoverEntry(null);
+    setRightEntry(null);
+    setActivePane("left");
+    if (!split) setLibraryOpen(true);
+    setSplit((on) => !on);
+  };
   // Com a coluna aberta e o mouse num mapa diferente do aberto, a janela mostra esse mapa no lugar do aberto.
-  const hoverShown = showLibrary && libraryOpen && hoverEntry && !(previewEntry && mapKeyOf(previewEntry) === mapKeyOf(hoverEntry))
+  // Com o split, o mouse não faz pré-visualização: o mapa da direita só muda ao clicar.
+  const hoverShown = !splitShown && showLibrary && libraryOpen && hoverEntry && !(previewEntry && mapKeyOf(previewEntry) === mapKeyOf(hoverEntry))
     ? hoverEntry
     : null;
   useEffect(() => {
@@ -347,7 +374,10 @@ export default function App() {
         >
           <div className="viewer-split">
             {/* O mapa aberto fica montado mesmo com a pré-visualização na frente (zoom e medições não se perdem). */}
-            <div className={`viewer-main${hoverShown ? " is-under" : ""}`}>
+            <div
+              className={`viewer-main${hoverShown ? " is-under" : ""}${splitShown ? " viewer-main--split" : ""}${splitShown && activePane === "left" ? " is-active" : ""}`}
+              onMouseDownCapture={() => setActivePane("left")}
+            >
               {previewEntry ? (
                 <Preview
                   key={previewSeq}
@@ -361,6 +391,9 @@ export default function App() {
                   onToggleFullscreen={() => setViewFull(!viewFull)}
                   libraryOpen={libraryOpen}
                   onToggleLibrary={showLibrary ? toggleLibrary : undefined}
+                  splitOn={splitShown}
+                  onToggleSplit={showLibrary ? toggleSplit : undefined}
+                  active={activePane === "left"}
                 />
               ) : (
                 <ViewerEmpty
@@ -371,10 +404,34 @@ export default function App() {
               )}
               {hoverShown && <HoverPreview key={mapKeyOf(hoverShown)} entry={hoverShown} />}
             </div>
+            {splitShown && (
+              <div
+                className={`viewer-main viewer-main--split viewer-main--right${activePane === "right" ? " is-active" : ""}`}
+                onMouseDownCapture={() => setActivePane("right")}
+              >
+                {rightEntry ? (
+                  <Preview
+                    key={rightSeq}
+                    entry={rightEntry}
+                    hasPrev={false}
+                    hasNext={false}
+                    onPrev={() => {}}
+                    onNext={() => {}}
+                    onClose={toggleSplit}
+                    active={activePane === "right"}
+                    hideSplit
+                  />
+                ) : (
+                  <div className="viewer-split__empty">
+                    <p>{t("split.empty")}</p>
+                  </div>
+                )}
+              </div>
+            )}
             {showLibrary && (
               <aside className="viewer-library">
                 <div className="viewer-library__inner">
-                  <Search docked folders={folders} onPreview={openPreview} view={libraryView} onViewChange={setLibraryView} onHover={setHoverEntry} />
+                  <Search docked folders={folders} onPreview={openPreview} view={libraryView} onViewChange={setLibraryView} onHover={splitShown ? undefined : setHoverEntry} />
                 </div>
               </aside>
             )}

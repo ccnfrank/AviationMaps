@@ -1002,6 +1002,22 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 .viewer-main > .preview { min-width: 0; }
 .viewer-main.is-under > :not(.hover-preview) { visibility: hidden; }
 .hover-preview { position: absolute; inset: 0; z-index: 1; background: var(--surface); }
+
+/* Split maps: a visualização vira dois painéis lado a lado. A borda marca a divisão, e o contorno
+   aceso marca o painel ativo, o que recebe as teclas e as ferramentas. */
+.viewer-main--right { border-left: 1px solid var(--line); }
+.viewer-main--split::after {
+  content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  box-shadow: inset 0 0 0 2px transparent; transition: box-shadow var(--dur-fast);
+}
+.viewer-main--split.is-active::after { box-shadow: inset 0 0 0 2px rgba(var(--accent-rgb), .45); }
+/* Uma barra de ferramentas só, a do painel ativo. A do outro painel fica invisível e não recebe clique nem foco,
+   mas ocupa o mesmo espaço, para os dois painéis terminarem na mesma altura. */
+.viewer-main--split:not(.is-active) .view-tools { visibility: hidden; }
+.viewer-split__empty {
+  flex: 1; min-width: 0; display: grid; place-items: center; padding: var(--s-4);
+  background: var(--canvas); color: var(--muted); text-align: center;
+}
 /* Gaveta: a coluna abre e fecha pela largura, e a janela do mapa acompanha. Fechada, some e não recebe foco. */
 .viewer-library {
   width: var(--lib-now); flex: none; display: flex; min-height: 0; overflow: hidden;
@@ -1045,6 +1061,9 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 
 @media (max-width: 640px) {
   .viewer-split { flex-direction: column; }
   .viewer-main { flex: 1 1 58%; }
+  /* Com o split, os dois painéis dividem a área de cima por igual, e a borda vira uma linha horizontal */
+  .viewer-main--split { flex: 1 1 0; }
+  .viewer-main--right { border-left: 0; border-top: 1px solid var(--line); }
   .viewer-library {
     width: auto; flex: 1 1 42%; box-shadow: inset 0 1px 0 var(--line);
     transition: flex-basis var(--dur-base) var(--ease-out), visibility 0s linear 0s;
